@@ -7,6 +7,7 @@ export interface ProcessorOptions {
   rule?: string;
   exception?: string;
   firstDayOfWeek?: number;
+  calendar?: string;
   getExceptionDateTimezoneOffsets?: (date: Date) => number[];
 }
 

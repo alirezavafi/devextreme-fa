@@ -14,22 +14,37 @@ import type { Rule } from '../recurrence/types';
 
 export const createFormIconTemplate = (iconName: string): () => dxElementWrapper => (): dxElementWrapper => getImageContainer(iconName) ?? $('<div>').addClass('dx-scheduler-form-icon-sized-gap');
 
-export const getStartDateCommonConfig = (firstDayOfWeek: DayOfWeek): SimpleItem => ({
-  colSpan: 1,
-  itemType: 'simple',
-  editorType: 'dxDateBox',
-  validationRules: [{
-    type: 'required',
-  }],
-  editorOptions: {
+export const getStartDateCommonConfig = (
+  firstDayOfWeek: DayOfWeek,
+  calendar?: string,
+): SimpleItem => {
+  const editorOptions = {
     type: 'date',
     useMaskBehavior: true,
     calendarOptions: {
       firstDayOfWeek,
       showTodayButton: true,
     },
-  } as unknown as DateBoxProperties,
-});
+  } as Record<string, unknown>;
+
+  // Render and parse this date editor in the selected calendar. Stored value
+  // stays a Gregorian Date; only display/entry changes. Guarded so the default
+  // Gregorian path keeps `editorOptions` byte-for-byte unchanged.
+  if (calendar && calendar !== 'gregorian') {
+    editorOptions.calendar = calendar;
+    (editorOptions.calendarOptions as Record<string, unknown>).calendar = calendar;
+  }
+
+  return {
+    colSpan: 1,
+    itemType: 'simple',
+    editorType: 'dxDateBox',
+    validationRules: [{
+      type: 'required',
+    }],
+    editorOptions: editorOptions as unknown as DateBoxProperties,
+  };
+};
 
 export class RecurrenceRule {
   startDate: Date | null = null;

@@ -403,7 +403,11 @@ class SchedulerAgenda extends WorkSpace {
         setHeight($td, this.getRowHeight(rowSize));
 
         if (date) {
-          cellDateNumber = String(dateLocalization.format(date, 'd'));
+          const calendar = this.option('calendar');
+          cellDateNumber = String(dateLocalization.format(
+            date,
+            calendar && calendar !== 'gregorian' ? { type: 'd', calendar } : 'd',
+          ));
           cellDayName = String(dateLocalization.format(date, formatWeekday));
         }
 

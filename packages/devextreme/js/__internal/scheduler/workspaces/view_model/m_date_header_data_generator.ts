@@ -3,6 +3,7 @@ import type { DateHeaderData } from '@ts/scheduler/types';
 
 import {
   formatWeekdayAndDay,
+  getCalendarHeaderFormatter,
   getDisplayedCellCount,
   getHeaderCellText,
   getHorizontalGroupCount,
@@ -47,6 +48,7 @@ export class DateHeaderDataGenerator {
       isHorizontalGrouping,
       intervalCount,
       viewOffset,
+      calendar,
     } = options;
 
     const resourceManager = getResourceManager();
@@ -64,6 +66,7 @@ export class DateHeaderDataGenerator {
     const daysInView = daysInGroup * datesRepeatCount;
 
     const weekDaysRow: any[] = [];
+    const formatWeekDay = getCalendarHeaderFormatter(calendar) ?? formatWeekdayAndDay;
 
     for (let dayIndex = 0; dayIndex < daysInView; dayIndex += 1) {
       const cell = completeViewDataMap[index][dayIndex * colSpan];
@@ -72,7 +75,7 @@ export class DateHeaderDataGenerator {
       weekDaysRow.push({
         ...cell,
         colSpan,
-        text: formatWeekdayAndDay(shiftedStartDate),
+        text: formatWeekDay(shiftedStartDate),
         isFirstGroupCell: false,
         isLastGroupCell: false,
       });

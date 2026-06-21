@@ -1,11 +1,11 @@
-import { formatWeekdayAndDay } from '@ts/scheduler/r1/utils/index';
+import { formatWeekdayAndDay, getCalendarHeaderFormatter } from '@ts/scheduler/r1/utils/index';
 
 import type { ViewDataProviderOptions } from './view_model/types';
 import SchedulerWorkSpaceIndicator from './work_space_indicator';
 
 class SchedulerWorkspaceVertical extends SchedulerWorkSpaceIndicator {
   protected override getFormat(): (date: Date) => string {
-    return formatWeekdayAndDay;
+    return getCalendarHeaderFormatter(this.option('calendar')) ?? formatWeekdayAndDay;
   }
 
   generateRenderOptions(): ViewDataProviderOptions {

@@ -5,11 +5,15 @@ import type { DefaultOptionsRule } from '@js/core/options/utils';
 import type { dxElementWrapper } from '@js/core/renderer';
 import $ from '@js/core/renderer';
 import dateUtils from '@js/core/utils/date';
+import type { CalendarType } from '@ts/core/localization/calendar';
+import numberLocalization from '@ts/core/localization/number';
 import type { OptionChanged } from '@ts/core/widget/types';
 import Editor from '@ts/ui/editor/editor';
 
 import type { EditorProperties } from '../editor/editor';
 import uiDateUtils from './date_utils';
+import type { CalendarRollerType } from './date_view.calendar';
+import { applyCalendarRollerValue, buildCalendarRollerConfig } from './date_view.calendar';
 import DateViewRoller from './date_view_roller';
 
 const DATEVIEW_CLASS = 'dx-dateview';
@@ -38,6 +42,7 @@ export interface RollerConfig {
   displayItems: string[];
   selectedIndex?: number;
   getIndex: (value: Date) => number;
+  calendarField?: boolean;
 }
 
 export interface DateViewProperties extends EditorProperties {
@@ -48,6 +53,8 @@ export interface DateViewProperties extends EditorProperties {
   maxDate: Date;
 
   type?: string;
+
+  calendar?: CalendarType;
 }
 
 class DateView extends Editor<DateViewProperties> {
@@ -86,6 +93,7 @@ class DateView extends Editor<DateViewProperties> {
       type: TYPE.date,
       value: new Date(),
       applyCompactClass: false,
+      calendar: 'gregorian',
     };
   }
 
@@ -197,6 +205,21 @@ class DateView extends Editor<DateViewProperties> {
     const selectedType = type ?? defaultType;
     this._rollerConfigs = {};
 
+    // Non-Gregorian calendars (Persian/Hijri) conventionally show date pickers in
+    // day-month-year order. Use a fixed DMY order for the rollers and append the
+    // time parts (when present) from the locale's pattern.
+    if (this._isCustomCalendar() && (selectedType === 'date' || selectedType === 'datetime')) {
+      const dateOrder = ['day', 'month', 'year'];
+      const formatPattern = uiDateUtils.FORMATS_MAP[selectedType as string];
+      // @ts-expect-error core/DateLocalization type should be fixed
+      const allParts = dateLocalization.getFormatParts(formatPattern) as string[];
+      const timeParts = allParts.filter((p) => !dateOrder.includes(p));
+      [...dateOrder, ...timeParts].forEach((partName) => {
+        this._createRollerConfig(partName);
+      });
+      return;
+    }
+
     dateLocalization
       // @ts-expect-error core/DateLocalization type should be fixed
       .getFormatParts(uiDateUtils.FORMATS_MAP[selectedType as string])
@@ -206,6 +229,11 @@ class DateView extends Editor<DateViewProperties> {
   }
 
   _createRollerConfig(componentName: string): void {
+    if (this._isCustomCalendar() && this._isCalendarField(componentName)) {
+      this._createCalendarRollerConfig(componentName as CalendarRollerType);
+      return;
+    }
+
     const componentInfo = uiDateUtils.DATE_COMPONENTS_INFO[componentName];
 
     const valueRange = this._calculateRollerConfigValueRange(componentName);
@@ -235,6 +263,41 @@ class DateView extends Editor<DateViewProperties> {
     this._rollerConfigs[componentName] = config;
   }
 
+  _isCustomCalendar(): boolean {
+    const { calendar } = this.option();
+    return !!calendar && calendar !== 'gregorian';
+  }
+
+  _isCalendarField(componentName: string): boolean {
+    return componentName === ROLLER_TYPE.year
+      || componentName === ROLLER_TYPE.month
+      || componentName === ROLLER_TYPE.day;
+  }
+
+  _createCalendarRollerConfig(componentName: CalendarRollerType): void {
+    const { calendar, minDate, maxDate } = this.option();
+    const curDate = this._getCurrentDate();
+
+    const calConfig = buildCalendarRollerConfig(
+      componentName,
+      calendar as CalendarType,
+      curDate,
+      minDate,
+      maxDate,
+      (value: number): string => numberLocalization.convertDigits(String(value)) as string,
+    );
+
+    this._rollerConfigs[componentName] = {
+      type: componentName,
+      setValue: '',
+      calendarField: true,
+      valueItems: calConfig.valueItems,
+      displayItems: calConfig.displayItems,
+      selectedIndex: calConfig.selectedIndex,
+      getIndex: calConfig.getIndex,
+    };
+  }
+
   _setActiveRoller(currentRoller: RollerConfig): void {
     const activeRoller = currentRoller && this._rollers[currentRoller.type];
 
@@ -255,34 +318,49 @@ class DateView extends Editor<DateViewProperties> {
   _setRollerState(roller: RollerConfig, selectedIndex: number): void {
     if (selectedIndex !== roller.selectedIndex) {
       const rollerValue = roller.valueItems[selectedIndex];
-      const { setValue } = roller;
-      let currentValue = new Date(this._getCurrentDate());
-      let currentDate = currentValue.getDate();
       const { minDate, maxDate } = this.option();
 
-      if (roller.type === ROLLER_TYPE.month) {
-        currentDate = Math.min(
-          currentDate,
-          uiDateUtils.getMaxMonthDay(currentValue.getFullYear(), rollerValue),
+      if (roller.calendarField) {
+        const { calendar } = this.option();
+        let currentValue = applyCalendarRollerValue(
+          roller.type as CalendarRollerType,
+          calendar as CalendarType,
+          this._getCurrentDate(),
+          rollerValue,
         );
-      } else if (roller.type === ROLLER_TYPE.year) {
-        currentDate = Math.min(
-          currentDate,
-          uiDateUtils.getMaxMonthDay(rollerValue, currentValue.getMonth()),
-        );
+        currentValue = dateUtils.normalizeDate(currentValue, minDate, maxDate) as Date;
+
+        this.option('value', currentValue);
+        roller.selectedIndex = selectedIndex;
+      } else {
+        const { setValue } = roller;
+        let currentValue = new Date(this._getCurrentDate());
+        let currentDate = currentValue.getDate();
+
+        if (roller.type === ROLLER_TYPE.month) {
+          currentDate = Math.min(
+            currentDate,
+            uiDateUtils.getMaxMonthDay(currentValue.getFullYear(), rollerValue),
+          );
+        } else if (roller.type === ROLLER_TYPE.year) {
+          currentDate = Math.min(
+            currentDate,
+            uiDateUtils.getMaxMonthDay(rollerValue, currentValue.getMonth()),
+          );
+        }
+
+        currentValue.setDate(currentDate);
+        currentValue[setValue](rollerValue);
+
+        const normalizedDate = dateUtils.normalizeDate(currentValue, minDate, maxDate);
+        // @ts-expect-error ts-error
+        currentValue = uiDateUtils.mergeDates(normalizedDate, currentValue, 'time');
+        currentValue = dateUtils.normalizeDate(currentValue, minDate, maxDate);
+
+        this.option('value', currentValue);
+
+        roller.selectedIndex = selectedIndex;
       }
-
-      currentValue.setDate(currentDate);
-      currentValue[setValue](rollerValue);
-
-      const normalizedDate = dateUtils.normalizeDate(currentValue, minDate, maxDate);
-      // @ts-expect-error ts-error
-      currentValue = uiDateUtils.mergeDates(normalizedDate, currentValue, 'time');
-      currentValue = dateUtils.normalizeDate(currentValue, minDate, maxDate);
-
-      this.option('value', currentValue);
-
-      roller.selectedIndex = selectedIndex;
     }
 
     if (roller.type === ROLLER_TYPE.year) {
@@ -388,6 +466,9 @@ class DateView extends Editor<DateViewProperties> {
         if (args.value) {
           this._toggleFormatClasses(args.value as string, args.previousValue as string);
         }
+        break;
+      case 'calendar':
+        this._renderRollers();
         break;
       case 'visible':
         super._optionChanged(args);

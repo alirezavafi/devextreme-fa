@@ -88,6 +88,7 @@ class DateRangeBox extends Editor<Properties> {
       applyValueMode: 'instantly',
       buttons: undefined,
       calendarOptions: {},
+      calendar: 'gregorian',
       cancelButtonText: messageLocalization.format('Cancel'),
       endDateOutOfRangeMessage: messageLocalization.format('dxDateRangeBox-endDateOutOfRangeMessage'),
       dateSerializationFormat: undefined,
@@ -530,6 +531,8 @@ class DateRangeBox extends Editor<Properties> {
       min: options.min,
       openOnFieldClick: options.openOnFieldClick,
       pickerType: this._getPickerType(),
+      calendar: options.calendar,
+      calendarSwitcher: options.calendarSwitcher,
       readOnly: options.readOnly,
       rtlEnabled: options.rtlEnabled,
       spellcheck: options.spellcheck,
@@ -820,6 +823,8 @@ class DateRangeBox extends Editor<Properties> {
       case 'acceptCustomValue':
       case 'dateSerializationFormat':
       case 'displayFormat':
+      case 'calendar':
+      case 'calendarSwitcher':
       case 'max':
       case 'min':
       case 'openOnFieldClick':

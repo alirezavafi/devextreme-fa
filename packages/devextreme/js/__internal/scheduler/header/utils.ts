@@ -3,6 +3,7 @@ import dateUtils from '@js/core/utils/date';
 import { isFunction, isObject } from '@js/core/utils/type';
 import messageLocalization from '@js/localization/message';
 import type { DateNavigatorTextInfo, Properties } from '@js/ui/scheduler';
+import { getCalendar, getCalendarMonthNamesInActiveLocale } from '@ts/core/localization/calendar';
 import type { BaseFormat } from '@ts/core/localization/date';
 import { camelize } from '@ts/core/utils/m_inflector';
 import type { IntervalOptions, Step } from '@ts/scheduler/header/types';
@@ -26,6 +27,58 @@ const {
 const {
   format: formatDate,
 } = dateLocalization;
+
+const isCustomCalendar = (calendar?: string): boolean => !!calendar && calendar !== 'gregorian';
+
+const fmtPart = (date: Date, type: string, calendar?: string): string => formatDate(
+  date,
+  isCustomCalendar(calendar) ? { type, calendar } : type,
+) as string;
+
+const monthNamesFor = (type: 'abbreviated' | 'wide', calendar?: string): string[] => (
+  isCustomCalendar(calendar)
+    ? getCalendarMonthNamesInActiveLocale(calendar as string, type)
+    : dateLocalization.getMonthNames(type as BaseFormat)
+);
+
+const isValidDate = (d: unknown): d is Date => d instanceof Date && !Number.isNaN(d.getTime());
+
+const monthIndexOf = (date: Date, calendar?: string): number => (
+  isCustomCalendar(calendar) ? getCalendar(calendar as string).toParts(date).month : date.getMonth()
+);
+
+const yearValueOf = (date: Date, calendar?: string): number => (
+  isCustomCalendar(calendar)
+    ? getCalendar(calendar as string).toParts(date).year
+    : date.getFullYear()
+);
+
+const sameCalendarMonth = (a: Date, b: Date, calendar?: string): boolean => {
+  if (!isCustomCalendar(calendar)) {
+    return dateUtils.sameMonth(a, b);
+  }
+  const pa = getCalendar(calendar as string).toParts(a);
+  const pb = getCalendar(calendar as string).toParts(b);
+  return pa.year === pb.year && pa.month === pb.month;
+};
+
+const sameCalendarYear = (a: Date, b: Date, calendar?: string): boolean => (
+  isCustomCalendar(calendar)
+    ? yearValueOf(a, calendar) === yearValueOf(b, calendar)
+    : dateUtils.sameYear(a, b)
+);
+
+const getCalendarMonthStartDate = (date: Date, calendar: string): Date => {
+  const c = getCalendar(calendar);
+  const { year, month } = c.toParts(date);
+  return c.fromParts({ year, month, day: 1 });
+};
+
+const getCalendarMonthEndDate = (date: Date, calendar: string): Date => {
+  const c = getCalendar(calendar);
+  const { year, month } = c.toParts(date);
+  return c.fromParts({ year, month, day: c.getDaysInMonth(year, month) });
+};
 
 const MS_DURATION = { milliseconds: 1 };
 const DAY_DURATION = { days: 1 };
@@ -96,7 +149,9 @@ const getIntervalStartDate = (options: IntervalOptions): Date => {
         nextDay,
       );
     case 'month':
-      return getPeriodStart(date, step, false, firstDayOfWeek) as Date;
+      return isCustomCalendar(options.calendar)
+        ? getCalendarMonthStartDate(date, options.calendar as string)
+        : getPeriodStart(date, step, false, firstDayOfWeek) as Date;
     case 'week': {
       const weekStart = getPeriodStart(date, 'week', false, firstDayOfWeek) as Date;
       return getFirstVisibleDate(weekStart, skippedDays, nextDay);
@@ -114,11 +169,18 @@ const getPeriodEndDate = (
   agendaDuration: number,
   skippedDays: number[],
   firstDayOfWeek: number | undefined,
+  calendar?: string,
 ): Date => {
+  const monthEnd = (): Date => (
+    isCustomCalendar(calendar)
+      ? nextDay(getCalendarMonthEndDate(currentPeriodStartDate, calendar as string))
+      : nextMonth(currentPeriodStartDate)
+  );
+
   const calculators: Record<Step, () => Date> = {
     day: () => nextDay(currentPeriodStartDate),
     week: () => getDateAfterWeek(currentPeriodStartDate, firstDayOfWeek, skippedDays),
-    month: () => nextMonth(currentPeriodStartDate),
+    month: monthEnd,
     agenda: () => nextAgendaStart(currentPeriodStartDate, agendaDuration),
   };
 
@@ -141,7 +203,7 @@ const getNextPeriodStartDate = (
 
 const getIntervalEndDate = (startDate: Date, options: IntervalOptions): Date => {
   const {
-    intervalCount, step, agendaDuration, skippedDays, firstDayOfWeek,
+    intervalCount, step, agendaDuration, skippedDays, firstDayOfWeek, calendar,
   } = options;
 
   let periodStartDate = new Date(startDate);
@@ -157,6 +219,7 @@ const getIntervalEndDate = (startDate: Date, options: IntervalOptions): Date => 
       agendaDuration ?? 0,
       skippedDays,
       firstDayOfWeek,
+      calendar,
     );
 
     nextPeriodStartDate = getNextPeriodStartDate(periodEndDate, step, skippedDays);
@@ -214,40 +277,41 @@ export const getNextIntervalDate = (options: IntervalOptions, direction: Directi
   return addDateInterval(date, { days: dayDuration }, direction);
 };
 
-const getDateMonthFormatter = (isShort: boolean) => {
+const getDateMonthFormatter = (isShort: boolean, calendar?: string) => {
   const monthType = isShort ? 'abbreviated' : 'wide';
-  const months = dateLocalization.getMonthNames(monthType as BaseFormat);
+  const months = monthNamesFor(monthType, calendar);
 
   return (date: Date): string => {
-    const day = formatDate(date, 'day');
+    const day = fmtPart(date, 'day', calendar);
 
-    const month = months[date.getMonth()];
+    const month = months[monthIndexOf(date, calendar)];
 
     return `${day} ${month}`;
   };
 };
 
-const formatMonthYear = (date: Date): string => {
-  const months = dateLocalization.getMonthNames('abbreviated');
-  const month = months[date.getMonth()];
+const formatMonthYear = (date: Date, calendar?: string): string => {
+  const months = monthNamesFor('abbreviated', calendar);
+  const month = months[monthIndexOf(date, calendar)];
 
-  const year = formatDate(date, 'year');
+  const year = fmtPart(date, 'year', calendar);
 
   return `${month} ${year}`;
 };
 
-const getDateMonthYearFormatter = (isShort: boolean) => (date: Date): string => {
-  const dateMonthFormat = getDateMonthFormatter(isShort);
+const getDateMonthYearFormatter = (isShort: boolean, calendar?: string) => (date: Date): string => {
+  const dateMonthFormat = getDateMonthFormatter(isShort, calendar);
   const dateMonth = dateMonthFormat(date);
 
-  const year = formatDate(date, 'year');
+  const year = fmtPart(date, 'year', calendar);
 
   return `${dateMonth} ${year}`;
 };
 
-const getDifferentYearCaption = (startDate: Date, endDate: Date): string => {
-  const firstDateText = formatDate(startDate, getDateMonthYearFormatter(true));
-  const lastDateDateText = formatDate(endDate, getDateMonthYearFormatter(true));
+const getDifferentYearCaption = (startDate: Date, endDate: Date, calendar?: string): string => {
+  const formatter = getDateMonthYearFormatter(true, calendar);
+  const firstDateText = formatter(startDate);
+  const lastDateDateText = formatter(endDate);
 
   return `${firstDateText}-${lastDateDateText}`;
 };
@@ -262,72 +326,108 @@ export const getCaptionInterval = (options: IntervalOptions): {
   return { startDate, endDate };
 };
 
-const getSameYearCaption = (startDate: Date, endDate: Date, isShort: boolean): string => {
-  const isDifferentMonthDates = startDate.getMonth() !== endDate.getMonth();
+const getSameYearCaption = (
+  startDate: Date,
+  endDate: Date,
+  isShort: boolean,
+  calendar?: string,
+): string => {
+  const isDifferentMonthDates = monthIndexOf(startDate, calendar)
+    !== monthIndexOf(endDate, calendar);
   const useShortFormat = isDifferentMonthDates || isShort;
 
-  const firstDateFormat = isDifferentMonthDates
-    ? getDateMonthFormatter(useShortFormat)
-    : DAY_FORMAT;
+  const firstDateText = isDifferentMonthDates
+    ? getDateMonthFormatter(useShortFormat, calendar)(startDate)
+    : fmtPart(startDate, DAY_FORMAT, calendar);
 
-  const firstDateText = formatDate(startDate, firstDateFormat);
-  const lastDateText = formatDate(endDate, getDateMonthYearFormatter(useShortFormat));
+  const lastDateText = getDateMonthYearFormatter(useShortFormat, calendar)(endDate);
 
   return `${firstDateText}-${lastDateText}`;
 };
 
-const getSameDateCaption = (date: Date, step, isShort: boolean): string => {
+const getSameDateCaption = (date: Date, step, isShort: boolean, calendar?: string): string => {
   const useShortFormat = step === 'agenda' ? isShort : false;
 
-  const dateMonthFormat = getDateMonthFormatter(useShortFormat);
+  const dateMonthFormat = getDateMonthFormatter(useShortFormat, calendar);
 
   const dateMonth = dateMonthFormat(date);
-  const year = formatDate(date, 'year');
+  const year = fmtPart(date, 'year', calendar);
 
   return `${dateMonth} ${year}`;
 };
 
-const formatCaptionByMonths = (startDate: Date, endDate: Date, isShort: boolean): string => {
-  const isDifferentYears = startDate.getFullYear() !== endDate.getFullYear();
+const formatCaptionByMonths = (
+  startDate: Date,
+  endDate: Date,
+  isShort: boolean,
+  calendar?: string,
+): string => {
+  const isDifferentYears = yearValueOf(startDate, calendar) !== yearValueOf(endDate, calendar);
 
   if (isDifferentYears) {
-    return getDifferentYearCaption(startDate, endDate);
+    return getDifferentYearCaption(startDate, endDate, calendar);
   }
 
-  return getSameYearCaption(startDate, endDate, isShort);
+  return getSameYearCaption(startDate, endDate, isShort, calendar);
 };
 
-const formatMonthViewCaption = (startDate: Date, endDate: Date): string => {
-  if (dateUtils.sameMonth(startDate, endDate)) {
-    return String(formatDate(startDate, 'monthandyear') ?? '');
+const formatMonthViewCaption = (startDate: Date, endDate: Date, calendar?: string): string => {
+  if (sameCalendarMonth(startDate, endDate, calendar)) {
+    return String(fmtPart(startDate, 'monthandyear', calendar) ?? '');
   }
 
-  const isSameYear = dateUtils.sameYear(startDate, endDate);
+  const isSameYear = sameCalendarYear(startDate, endDate, calendar);
 
   const firstDateText = isSameYear
-    ? dateLocalization.getMonthNames('abbreviated')[startDate.getMonth()]
-    : formatMonthYear(startDate);
-  const lastDateText = formatMonthYear(endDate);
+    ? monthNamesFor('abbreviated', calendar)[monthIndexOf(startDate, calendar)]
+    : formatMonthYear(startDate, calendar);
+  const lastDateText = formatMonthYear(endDate, calendar);
 
   return `${firstDateText}-${lastDateText}`;
 };
 
-const getCaptionText = (startDate: Date, endDate: Date, isShort: boolean, step): string => {
+const getCaptionText = (
+  startDate: Date,
+  endDate: Date,
+  isShort: boolean,
+  step,
+  calendar?: string,
+): string => {
   if (dateUtils.sameDate(startDate, endDate)) {
-    return getSameDateCaption(startDate, step, isShort);
+    return getSameDateCaption(startDate, step, isShort, calendar);
   }
 
   if (step === 'month') {
-    return formatMonthViewCaption(startDate, endDate);
+    return formatMonthViewCaption(startDate, endDate, calendar);
   }
 
-  return formatCaptionByMonths(startDate, endDate, isShort);
+  return formatCaptionByMonths(startDate, endDate, isShort, calendar);
 };
 
 export const getCaption = (options: IntervalOptions, isShort: boolean, customizationFunction?: Properties['customizeDateNavigatorText']): DateNavigatorTextInfo => {
-  const { startDate, endDate } = getCaptionInterval(options);
+  let { startDate, endDate } = getCaptionInterval(options);
 
-  let text = getCaptionText(startDate, endDate, isShort, options.step);
+  // Guard against invalid Date objects leaking into the caption builder
+  // (e.g. transiently during async option/view changes when `startViewDate`
+  // hasn't been computed yet). Without this, the caption would render as
+  // `undefined NaN-undefined NaN` (`monthNamesFor[NaN]` is undefined and
+  // `Intl.DateTimeFormat.format(invalidDate)` throws). Fall back to
+  // `options.date` (typically `currentDate`) when it is itself valid.
+  if (!isValidDate(startDate) || !isValidDate(endDate)) {
+    if (isValidDate(options.date)) {
+      startDate = options.date;
+      endDate = options.date;
+    } else {
+      return {
+        text: '',
+        formatDate: '',
+        startDate,
+        endDate,
+      };
+    }
+  }
+
+  let text = getCaptionText(startDate, endDate, isShort, options.step, options.calendar);
 
   if (isFunction(customizationFunction)) {
     text = customizationFunction({ startDate, endDate, text });

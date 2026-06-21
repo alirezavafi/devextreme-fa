@@ -1,8 +1,10 @@
+/* eslint-disable spellcheck/spell-checker */
 import { dateUtilsTs } from '@ts/core/utils/date';
 import { RRule, RRuleSet } from 'rrule';
 
 import { parseRecurrenceRule } from '../../../../recurrence/base';
 import type { DateInterval, MinimalAppointmentEntity } from '../../../types';
+import { generateCalendarRecurrenceTimestamps } from './generate_recurrence.calendar';
 import { getDateOffsetMs } from './get_date_information';
 
 interface Options {
@@ -10,6 +12,7 @@ interface Options {
   interval: DateInterval;
   timeZone: string;
   startDateTimeZone?: string;
+  calendar?: string;
 }
 
 const WEEK_DAY_NUMBERS = [6, 0, 1, 2, 3, 4, 5];
@@ -23,6 +26,7 @@ export const generateRecurrenceUTCDates = <
     interval,
     timeZone,
     startDateTimeZone,
+    calendar,
   }: Options,
 ): number[] => {
   if (!appointment.hasRecurrenceRule || !appointment.recurrenceRule) {
@@ -42,6 +46,19 @@ export const generateRecurrenceUTCDates = <
   // NOTE: interval dates already have target time zone offset
   const min = interval.min - duration - targetOffset + startDateOffsetBase;
   const max = interval.max - targetOffset + startDateOffsetBase;
+
+  // Calendar-aware MONTHLY/YEARLY recurrence (Persian/Hijri/...). Returns null for
+  // rules it cannot represent, in which case we fall through to the RRULE engine.
+  const calendarTimestamps = generateCalendarRecurrenceTimestamps({
+    rule: appointment.recurrenceRule,
+    calendar: calendar as string,
+    startMs: start,
+    minMs: min,
+    maxMs: max,
+  });
+  if (calendarTimestamps !== null) {
+    return calendarTimestamps.map((ms) => ms - startDateOffsetBase);
+  }
 
   const rule = parseRecurrenceRule(appointment.recurrenceRule);
   const ruleOptions = RRule.parseString(appointment.recurrenceRule);

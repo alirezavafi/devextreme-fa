@@ -701,6 +701,13 @@
                 "DemoType": "Web"
               },
               {
+                "Title": "Multiple Calendars",
+                "Name": "MultipleCalendars",
+                "Equivalents": "calendar, persian, jalali, hijri, islamic, umalqura, non-gregorian",
+                "Widget": "DataGrid",
+                "DemoType": "Web"
+              },
+              {
                 "Title": "Multi-Level Headers (Bands)",
                 "Name": "MultiRowHeadersBands",
                 "Credits": "www.wikipedia.org",
@@ -3680,6 +3687,18 @@
             ]
           },
           {
+            "Name": "Multiple Calendars",
+            "Equivalents": "calendar, persian, jalali, hijri, islamic, umalqura, non-gregorian",
+            "Demos": [
+              {
+                "Title": "Multiple Calendars",
+                "Name": "MultipleCalendars",
+                "Widget": "Scheduler",
+                "DemoType": "Web"
+              }
+            ]
+          },
+          {
             "Name": "Data Binding",
             "Equivalents": "",
             "Demos": [
@@ -4756,6 +4775,12 @@
             "Title": "Multiple Selection",
             "Name": "MultipleSelection",
             "Widget": "Calendar"
+          },
+          {
+            "Title": "Multiple Calendars",
+            "Name": "MultipleCalendars",
+            "Equivalents": "calendar, persian, jalali, hijri, islamic, umalqura, non-gregorian",
+            "Widget": "Calendar"
           }
         ]
       },
@@ -4805,6 +4830,12 @@
             "Name": "Formatting",
             "Equivalents": "mask",
             "Widget": "DateBox"
+          },
+          {
+            "Title": "Multiple Calendars",
+            "Name": "MultipleCalendars",
+            "Equivalents": "calendar, persian, jalali, hijri, islamic, umalqura, non-gregorian",
+            "Widget": "DateBox"
           }
         ]
       },
@@ -4822,6 +4853,12 @@
           {
             "Title": "Formatting",
             "Name": "Formatting",
+            "Widget": "DateRangeBox"
+          },
+          {
+            "Title": "Multiple Calendars",
+            "Name": "MultipleCalendars",
+            "Equivalents": "calendar, persian, jalali, hijri, islamic, umalqura, non-gregorian",
             "Widget": "DateRangeBox"
           }
         ]

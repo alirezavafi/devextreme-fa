@@ -7,5 +7,8 @@
         "source.fixAll.stylelint": "explicit"
     },
     "typescript.tsdk": "packages/devextreme/node_modules/typescript/lib",
-    "stylelint.validate": ["css", "scss"]
+    "stylelint.validate": [
+        "css",
+        "scss"
+    ]
 }

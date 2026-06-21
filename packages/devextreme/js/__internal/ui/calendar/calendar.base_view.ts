@@ -16,6 +16,7 @@ import type { DxEvent } from '@js/events';
 import type {
   CalendarSelectionMode, CalendarZoomLevel, CellTemplateData, DisabledDate,
 } from '@js/ui/calendar';
+import type { CalendarType } from '@ts/core/localization/calendar';
 import type { DefaultActionArgs } from '@ts/core/widget/component';
 import type { OptionChanged } from '@ts/core/widget/types';
 import type { WidgetProperties } from '@ts/core/widget/widget';
@@ -95,6 +96,8 @@ export interface BaseViewProperties extends WidgetProperties {
 
   maxZoomLevel?: CalendarZoomLevel;
 
+  calendar?: CalendarType;
+
   allowValueSelection: boolean;
 
   range: Date[];
@@ -141,6 +144,15 @@ class BaseView<
 
   _getViewName(): string {
     return 'base';
+  }
+
+  _getCalendarType(): CalendarType {
+    return (this.option('calendar') as CalendarType) ?? 'gregorian';
+  }
+
+  _isCustomCalendar(): boolean {
+    const calendar = this._getCalendarType();
+    return !!calendar && calendar !== 'gregorian';
   }
 
   _getDefaultOptions(): TProperties {

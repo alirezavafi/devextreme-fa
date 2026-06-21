@@ -3,6 +3,7 @@ import { RRule, RRuleSet } from 'rrule';
 
 import timeZoneUtils from '../utils_time_zone';
 import { getDateByAsciiString, parseRecurrenceRule } from './base';
+import { generateCalendarRecurrenceDates } from './generate_dates.calendar';
 import type { ProcessorOptions, RRuleParams } from './types';
 import { validateRRuleObject } from './validate_rule';
 
@@ -177,6 +178,13 @@ export const generateDates = (options: ProcessorOptions): Date[] => {
 
   if (!isValid) {
     return [];
+  }
+
+  // Calendar-aware MONTHLY/YEARLY recurrence (Persian/Hijri/...). Returns null
+  // for rules it cannot represent, in which case we fall through to RRULE.
+  const calendarDates = generateCalendarRecurrenceDates(options, rule);
+  if (calendarDates !== null) {
+    return calendarDates;
   }
 
   const rruleIntervalParams = getRruleParams(options);

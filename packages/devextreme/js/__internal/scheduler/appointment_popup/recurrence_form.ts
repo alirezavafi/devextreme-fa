@@ -22,7 +22,8 @@ import { createFormIconTemplate, getStartDateCommonConfig, RecurrenceRule } from
 
 export interface RecurrenceFormConfig {
   firstDayOfWeek: DayOfWeek;
-  createComponent: CreateComponentFn
+  createComponent: CreateComponentFn;
+  calendar?: string;
 }
 
 const CLASSES = {
@@ -172,7 +173,7 @@ export class RecurrenceForm {
         },
         extend(
           true,
-          getStartDateCommonConfig(this.config.firstDayOfWeek),
+          getStartDateCommonConfig(this.config.firstDayOfWeek, this.config.calendar),
           {
             name: EDITOR_NAMES.recurrenceStartDateEditor,
             cssClass: CLASSES.recurrenceStartDateEditor,
@@ -480,7 +481,13 @@ export class RecurrenceForm {
             useMaskBehavior: true,
             calendarOptions: {
               firstDayOfWeek: this.config.firstDayOfWeek,
+              ...(this.config.calendar && this.config.calendar !== 'gregorian'
+                ? { calendar: this.config.calendar }
+                : {}),
             },
+            ...(this.config.calendar && this.config.calendar !== 'gregorian'
+              ? { calendar: this.config.calendar }
+              : {}),
             inputAttr: {
               'aria-label': messageLocalization.format('dxScheduler-recurrenceUntilDateLabel'),
             },

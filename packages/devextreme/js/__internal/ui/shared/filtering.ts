@@ -1,10 +1,56 @@
 import { map } from '@js/core/utils/iterator';
 import { isDate, isDefined } from '@js/core/utils/type';
+import { getCalendar, isCalendarRegistered } from '@ts/core/localization/calendar';
 
 const DEFAULT_DATE_INTERVAL = ['year', 'month', 'day'];
 const DEFAULT_DATETIME_INTERVAL = ['year', 'month', 'day', 'hour', 'minute'];
 
 const isDateType = (dataType): boolean => dataType === 'date' || dataType === 'datetime';
+
+// Reads a non-Gregorian calendar type from a column's date `format` object.
+const getColumnCalendarType = (column): string | undefined => {
+  const format = column?.format;
+  const calendar = format && typeof format === 'object' ? format.calendar : undefined;
+  return calendar && calendar !== 'gregorian' && isCalendarRegistered(calendar)
+    ? calendar as string
+    : undefined;
+};
+
+// Builds the [start, end) Gregorian date range for a header-filter date tree
+// node expressed in calendar parts. `values` are [year, month0Based, day] in
+// the selected calendar (matching DATE_INTERVAL_SELECTORS / getDateValues).
+const getCalendarDateRange = (
+  calendarType: string,
+  dateInterval: string | undefined,
+  values: number[],
+): { dateStart: Date; dateEnd: Date } => {
+  const calendar = getCalendar(calendarType);
+  const year = values[0];
+  const month = values[1] ?? 0;
+  const day = values[2] ?? 1;
+
+  if (dateInterval === 'year') {
+    return {
+      dateStart: calendar.fromParts({ year, month: 0, day: 1 }),
+      dateEnd: calendar.fromParts({ year: year + 1, month: 0, day: 1 }),
+    };
+  }
+
+  if (dateInterval === 'month') {
+    const dateStart = calendar.fromParts({ year, month, day: 1 });
+    const dateEnd = new Date(dateStart);
+    // A calendar month boundary aligns with a Gregorian day boundary, so adding
+    // the calendar-month length in days yields the first day of the next month.
+    dateEnd.setDate(dateEnd.getDate() + calendar.getDaysInMonth(year, month));
+    return { dateStart, dateEnd };
+  }
+
+  // day (default): a calendar day equals one Gregorian day.
+  const dateStart = calendar.fromParts({ year, month, day });
+  const dateEnd = new Date(dateStart);
+  dateEnd.setDate(dateEnd.getDate() + 1);
+  return { dateStart, dateEnd };
+};
 
 // @ts-expect-error ts-error
 // eslint-disable-next-line consistent-return
@@ -125,6 +171,36 @@ export default (function () {
       dateInterval = getGroupInterval(column)?.[values.length - 1];
     } else if (column.dataType === 'datetime') {
       dateInterval = 'minute';
+    }
+
+    // Calendar-aware header-filter date tree: the path values are calendar
+    // parts (year/month/day in the selected calendar). Rebuild the Gregorian
+    // [start, end) range via the calendar so the filter matches the stored
+    // Gregorian dates. Guarded so the Gregorian path is unchanged.
+    const calendarType = target === 'headerFilter' ? getColumnCalendarType(column) : undefined;
+    if (calendarType && (dateInterval === 'year' || dateInterval === 'month' || dateInterval === 'day' || dateInterval === undefined)) {
+      const range = getCalendarDateRange(calendarType, dateInterval, values);
+      dateStart = range.dateStart;
+      dateEnd = range.dateEnd;
+
+      switch (selectedFilterOperation) {
+        case '<':
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return [selector, '<', dateStart];
+        case '<=':
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return [selector, '<', dateEnd];
+        case '>':
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return [selector, '>=', dateEnd];
+        case '>=':
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return [selector, '>=', dateStart];
+        case '<>':
+          return [[selector, '<', dateStart], 'or', [selector, '>=', dateEnd]];
+        default:
+          return [[selector, '>=', dateStart], 'and', [selector, '<', dateEnd]];
+      }
     }
 
     switch (dateInterval) {

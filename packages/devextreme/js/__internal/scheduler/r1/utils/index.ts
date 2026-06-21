@@ -76,12 +76,24 @@ export {
   splitNumber,
 } from './base';
 export {
+  formatWeekdayAndDayInCalendar,
+  getCalendarDayNumber,
+  getCalendarHeaderFormatter,
+  isCustomCalendar,
+} from './calendar_format';
+export {
   excludeFromRecurrence,
 } from './exclude_from_recurrence';
 export {
   formatWeekday,
   formatWeekdayAndDay,
 } from './format_weekday';
+export {
+  addCalendarMonthsToDate,
+  getCalendarMonthEnd,
+  getCalendarMonthStart,
+  getCalendarSpanEnd,
+} from './month_boundary.calendar';
 
 export const agendaUtils = {
   calculateEndViewDate,

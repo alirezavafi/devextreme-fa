@@ -1,8 +1,12 @@
 import dateLocalization from '@js/common/core/localization/date';
 import dateUtils from '@js/core/utils/date';
+import { isDefined } from '@js/core/utils/type';
+import { getCalendarFirstDayOfWeek } from '@ts/core/localization/calendar';
 import type { TimeZoneCalculator } from '@ts/scheduler/r1/timezone_calculator';
 import {
-  getToday, isFirstCellInMonthWithIntervalCount, monthUtils, setOptionHour,
+  getCalendarMonthStart,
+  getCalendarSpanEnd,
+  getToday, isCustomCalendar, isFirstCellInMonthWithIntervalCount, monthUtils, setOptionHour,
 } from '@ts/scheduler/r1/utils/index';
 import type { ViewDataProviderOptions } from '@ts/scheduler/types';
 
@@ -10,6 +14,26 @@ import timezoneUtils from '../../utils_time_zone';
 import { ViewDataGenerator } from './m_view_data_generator';
 import type { MonthViewCellDataSimple, ViewDataProviderExtendedOptions } from './types';
 import { calculateAlignedWeeksBetweenDates } from './utils/view_generator_utils';
+
+/**
+ * Resolve the effective first day of week for the calendar-aware month view.
+ * Order: explicit `firstDayOfWeek` option → calendar's own default (Persian/Hijri = Saturday)
+ *  → locale default. Without this guard, an unset option would propagate as `undefined`
+ *  through `getFirstWeekDate`, producing an Invalid Date for every cell.
+ */
+const getCalendarFirstDayOfWeekFallback = (
+  firstDayOfWeekOption: number | undefined,
+  calendar: string,
+): number => {
+  if (isDefined(firstDayOfWeekOption)) {
+    return firstDayOfWeekOption;
+  }
+  const calendarFirstDay = getCalendarFirstDayOfWeek(calendar);
+  if (isDefined(calendarFirstDay)) {
+    return calendarFirstDay;
+  }
+  return dateLocalization.firstDayOfWeekIndex();
+};
 
 const toMs = dateUtils.dateToMilliseconds;
 
@@ -32,6 +56,7 @@ export class ViewDataGeneratorMonth extends ViewDataGenerator {
       timeZoneCalculator,
       intervalCount,
       viewOffset,
+      calendar,
     } = options;
 
     const data = super.getCellData(
@@ -52,7 +77,7 @@ export class ViewDataGeneratorMonth extends ViewDataGenerator {
       startDate,
       intervalCount,
     );
-    data.text = monthUtils.getCellText(startDate, intervalCount);
+    data.text = monthUtils.getCellText(startDate, intervalCount, calendar);
 
     return data;
   }
@@ -87,6 +112,16 @@ export class ViewDataGeneratorMonth extends ViewDataGenerator {
   }
 
   protected calculateStartViewDate(options: ViewDataProviderOptions): Date {
+    if (isCustomCalendar(options.calendar)) {
+      const monthStart = getCalendarMonthStart(options.currentDate, options.calendar);
+      const firstDayOfWeek = getCalendarFirstDayOfWeekFallback(
+        options.firstDayOfWeek,
+        options.calendar,
+      );
+      const firstViewDate = dateUtils.getFirstWeekDate(monthStart, firstDayOfWeek);
+      return setOptionHour(firstViewDate, options.startDayHour);
+    }
+
     return monthUtils.calculateStartViewDate(
       options.currentDate,
       options.startDayHour,
@@ -97,6 +132,16 @@ export class ViewDataGeneratorMonth extends ViewDataGenerator {
   }
 
   protected setVisibilityDates(options: ViewDataProviderOptions): void {
+    if (isCustomCalendar(options.calendar)) {
+      this.minVisibleDate = getCalendarMonthStart(options.currentDate, options.calendar);
+      this.maxVisibleDate = getCalendarSpanEnd(
+        options.currentDate,
+        options.calendar,
+        options.intervalCount,
+      );
+      return;
+    }
+
     const {
       intervalCount,
       startDate,
@@ -127,6 +172,16 @@ export class ViewDataGeneratorMonth extends ViewDataGenerator {
   }
 
   getRowCount(options: ViewDataProviderOptions): number {
+    if (isCustomCalendar(options.calendar)) {
+      const start = getCalendarMonthStart(options.currentDate, options.calendar);
+      const end = getCalendarSpanEnd(options.currentDate, options.calendar, options.intervalCount);
+      return calculateAlignedWeeksBetweenDates(
+        start,
+        end,
+        getCalendarFirstDayOfWeekFallback(options.firstDayOfWeek, options.calendar),
+      );
+    }
+
     const startDate = new Date(options.currentDate);
     startDate.setDate(1);
 

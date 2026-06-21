@@ -57,7 +57,9 @@ export class SchedulerHeader extends Widget<HeaderOptions> {
   }
 
   public getIntervalOptions(date: Date): IntervalOptions {
-    const { currentView, firstDayOfWeek, skippedDays } = this.option();
+    const {
+      currentView, firstDayOfWeek, skippedDays, calendar,
+    } = this.option();
     const step = getStep(currentView.type);
 
     return {
@@ -67,6 +69,7 @@ export class SchedulerHeader extends Widget<HeaderOptions> {
       intervalCount: currentView.intervalCount,
       agendaDuration: currentView.agendaDuration,
       skippedDays,
+      calendar,
     };
   }
 
@@ -268,7 +271,14 @@ export class SchedulerHeader extends Widget<HeaderOptions> {
     const { currentDate, startViewDate } = this.option();
     let date = currentDate;
 
-    if (startViewDate) {
+    // `startViewDate` can transiently be invalid during view switches /
+    // workspace re-renders (e.g. when the workspace hasn't computed its
+    // start-view date for the new view yet). Fall back to currentDate in that
+    // case to avoid a "undefined NaN-undefined NaN" caption.
+    const isValidStartView = startViewDate instanceof Date
+      && !Number.isNaN(startViewDate.getTime());
+
+    if (isValidStartView) {
       date = this.getDisplayedDate();
     }
 

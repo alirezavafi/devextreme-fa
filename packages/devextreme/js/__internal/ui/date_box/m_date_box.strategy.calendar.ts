@@ -119,7 +119,7 @@ class CalendarStrategy extends DateBoxStrategy {
 
   _getWidgetOptions(): Record<string, unknown> {
     const {
-      disabledDates, min, max, todayButtonText, calendarOptions = {},
+      disabledDates, min, max, todayButtonText, calendarOptions = {}, calendar, calendarSwitcher,
     } = this.dateBox.option();
 
     return extend(calendarOptions, {
@@ -128,8 +128,11 @@ class CalendarStrategy extends DateBoxStrategy {
       dateSerializationFormat: null,
       min,
       max,
+      calendar,
+      calendarSwitcher,
       onValueChanged: this._valueChangedHandler.bind(this),
       onCellClick: this._cellClickHandler.bind(this),
+      onOptionChanged: this._calendarOptionChangedHandler.bind(this),
       disabledDates: isFunction(disabledDates)
         ? this._injectComponent(disabledDates.bind(this.dateBox))
         : disabledDates,
@@ -137,6 +140,14 @@ class CalendarStrategy extends DateBoxStrategy {
       skipFocusCheck: true,
       todayButtonText,
     }) as Record<string, unknown>;
+  }
+
+  _calendarOptionChangedHandler(e: { name: string; value: unknown }): void {
+    // Propagate the in-picker calendar switcher's selection up to the DateBox so
+    // a calendar change inside the dropdown is preserved after the dropdown closes.
+    if (e.name === 'calendar' && this.dateBox.option('calendar') !== e.value) {
+      this.dateBox.option('calendar', e.value as string);
+    }
   }
 
   _injectComponent<T>(

@@ -4,14 +4,23 @@ import { getGlobalFormatByDataType } from '@ts/core/m_global_format_config';
 
 import type { TargetedAppointment, ViewType } from '../../types';
 
-const formatTooltipDatePart = (date: Date): string => {
+const formatTooltipDatePart = (date: Date, calendar?: string): string => {
   const globalFormat = getGlobalFormatByDataType('date');
+  const useCalendar = !!calendar && calendar !== 'gregorian';
 
   if (globalFormat) {
-    return dateLocalization.format(date, globalFormat) as string;
+    return dateLocalization.format(
+      date,
+      useCalendar && typeof globalFormat === 'string'
+        ? { type: globalFormat, calendar }
+        : globalFormat,
+    ) as string;
   }
 
-  return String(dateLocalization.format(date, 'monthandday'));
+  return String(dateLocalization.format(
+    date,
+    useCalendar ? { type: 'monthandday', calendar } : 'monthandday',
+  ));
 };
 
 const formatTooltipTimePart = (date: Date): string => {
@@ -45,22 +54,27 @@ export const getDateFormatType = (
   return DateFormatType.DATETIME;
 };
 
-export const getDateText = (startDate: Date, endDate: Date, formatType: DateFormatType): string => {
+export const getDateText = (
+  startDate: Date,
+  endDate: Date,
+  formatType: DateFormatType,
+  calendar?: string,
+): string => {
   const isSameDate = dateUtils.sameDate(startDate, endDate);
 
   switch (formatType) {
     case DateFormatType.DATETIME:
       return [
-        formatTooltipDatePart(startDate),
+        formatTooltipDatePart(startDate, calendar),
         formatTooltipTimePart(startDate),
         '-',
-        !isSameDate && formatTooltipDatePart(endDate),
+        !isSameDate && formatTooltipDatePart(endDate, calendar),
         formatTooltipTimePart(endDate),
       ].filter(Boolean).join(' ');
     case DateFormatType.TIME:
       return `${formatTooltipTimePart(startDate)} - ${formatTooltipTimePart(endDate)}`;
     case DateFormatType.DATE:
-      return `${formatTooltipDatePart(startDate)}${isSameDate ? '' : ` - ${formatTooltipDatePart(endDate)}`}`;
+      return `${formatTooltipDatePart(startDate, calendar)}${isSameDate ? '' : ` - ${formatTooltipDatePart(endDate, calendar)}`}`;
     default:
       return '';
   }
@@ -70,9 +84,10 @@ export const getDateTextFromTargetAppointment = (
   targetedAppointmentData: TargetedAppointment,
   format?: DateFormatType,
   viewType?: ViewType,
+  calendar?: string,
 ): string => {
   const { displayStartDate: startDate, displayEndDate: endDate, allDay } = targetedAppointmentData;
   const formatType = format ?? getDateFormatType(startDate, endDate, allDay, viewType);
 
-  return getDateText(startDate, endDate, formatType);
+  return getDateText(startDate, endDate, formatType, calendar);
 };

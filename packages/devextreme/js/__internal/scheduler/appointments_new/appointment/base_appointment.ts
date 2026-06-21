@@ -35,6 +35,7 @@ export interface BaseAppointmentViewProperties
 
   getDataAccessor: () => AppointmentDataAccessor;
   getResourceColor: () => Promise<string | undefined>;
+  getCalendar?: () => string | undefined;
 }
 
 export class BaseAppointmentView<
@@ -164,6 +165,8 @@ export class BaseAppointmentView<
     const dateText = getDateTextFromTargetAppointment(
       this.targetedAppointmentData,
       this.isAllDay() ? DateFormatType.DATE : DateFormatType.TIME,
+      undefined,
+      this.option().getCalendar?.(),
     );
 
     return dateText;

@@ -41,6 +41,32 @@ export type CalendarZoomLevel = 'century' | 'decade' | 'month' | 'year';
 /** @public */
 export type CalendarSelectionMode = 'single' | 'multiple' | 'range';
 
+/**
+ * @docid
+ * @public
+ */
+export type CalendarSystemType = 'gregorian' | 'persian' | 'hijri' | 'hijri-umalqura' | string;
+
+/**
+ * @docid
+ * @public
+ */
+export type CalendarSwitcher = boolean | CalendarSwitcherConfig;
+
+/**
+ * @docid
+ * @namespace DevExpress.ui
+ * @public
+ */
+export interface CalendarSwitcherConfig {
+    /**
+     * @docid
+     * @default undefined
+     * @public
+     */
+    items?: Array<CalendarSystemType>;
+}
+
 /** @public */
 export type WeekNumberRule = 'auto' | 'firstDay' | 'fullWeek' | 'firstFourDays';
 
@@ -151,6 +177,18 @@ export interface dxCalendarOptions extends EditorOptions<dxCalendar> {
      * @public
      */
     max?: DateLike;
+    /**
+     * @docid
+     * @default 'gregorian'
+     * @public
+     */
+    calendar?: CalendarSystemType;
+    /**
+     * @docid
+     * @default false
+     * @public
+     */
+    calendarSwitcher?: CalendarSwitcher;
     /**
      * @docid
      * @default 'month'

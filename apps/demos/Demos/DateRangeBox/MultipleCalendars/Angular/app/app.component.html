@@ -1,0 +1,25 @@
+<div class="dx-fieldset">
+  <div class="dx-field">
+    <div class="dx-field-label">Calendar</div>
+    <div class="dx-field-value">
+      <dx-select-box
+        [items]="calendars"
+        [(value)]="calendar"
+        valueExpr="id"
+        displayExpr="text"
+        [inputAttr]="{ 'aria-label': 'Calendar' }"
+      >
+      </dx-select-box>
+    </div>
+  </div>
+  <div class="dx-field">
+    <div class="dx-field-label">Date range</div>
+    <div class="dx-field-value">
+      <dx-date-range-box
+        [value]="value"
+        [calendar]="calendar"
+      >
+      </dx-date-range-box>
+    </div>
+  </div>
+</div>

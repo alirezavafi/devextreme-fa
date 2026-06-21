@@ -700,6 +700,12 @@ export interface dxSchedulerOptions extends WidgetOptions<dxScheduler> {
     firstDayOfWeek?: DayOfWeek | undefined;
     /**
      * @docid
+     * @default 'gregorian'
+     * @public
+     */
+    calendar?: 'gregorian' | 'persian' | 'hijri' | 'hijri-umalqura' | string;
+    /**
+     * @docid
      * @default undefined
      * @public
      */

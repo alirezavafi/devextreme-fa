@@ -1,0 +1,18 @@
+<div class="options">
+  <span>Calendar</span>
+  <dx-select-box
+    [items]="calendars"
+    [(value)]="calendar"
+    valueExpr="id"
+    displayExpr="text"
+    [inputAttr]="{ 'aria-label': 'Calendar' }"
+  >
+  </dx-select-box>
+</div>
+<div class="calendar-container">
+  <dx-calendar
+    [value]="date"
+    [calendar]="calendar"
+  >
+  </dx-calendar>
+</div>

@@ -65,6 +65,7 @@ export interface AppointmentsProperties extends DOMComponentProperties<Appointme
   getAppointmentDataSource: () => AppointmentDataSource;
   getResourceManager: () => ResourceManager;
   getDataAccessor: () => AppointmentDataAccessor;
+  getCalendar?: () => string | undefined;
   getStartViewDate: () => Date;
   getSortedItems: () => SortedEntity[];
   isVirtualScrolling: () => boolean;
@@ -375,6 +376,7 @@ export class Appointments extends DOMComponent<Appointments, AppointmentsPropert
       onRendered: this.option().onAppointmentRendered,
       getResourceColor: this.getResourceColor.bind(this, appointmentViewModel),
       getDataAccessor: this.option().getDataAccessor,
+      getCalendar: this.option().getCalendar,
       onClick: this.onAppointmentClick.bind(this),
       onDblClick: this.onAppointmentDblClick.bind(this),
       onContextMenu: this.onAppointmentContextMenu.bind(this),

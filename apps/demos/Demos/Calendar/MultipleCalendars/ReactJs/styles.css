@@ -1,0 +1,14 @@
+.options {
+  margin-bottom: 20px;
+  max-width: 260px;
+}
+
+.options > span {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.calendar-container {
+  display: inline-block;
+}

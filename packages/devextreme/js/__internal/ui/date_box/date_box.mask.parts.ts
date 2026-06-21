@@ -2,6 +2,19 @@ import { getPatternSetters } from '@js/common/core/localization/ldml/date.parser
 import { noop } from '@js/core/utils/common';
 import { extend } from '@js/core/utils/extend';
 import { fitIntoRange } from '@js/core/utils/math';
+import type { CalendarType } from '@ts/core/localization/calendar';
+
+import {
+  getCalendarPartGetter,
+  getCalendarPartLimits,
+  getCalendarPartSetter,
+} from './date_box.mask.calendar';
+
+const CALENDAR_PART_CHARS = ['y', 'M', 'L', 'd'];
+
+interface Limits { min: number; max: number }
+
+const isCustomCalendar = (calendarType?: CalendarType): boolean => !!calendarType && calendarType !== 'gregorian';
 
 const getLimits = (
   pattern: string,
@@ -124,8 +137,10 @@ interface Section {
 export const renderDateParts = (
   text: string,
   regExpInfo: { regexp: RegExp; patterns: string[] },
+  calendarType?: CalendarType,
 ): Section[] => {
   const result = regExpInfo.regexp.exec(text) ?? [];
+  const useCalendar = isCustomCalendar(calendarType);
 
   let start = 0;
   let end = 0;
@@ -136,7 +151,31 @@ export const renderDateParts = (
     end = start + result[i].length;
 
     const pattern = regExpInfo.patterns[i - 1].replace(/^'|'$/g, '');
-    const getter = getPatternGetter(pattern[0]);
+    const patternChar = pattern[0];
+    const isCalendarPart = useCalendar && CALENDAR_PART_CHARS.includes(patternChar);
+
+    const getter = isCalendarPart
+      ? (getCalendarPartGetter(patternChar, calendarType as CalendarType)
+        ?? getPatternGetter(patternChar))
+      : getPatternGetter(patternChar);
+
+    const setter = isCalendarPart
+      ? (getCalendarPartSetter(patternChar, calendarType as CalendarType)
+        ?? (PATTERN_SETTERS[patternChar] ?? noop))
+      : (PATTERN_SETTERS[patternChar] ?? noop);
+
+    const limits = isCalendarPart
+      ? (date: Date, forcedPattern?: string): Limits => getCalendarPartLimits(
+        patternChar,
+        calendarType as CalendarType,
+        date,
+        forcedPattern,
+      )
+      : (date: Date, forcedPattern?: string): Limits => getLimits(
+        patternChar,
+        date,
+        forcedPattern,
+      );
 
     sections.push({
       index: i - 1,
@@ -144,8 +183,8 @@ export const renderDateParts = (
       caret: { start, end },
       pattern,
       text: result[i],
-      limits: (date: Date, forcedPattern?: string) => getLimits(pattern[0], date, forcedPattern),
-      setter: PATTERN_SETTERS[pattern[0]] ?? noop,
+      limits,
+      setter,
       getter,
     });
   }
