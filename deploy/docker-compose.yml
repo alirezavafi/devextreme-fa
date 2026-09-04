@@ -1,0 +1,20 @@
+# Publishes the multi-calendar showcase at https://demos.dev-box.ir/devextreme-fa/.
+#
+# Build the site first — the image copies it, it does not produce it:
+#
+#   deploy\build.ps1
+#   scripts\deploy-compose.ps1 -ProjectName devextreme-fa-demos `
+#       -File deploy\docker-compose.yml -Sites "demos.dev-box.ir=8094"
+#
+# Port 8094 is bound to loopback so the container is reachable only through
+# nginx/HTTPS on the server, never directly.
+services:
+  demos:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: devextreme-fa-demos:latest
+    container_name: devextreme-fa-demos
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:8094:80'

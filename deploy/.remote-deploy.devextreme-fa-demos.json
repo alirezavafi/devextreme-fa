@@ -1,0 +1,18 @@
+{
+  "File": "E:\\AV\\Projects\\me\\_dev-box\\libs\\devextreme\\deploy\\docker-compose.yml",
+  "ProjectName": "devextreme-fa-demos",
+  "Context": "remote-server",
+  "Sites": [
+    "demos.dev-box.ir=8094"
+  ],
+  "Email": "",
+  "NoHttp3": false,
+  "Spa": null,
+  "Oidc": "",
+  "OidcFile": "",
+  "Projects": null,
+  "Fingerprints": {
+    "build:demos": "bcdca46e1f296c13d472b07c87a90f5909a4d2c3f6c4ad9f36bb6e0e51e43b33"
+  },
+  "LastDeployed": "2026-09-04T20:14:17.8397885+03:30"
+}
