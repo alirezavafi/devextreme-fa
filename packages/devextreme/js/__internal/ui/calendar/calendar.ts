@@ -863,7 +863,7 @@ class Calendar<
   }
 
   _getCalendarType(): CalendarType {
-    return (this.option('calendar') as CalendarType) ?? 'gregorian';
+    return this.option().calendar ?? 'gregorian';
   }
 
   _isCustomCalendar(): boolean {
@@ -1411,9 +1411,7 @@ class Calendar<
 
     if (this._$switcher) {
       this._$switcher.remove();
-      // @ts-expect-error ts-error
       delete this._$switcher;
-      // @ts-expect-error ts-error
       delete this._switcherSelectBox;
     }
 
@@ -1680,7 +1678,6 @@ class Calendar<
     delete this._navigator;
     delete this._$footer;
     delete this._$switcher;
-    // @ts-expect-error ts-error
     delete this._switcherSelectBox;
   }
 

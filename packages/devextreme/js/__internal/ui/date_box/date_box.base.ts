@@ -14,6 +14,7 @@ import {
 } from '@js/core/utils/type';
 import { getWindow, hasWindow } from '@js/core/utils/window';
 import type { DxEvent, InteractionEvent } from '@js/events';
+import type { Format } from '@js/localization';
 import type { CalendarSwitcher } from '@js/ui/calendar';
 import type {
   DateLike,
@@ -539,7 +540,7 @@ class DateBox extends DropDownEditor<DateBoxBaseProperties> {
     this._getSubmitElement().val(submitValue);
   }
 
-  _getEffectiveDisplayFormatOption(): unknown {
+  _getEffectiveDisplayFormatOption(): Format | undefined {
     const { displayFormat, calendar } = this.option();
 
     if (!isDefined(displayFormat) && calendar && calendar !== 'gregorian') {
@@ -651,7 +652,7 @@ class DateBox extends DropDownEditor<DateBoxBaseProperties> {
 
   _getParsedDate(text?: string): Date | undefined {
     const displayFormat = this._getEffectiveDisplayFormatOption();
-    const strategyDisplayFormat = this._strategy.getDisplayFormat(displayFormat as Format);
+    const strategyDisplayFormat = this._strategy.getDisplayFormat(displayFormat);
     const { calendar } = this.option();
 
     // Thread the active calendar through dateLocalization.parse so the user's

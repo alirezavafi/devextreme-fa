@@ -230,7 +230,7 @@ const dateLocalization = dependencyInjector({
         ? (format).type
         : format);
 
-      if (isString(typeStr)) {
+      if (typeof typeStr === 'string') {
         const pattern = FORMATS_TO_PATTERN_MAP[typeStr.toLowerCase()] || typeStr;
         const normalized = numberLocalization.convertDigits(text, true) as string;
         return parseDateInCalendar(normalized, calendarType, pattern, this);

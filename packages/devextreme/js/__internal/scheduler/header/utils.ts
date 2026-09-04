@@ -420,7 +420,6 @@ export const getCaption = (options: IntervalOptions, isShort: boolean, customiza
     } else {
       return {
         text: '',
-        formatDate: '',
         startDate,
         endDate,
       };

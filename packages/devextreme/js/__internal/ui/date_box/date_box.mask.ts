@@ -365,9 +365,10 @@ class DateBoxMask extends DateBoxBase {
         ? format
         : (format as { type?: string } | undefined)?.type;
 
-      if (isString(typeStr)) {
-        this._formatPattern = dateLocalization._getPatternByFormat(typeStr) ?? typeStr;
-        return this._formatPattern;
+      if (typeof typeStr === 'string') {
+        const pattern: string = dateLocalization._getPatternByFormat(typeStr) ?? typeStr;
+        this._formatPattern = pattern;
+        return pattern;
       }
     }
 
@@ -491,7 +492,6 @@ class DateBoxMask extends DateBoxBase {
         value,
         this._getCalendarType(),
         pattern,
-        // @ts-expect-error dateLocalization satisfies the LDML date-parts contract
         dateLocalization,
       );
       return numberLocalization.convertDigits(text) as string;
@@ -502,7 +502,6 @@ class DateBoxMask extends DateBoxBase {
 
   _prepareRegExpInfo(): void {
     const dateParts = this._isCustomCalendar()
-      // @ts-expect-error dateLocalization satisfies the LDML date-parts contract
       ? createCalendarDateParts(getCalendar(this._getCalendarType()), dateLocalization)
       : dateLocalization;
     this._regExpInfo = getRegExpInfo(this._getFormatPattern(), dateParts);
@@ -805,7 +804,6 @@ class DateBoxMask extends DateBoxBase {
         newText,
         this._getCalendarType(),
         this._getFormatPattern(),
-        // @ts-expect-error dateLocalization satisfies the LDML date-parts contract
         dateLocalization,
         this._maskValue ?? undefined,
       )

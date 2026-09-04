@@ -1,6 +1,7 @@
 import registerComponent from '@js/core/component_registrator';
 import type { TemplateBase } from '@js/core/templates/template_base';
 import dateUtils from '@js/core/utils/date';
+import type { CalendarType } from '@ts/core/localization/calendar';
 import { HeaderPanelComponent } from '@ts/scheduler/r1/components/index';
 import { formatWeekdayAndDay, getCalendarHeaderFormatter, monthUtils } from '@ts/scheduler/r1/utils/index';
 
@@ -40,7 +41,8 @@ class SchedulerTimelineMonth extends SchedulerTimeline {
   }
 
   protected override getFormat(): (date: Date) => string {
-    return getCalendarHeaderFormatter(this.option('calendar')) ?? formatWeekdayAndDay;
+    const calendar = this.option('calendar') as CalendarType | undefined;
+    return getCalendarHeaderFormatter(calendar) ?? formatWeekdayAndDay;
   }
 
   protected override getIntervalBetween(currentDate: Date): number {

@@ -10,7 +10,9 @@ import { getCalendar } from '@ts/core/localization/calendar';
  * existing week/row machinery keeps working on real `Date`s.
  */
 
-export const isCustomCalendar = (calendar?: CalendarType): boolean => !!calendar && calendar !== 'gregorian';
+export const isCustomCalendar = (
+  calendar?: CalendarType,
+): calendar is CalendarType => !!calendar && calendar !== 'gregorian';
 
 /** First Gregorian date of the calendar month containing `date`. */
 export function getCalendarMonthStart(date: Date, calendar: CalendarType): Date {

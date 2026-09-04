@@ -15,7 +15,7 @@ import { getCalendar } from '@ts/core/localization/calendar';
  * navigator caption depend on month-boundary math and are tracked separately.
  */
 
-export function isCustomCalendar(calendarType?: CalendarType): boolean {
+export function isCustomCalendar(calendarType?: CalendarType): calendarType is CalendarType {
   return !!calendarType && calendarType !== 'gregorian';
 }
 
@@ -46,5 +46,5 @@ export function getCalendarHeaderFormatter(
     return undefined;
   }
 
-  return (date: Date): string => formatWeekdayAndDayInCalendar(date, calendarType as CalendarType);
+  return (date: Date): string => formatWeekdayAndDayInCalendar(date, calendarType);
 }

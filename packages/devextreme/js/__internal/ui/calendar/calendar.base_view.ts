@@ -147,7 +147,7 @@ class BaseView<
   }
 
   _getCalendarType(): CalendarType {
-    return (this.option('calendar') as CalendarType) ?? 'gregorian';
+    return this.option().calendar ?? 'gregorian';
   }
 
   _isCustomCalendar(): boolean {
