@@ -7,7 +7,7 @@ import {
 } from 'path';
 import { createHash } from 'crypto';
 import { version as DX_Version } from 'devextreme/package.json';
-import { Demo, Framework } from './types';
+import { Demo, Framework, Group } from './types';
 import { resourceLinks } from './external-resource-metadata';
 
 export const isSkipDemo = (demo: Demo) => {
@@ -15,6 +15,14 @@ export const isSkipDemo = (demo: Demo) => {
   const excluded = ['Localization', 'RowTemplate', 'CellCustomization', 'TimeZonesSupport', 'ExportToPDF'];
   return excluded.includes(Widget) || excluded.includes(Name);
 };
+
+// Widgets with many demos (Scheduler, DataGrid, the charts) nest a second level
+// of groups, so the menu has to be walked recursively or those demos are
+// silently dropped from every build that reads it.
+export const collectDemos = (groups: Group[]): Demo[] => groups.flatMap((group) => [
+  ...(group.Demos ?? []).filter((demo) => !isSkipDemo(demo)),
+  ...collectDemos(group.Groups ?? []),
+]);
 
 const demosRootDir = join(__dirname, '..', '..', '..');
 const destinationPublishDir = join(demosRootDir, 'publish-demos');

@@ -45,7 +45,9 @@ export default class AngularBundler implements Bundler {
     const isWin = process.platform === 'win32';
     const npmCmd = isWin ? 'npm.cmd' : 'npm';
     const npmArgs = ['run', 'build-angular', '--', getProjectNameByDemo(demo)];
-    const ngBuildProcess = spawn(npmCmd, npmArgs);
+    // Node refuses to spawn a .cmd without a shell (CVE-2024-27980), so on
+    // Windows this fails with EINVAL unless the shell is opted into.
+    const ngBuildProcess = spawn(npmCmd, npmArgs, { shell: isWin });
     ngBuildProcess.stdout.on('data', (data) => {
       console.log(`stdout: ${data}`);
     });
