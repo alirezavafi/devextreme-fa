@@ -15,6 +15,7 @@ import formatHelper from '@js/format_helper';
 import type { CustomOperation, DataType, Field } from '@js/ui/filter_builder';
 import filterUtils from '@js/ui/shared/filtering';
 import errors from '@js/ui/widget/ui.errors';
+import { applyCalendarToFormat } from '@ts/core/localization/calendar/format_calendar';
 import { getGlobalFormatByDataType } from '@ts/core/m_global_format_config';
 
 import { getConfig } from './m_between';
@@ -50,6 +51,7 @@ const AVAILABLE_FIELD_PROPERTIES = [
   'editorOptions',
   'filterOperations',
   'format',
+  'calendar',
   'lookup',
   'trueText',
   'calculateFilterExpression',
@@ -68,7 +70,10 @@ function getDateFormat(dataType: DataType | undefined): Format | undefined {
 }
 
 function getFormattedValueText(field: Field, value: FieldValue): string {
-  const fieldFormat = field.format ?? getDateFormat(field.dataType);
+  const fieldFormat = applyCalendarToFormat(
+    field.format ?? getDateFormat(field.dataType),
+    field.calendar,
+  );
 
   if (isBoolean(value)) {
     const trueText = field.trueText ?? messageLocalization.format('dxDataGrid-trueText');

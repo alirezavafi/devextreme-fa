@@ -1,6 +1,16 @@
 import { transformAsync } from '@babel/core';
 import type { PluginOption } from 'vite';
 
+// Mirror of build/gulp/transpile.js: strip `/// #DEBUG ... /// #ENDDEBUG` regions.
+// These blocks hold test-only hooks, some authored with CommonJS `exports.*`
+// (e.g. js/__internal/viz/core/renderers/renderer.ts), which throw
+// `exports is not defined` when Vite serves the module as native ESM.
+const REMOVE_DEBUG_REGEXP = /\/{2,}\s{0,}#DEBUG[\s\S]*?\/{2,}\s{0,}#ENDDEBUG/g;
+
+export function stripDebugBlocks(code: string): string {
+  return code.replace(REMOVE_DEBUG_REGEXP, '');
+}
+
 export function removeUninitializedClassFields(): unknown {
   return {
     visitor: {
@@ -126,6 +136,9 @@ export default function devextremeVitePlugin(): PluginOption {
         return null;
       }
 
+      // Strip debug-only blocks before Babel, exactly like the production build.
+      const sourceCode = stripDebugBlocks(code);
+
       const isTSX = cleanId.endsWith('.tsx');
       const isTS = cleanId.endsWith('.ts') || isTSX;
 
@@ -150,7 +163,7 @@ export default function devextremeVitePlugin(): PluginOption {
         'babel-plugin-inferno',
       );
 
-      const result = await transformAsync(code, {
+      const result = await transformAsync(sourceCode, {
         filename: cleanId,
         plugins,
         sourceMaps: true,

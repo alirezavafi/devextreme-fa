@@ -488,6 +488,11 @@ export interface dxRangeSelectorOptions extends BaseWidgetOptions<dxRangeSelecto
         format?: Format | undefined;
         /**
          * @docid
+         * @default undefined
+         */
+        calendar?: 'gregorian' | 'persian' | 'hijri' | string;
+        /**
+         * @docid
          * @default "hide"
          */
         overlappingBehavior?: LabelOverlap;

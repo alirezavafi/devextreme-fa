@@ -113,6 +113,7 @@ function getTickGenerator(options, incidentOccurred, skipTickGeneration, rangeIs
     incidentOccurred,
 
     firstDayOfWeek: options.workWeek?.[0],
+    calendar: options.label?.calendar,
     skipTickGeneration,
     skipCalculationLimits: options.skipCalculationLimits,
 

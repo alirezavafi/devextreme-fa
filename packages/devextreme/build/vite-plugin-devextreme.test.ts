@@ -3,6 +3,7 @@ import { transformSync } from '@babel/core';
 import {
   moveFieldInitializersToConstructor,
   removeUninitializedClassFields,
+  stripDebugBlocks,
 } from './vite-plugin-devextreme';
 
 function transform(code: string, plugin: unknown): string {
@@ -127,6 +128,48 @@ describe('moveFieldInitializersToConstructor', () => {
     `;
     const out = transform(input, moveFieldInitializersToConstructor);
     expect(out).toMatch(/constructor\(\)\s*\{\s*this\.foo\s*=\s*42;\s*const\s+x\s*=\s*1;\s*this\.x\s*=\s*x/);
+  });
+});
+
+describe('stripDebugBlocks', () => {
+  test('removes a /// #DEBUG ... /// #ENDDEBUG block that uses CommonJS exports', () => {
+    const input = [
+      'export const foo = 1;',
+      '/// #DEBUG',
+      'exports.DEBUG_set_SvgElement = DEBUG_set_SvgElement;',
+      '/// #ENDDEBUG',
+      'export const bar = 2;',
+    ].join('\n');
+    const out = stripDebugBlocks(input);
+    expect(out).toContain('export const foo = 1;');
+    expect(out).toContain('export const bar = 2;');
+    expect(out).not.toContain('exports.');
+    expect(out).not.toContain('#DEBUG');
+  });
+
+  test('removes multiple debug blocks', () => {
+    const input = [
+      'a();',
+      '/// #DEBUG',
+      'debugOnly1();',
+      '/// #ENDDEBUG',
+      'b();',
+      '//#DEBUG',
+      'debugOnly2();',
+      '//#ENDDEBUG',
+      'c();',
+    ].join('\n');
+    const out = stripDebugBlocks(input);
+    expect(out).toContain('a();');
+    expect(out).toContain('b();');
+    expect(out).toContain('c();');
+    expect(out).not.toContain('debugOnly1');
+    expect(out).not.toContain('debugOnly2');
+  });
+
+  test('leaves code without debug markers unchanged', () => {
+    const input = 'export const foo = 1;\nexport const bar = 2;\n';
+    expect(stripDebugBlocks(input)).toBe(input);
   });
 });
 

@@ -94,6 +94,7 @@ class Chat extends Widget<ChatProperties> {
       alerts: [],
       dataSource: null,
       dayHeaderFormat: getGlobalFormatByDataType('date') ?? 'shortdate',
+      calendar: undefined,
       editing: {
         allowUpdating: false,
         allowDeleting: false,
@@ -218,6 +219,7 @@ class Chat extends Widget<ChatProperties> {
       showUserName = false,
       showMessageTimestamp = false,
       dayHeaderFormat,
+      calendar,
       messageTimestampFormat,
       typingUsers = [],
     } = this.option();
@@ -240,6 +242,7 @@ class Chat extends Widget<ChatProperties> {
       showUserName,
       showMessageTimestamp,
       dayHeaderFormat,
+      calendar,
       messageTimestampFormat,
       typingUsers,
       isLoading,
@@ -797,6 +800,7 @@ class Chat extends Widget<ChatProperties> {
         this._messageList.option(name, !!value);
         break;
       case 'dayHeaderFormat':
+      case 'calendar':
       case 'messageTimestampFormat':
       case 'typingUsers':
         this._messageList.option(name, value);

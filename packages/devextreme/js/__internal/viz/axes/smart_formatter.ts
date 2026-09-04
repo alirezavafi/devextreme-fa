@@ -21,6 +21,7 @@ import {
   isDefined, isExponential, isFunction, isObject,
 } from '@js/core/utils/type';
 import formatHelper from '@js/format_helper';
+import { applyCalendarToFormat } from '@ts/core/localization/calendar/format_calendar';
 import { getGlobalFormatByDataType } from '@ts/core/m_global_format_config';
 import { getAdjustedLog10 as log10 } from '@ts/viz/core/utils';
 
@@ -339,6 +340,13 @@ export function smartFormatter(tick, options) {
     } else if (options.dataType === 'datetime') {
       format = getDateTimeFormat(tick, options);
     }
+  }
+
+  // Render datetime ticks in the selected civil calendar when the axis label
+  // carries a `calendar` (e.g. `argumentAxis: { label: { calendar: 'persian' } }`).
+  // Applies to both explicit and auto-generated formats; Gregorian is unchanged.
+  if (options.dataType === 'datetime') {
+    format = applyCalendarToFormat(format, options.labelOptions?.calendar);
   }
 
   return _format(tick, format);
