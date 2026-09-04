@@ -1,7 +1,7 @@
 import yargs from 'yargs';
 
 import {
-  Framework, Args, Item, Demo,
+  Framework, Args, Item, Demo, Group,
 } from './helper/types';
 import { copyMetadata, isSkipDemo } from './helper';
 
@@ -35,15 +35,20 @@ const getBundler = (framework: Framework): ESBundler => {
 const menu: Item[] = (menuMeta as any).default;
 const allDemos: Demo[] = [];
 
-for (const meta of menu) {
-  for (const group of meta.Groups) {
-    const demos = group.Demos || [];
-    for (const demo of demos) {
+function collectDemos(groups: Group[]): void {
+  for (const group of groups) {
+    for (const demo of group.Demos || []) {
       if (!isSkipDemo(demo)) {
         allDemos.push(demo);
       }
     }
+
+    collectDemos(group.Groups || []);
   }
+}
+
+for (const meta of menu) {
+  collectDemos(meta.Groups);
 }
 
 async function processDemosInBatches(bundler: ESBundler, demoList: Demo[], batchSize: number) {
