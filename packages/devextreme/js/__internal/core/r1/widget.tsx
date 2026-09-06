@@ -61,7 +61,7 @@ export interface WidgetProps extends BaseWidgetProps {
   activeStateUnit?: string;
   cssText?: string;
   aria?: Record<string, string>;
-  children?: JSX.Element | (JSX.Element | undefined | false | null)[];
+  children?: JSX.Element | (JSX.Element | false | null | undefined)[];
   classes?: string | undefined;
   name?: string;
   addWidgetClass?: boolean;
@@ -442,7 +442,7 @@ export class Widget extends InfernoWrapperComponent<WidgetProps> {
       const id = keyboard.on(
         this.widgetElementRef?.current,
         this.widgetElementRef?.current,
-        (e: Event): void => onKeyDown(e) as undefined,
+        (e): void => onKeyDown(e) as undefined,
       );
 
       return (): void => keyboard.off(id);
@@ -601,7 +601,7 @@ export class Widget extends InfernoWrapperComponent<WidgetProps> {
     return combineClasses(classesMap);
   }
 
-  getTabIndex(): undefined | number {
+  getTabIndex(): number | undefined {
     const { focusStateEnabled, disabled, tabIndex } = this.props;
     const isFocusable = focusStateEnabled && !disabled;
 

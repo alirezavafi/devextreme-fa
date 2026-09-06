@@ -1,10 +1,12 @@
 import {
   afterEach, beforeEach, describe, expect, it, jest,
 } from '@jest/globals';
+import type { DataGridInstance } from '@ts/grids/grid_core/__tests__/__mock__/helpers/utils';
 import {
   afterTest,
   beforeTest,
   createDataGrid,
+  flushAsync,
 } from '@ts/grids/grid_core/__tests__/__mock__/helpers/utils';
 
 import type { NAV_KEYS } from './helpers/const';
@@ -187,6 +189,178 @@ describe('Keyboard Navigation', () => {
       const finishGroupRowIndex = visibleGroupRows.length - 1; // Group "C"
 
       expect(keyboardNavController._focusedCellPosition.rowIndex).toBe(finishGroupRowIndex);
+    });
+  });
+
+  describe('editing a new row when allowUpdating is false (T1332312)', () => {
+    type CreatedGrid = Awaited<ReturnType<typeof createDataGrid>>;
+
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const createGridWithNewRow = (startEditAction: 'click' | 'dblClick' = 'click') => createDataGrid({
+      dataSource: DATA_SOURCE,
+      columns: ['name'],
+      editing: {
+        mode: 'batch',
+        allowUpdating: false,
+        allowAdding: true,
+        startEditAction,
+      },
+      keyboardNavigation: {
+        enabled: true,
+      },
+    });
+
+    // Adds a new row, leaves editing, then focuses the new row's cell without editing it.
+    const focusNewRowCell = async ({ instance, component }: CreatedGrid): Promise<number> => {
+      await instance.addRow();
+      await flushAsync();
+      instance.closeEditCell();
+      jest.runAllTimers();
+
+      const newRowIndex = instance.getVisibleRows().findIndex((row) => row.isNewRow);
+      const cell = component.getDataCell(newRowIndex, 0).getElement() as HTMLElement;
+
+      triggerPointerDown(cell);
+      jest.runAllTimers();
+
+      return newRowIndex;
+    };
+
+    it('should enter cell edit mode on Enter for a new row', async () => {
+      const grid = await createGridWithNewRow();
+      const newRowIndex = await focusNewRowCell(grid);
+
+      expect(grid.component.getDataCell(newRowIndex, 0).isEditCell).toBe(false);
+
+      triggerKeyDown(grid.instance, 'enter');
+      jest.runAllTimers();
+
+      expect(grid.component.getDataCell(newRowIndex, 0).isEditCell).toBe(true);
+    });
+
+    it('should enter cell edit mode on Enter for a new row even when startEditAction is dblClick', async () => {
+      const grid = await createGridWithNewRow('dblClick');
+      const newRowIndex = await focusNewRowCell(grid);
+
+      triggerKeyDown(grid.instance, 'enter');
+      jest.runAllTimers();
+
+      expect(grid.component.getDataCell(newRowIndex, 0).isEditCell).toBe(true);
+    });
+
+    it('should NOT enter cell edit mode on Enter for an existing row', async () => {
+      const grid = await createGridWithNewRow();
+      jest.runAllTimers();
+
+      const cell = grid.component.getDataCell(0, 0).getElement() as HTMLElement;
+      triggerPointerDown(cell);
+      jest.runAllTimers();
+
+      triggerKeyDown(grid.instance, 'enter');
+      jest.runAllTimers();
+
+      expect(grid.component.getDataCell(0, 0).isEditCell).toBe(false);
+    });
+  });
+
+  describe('focused cell position on a changesOnly repaint', () => {
+    const ROWS = [
+      { id: 1, name: 'Item 1' },
+      { id: 2, name: 'Item 2' },
+      { id: 3, name: 'Item 3' },
+    ];
+
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const createGridWithRows = async (keyboardEnabled = true) => {
+      const dataSource = ROWS.map((row) => ({ ...row }));
+      const grid = await createDataGrid({
+        dataSource,
+        columns: ['id', 'name'],
+        keyboardNavigation: {
+          enabled: keyboardEnabled,
+        },
+      });
+      await flushAsync();
+
+      const refocus = jest.spyOn(grid.instance.getController('editorFactory'), 'refocus');
+
+      return {
+        ...grid,
+        dataSource,
+        refocus,
+        keyboardNav: getKeyboardNavigationController(grid.instance),
+      };
+    };
+
+    const repaintChangesOnly = async (instance: DataGridInstance): Promise<void> => {
+      instance.refresh(true).catch(() => {});
+      await flushAsync();
+    };
+
+    it('should shift the focused cell down when a row is inserted above it', async () => {
+      const {
+        dataSource, instance, keyboardNav, refocus, component,
+      } = await createGridWithRows();
+
+      triggerPointerDown(component.getDataCell(0, 1).getElement() as HTMLElement);
+      jest.runAllTimers();
+
+      expect(keyboardNav._focusedCellPosition).toEqual({ rowIndex: 0, columnIndex: 1 });
+      refocus.mockClear();
+
+      dataSource.unshift({ id: 0, name: 'Item 0' });
+      await repaintChangesOnly(instance);
+
+      expect(keyboardNav._focusedCellPosition).toEqual({ rowIndex: 1, columnIndex: 1 });
+      expect(refocus).toHaveBeenCalled();
+    });
+
+    it('should keep the focused cell when a row is inserted below it', async () => {
+      const {
+        dataSource, instance, keyboardNav, refocus, component,
+      } = await createGridWithRows();
+
+      triggerPointerDown(component.getDataCell(0, 1).getElement() as HTMLElement);
+      jest.runAllTimers();
+
+      expect(keyboardNav._focusedCellPosition).toEqual({ rowIndex: 0, columnIndex: 1 });
+      refocus.mockClear();
+
+      dataSource.push({ id: 4, name: 'Item 4' });
+      await repaintChangesOnly(instance);
+
+      expect(keyboardNav._focusedCellPosition).toEqual({ rowIndex: 0, columnIndex: 1 });
+      expect(refocus).not.toHaveBeenCalled();
+    });
+
+    it('should shift the focused cell up when a row above it is removed', async () => {
+      const {
+        dataSource, instance, keyboardNav, refocus, component,
+      } = await createGridWithRows();
+
+      triggerPointerDown(component.getDataCell(1, 1).getElement() as HTMLElement);
+      jest.runAllTimers();
+
+      expect(keyboardNav._focusedCellPosition).toEqual({ rowIndex: 1, columnIndex: 1 });
+      refocus.mockClear();
+
+      dataSource.shift();
+      await repaintChangesOnly(instance);
+
+      expect(keyboardNav._focusedCellPosition).toEqual({ rowIndex: 0, columnIndex: 1 });
+      expect(refocus).toHaveBeenCalled();
+    });
+
+    it('should correct the focused cell even when keyboard navigation is disabled', async () => {
+      const { dataSource, instance, keyboardNav } = await createGridWithRows(false);
+
+      // No pointer handlers while kbn disabled, so seed the position directly
+      keyboardNav._focusedCellPosition = { rowIndex: 0, columnIndex: 1 };
+
+      dataSource.unshift({ id: 0, name: 'Item 0' });
+      await repaintChangesOnly(instance);
+
+      expect(keyboardNav._focusedCellPosition).toEqual({ rowIndex: 1, columnIndex: 1 });
     });
   });
 });

@@ -26,7 +26,7 @@ import { focusable as focusableSelector } from '@ts/core/utils/m_selectors';
 import type { DOMComponentProperties } from '@ts/core/widget/dom_component';
 import DOMComponent from '@ts/core/widget/dom_component';
 import type { OptionChanged } from '@ts/core/widget/types';
-import type { KeyboardKeyDownEvent } from '@ts/events/core/m_keyboard_processor';
+import type { KeyboardKeyDownEvent } from '@ts/events/core/keyboard_processor';
 
 export const WIDGET_CLASS = 'dx-widget';
 const DISABLED_STATE_CLASS = 'dx-state-disabled';
@@ -43,7 +43,7 @@ export type SupportedKeyHandler = (
   e: DxEvent<KeyboardEvent>,
   options?: KeyboardKeyDownEvent,
 // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-) => void | boolean;
+) => boolean | void;
 export type SupportedKeys = Record<
   string,
   SupportedKeyHandler
@@ -51,7 +51,7 @@ export type SupportedKeys = Record<
 
 function setAttribute(
   name: string,
-  value: string | undefined | null,
+  value: string | null | undefined,
   $target: dxElementWrapper,
 ): void {
   const attributeName = name === 'role' || name === 'id' ? name : `aria-${name}`;
@@ -62,10 +62,14 @@ function setAttribute(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface WidgetProperties<TComponent = any> extends WidgetOptions<TComponent>, Omit<
+export interface WidgetProperties<TComponent = any> extends Omit<WidgetOptions<TComponent>, 'width' | 'height'>, Omit<
   DOMComponentProperties<TComponent>,
   keyof WidgetOptions<TComponent>
 > {
+  width?: DOMComponentProperties<TComponent>['width'];
+
+  height?: DOMComponentProperties<TComponent>['height'];
+
   useResizeObserver?: boolean;
   onKeyboardHandled?: (event: KeyboardKeyDownEvent) => void;
   isActive?: boolean;
@@ -125,7 +129,7 @@ class Widget<
       visible: true,
       hint: undefined,
       activeStateEnabled: false,
-      onContentReady: null,
+      onContentReady: undefined,
       hoverStateEnabled: false,
       focusStateEnabled: false,
       tabIndex: 0,

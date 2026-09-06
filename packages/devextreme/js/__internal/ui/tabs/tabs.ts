@@ -26,7 +26,7 @@ import type {
   TabsStyle,
 } from '@js/ui/tabs';
 import { current as currentTheme, isFluent, isMaterial } from '@js/ui/themes';
-import { render } from '@ts/core/utils/m_ink_ripple';
+import { render } from '@ts/core/utils/ink_ripple';
 import type { OptionChanged } from '@ts/core/widget/types';
 import type { CollectionItemInfo, InkRippleEvent } from '@ts/ui/collection/collection_widget.base';
 import type { CollectionWidgetLiveUpdateProperties } from '@ts/ui/collection/collection_widget.live_update';
@@ -506,7 +506,7 @@ class Tabs extends CollectionWidgetLiveUpdate<TabsProperties> {
     this.$element().append(this._scrollable.$element());
   }
 
-  _scrollToItem(item: Element | undefined | null): void {
+  _scrollToItem(item: Element | null | undefined): void {
     if (!this._scrollable) return;
     const $item = this._editStrategy.getItemElement(item);
     this._scrollable.scrollToElement($item);
@@ -903,7 +903,7 @@ class Tabs extends CollectionWidgetLiveUpdate<TabsProperties> {
     this._renderScrolling();
   }
 
-  getScrollable(): Scrollable | undefined | null {
+  getScrollable(): Scrollable | null | undefined {
     return this._scrollable;
   }
 }

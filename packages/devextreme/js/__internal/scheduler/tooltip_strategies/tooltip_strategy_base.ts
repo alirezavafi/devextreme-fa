@@ -7,19 +7,22 @@ import type { ClickEvent as ButtonClickEvent } from '@js/ui/button';
 import Button from '@js/ui/button';
 import type {
   ContentReadyEvent,
-  InitializedEvent,
   ItemClickEvent,
   ItemContextMenuEvent,
   Properties as ListProperties,
 } from '@js/ui/list';
 import type dxOverlay from '@js/ui/overlay';
 import type { Properties as OverlayProperties } from '@js/ui/overlay';
-import type { Appointment, AppointmentClickEvent, Properties as SchedulerProperties } from '@js/ui/scheduler';
+import type { Appointment, Properties as SchedulerProperties } from '@js/ui/scheduler';
 import { createPromise } from '@ts/core/utils/promise';
 import List from '@ts/ui/list/list.edit';
 import type Tooltip from '@ts/ui/tooltip';
 
-import type { AppointmentTooltipItem, TargetedAppointment } from '../types';
+import type {
+  AppointmentTooltipContextMenuEventArgs,
+  AppointmentTooltipItem,
+  TargetedAppointment,
+} from '../types';
 
 const TOOLTIP_APPOINTMENT_ITEM = 'dx-tooltip-appointment-item';
 const TOOLTIP_APPOINTMENT_ITEM_CONTENT = `${TOOLTIP_APPOINTMENT_ITEM}-content`;
@@ -33,7 +36,7 @@ const TOOLTIP_APPOINTMENT_ITEM_DELETE_BUTTON = `${TOOLTIP_APPOINTMENT_ITEM}-dele
 
 const APPOINTMENT_TOOLTIP_TEMPLATE = 'appointmentTooltipTemplate';
 
-interface AppointmentTooltipOptions {
+export interface AppointmentTooltipOptions {
   createComponent: (
     element: dxElementWrapper,
     component: unknown,
@@ -63,11 +66,8 @@ interface AppointmentTooltipOptions {
   };
   getAppointmentDisabled: (appointment: Appointment) => boolean | undefined;
   onItemContextMenu: (eventArgs: unknown) => void;
-  createEventArgs: (e: ItemContextMenuEvent<AppointmentTooltipItem>) => unknown;
-  newAppointments?: boolean; // TODO<Appointments>
-  onAppointmentClick: (e: AppointmentClickEvent) => void;
-  onListInitialized: (e: InitializedEvent) => void;
-  onListDisposing: () => void;
+  createEventArgs: (e: ItemContextMenuEvent<AppointmentTooltipItem>) =>
+  AppointmentTooltipContextMenuEventArgs;
 }
 
 export interface AppointmentTooltipExtraOptions {
@@ -86,7 +86,7 @@ export abstract class TooltipStrategyBase {
 
   protected tooltip: Tooltip | dxOverlay<OverlayProperties> | null = null;
 
-  // TODO: make private once external usages in m_scheduler.ts are removed
+  // TODO: make private once external usages in scheduler.ts are removed
   _options: AppointmentTooltipOptions;
 
   protected extraOptions: AppointmentTooltipExtraOptions | null = null;
@@ -236,8 +236,6 @@ export abstract class TooltipStrategyBase {
     return {
       dataSource: dataList,
       onContentReady: this.onListRender.bind(this),
-      onInitialized: this.onListInitialized.bind(this),
-      onDisposing: this._options.onListDisposing,
       onItemClick: (
         e: ItemClickEvent<AppointmentTooltipItem>,
       ): void => this.onListItemClick(e),
@@ -254,9 +252,6 @@ export abstract class TooltipStrategyBase {
       pageLoadMode: 'scrollBottom',
     };
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected onListInitialized(e: InitializedEvent): void { }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected onListRender(e: ContentReadyEvent<AppointmentTooltipItem>): void { }
@@ -335,19 +330,7 @@ export abstract class TooltipStrategyBase {
 
     this.hide();
 
-    if (this._options.newAppointments) {
-      if (this.extraOptions?.isButtonClick) {
-        // @ts-expect-error 'component' and 'element' are set by action
-        this._options.onAppointmentClick({
-          appointmentElement: e.itemElement,
-          appointmentData: e.itemData.appointment,
-          targetedAppointmentData: e.itemData.targetedAppointment,
-          event: e.event,
-        });
-      }
-    } else {
-      this.extraOptions?.clickEvent?.(e);
-    }
+    this.extraOptions?.clickEvent?.(e);
 
     this._options.showAppointmentPopup(
       e.itemData.appointment,

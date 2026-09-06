@@ -11,28 +11,32 @@ import {
   isDate, isDefined, isFunction, isString,
 } from '@js/core/utils/type';
 import type { DxEvent, InteractionEvent } from '@js/events';
+import type dxDateBox from '@js/ui/date_box';
 import type { DateLike, Properties } from '@js/ui/date_box';
 import type { CalendarType } from '@ts/core/localization/calendar';
 import { getCalendar } from '@ts/core/localization/calendar';
 import dateLocalization from '@ts/core/localization/date';
 import type { OptionChanged } from '@ts/core/widget/types';
-import type { KeyboardKeyDownEvent } from '@ts/events/core/m_keyboard_processor';
-
-import type { DxMouseWheelEvent } from '../scroll_view/types';
-import type { DateBoxBaseProperties } from './date_box.base';
-import DateBoxBase from './date_box.base';
-import { createCalendarDateParts, formatDateInCalendar, parseDateInCalendar } from './date_box.mask.calendar';
-import { getDatePartIndexByPosition, renderDateParts } from './date_box.mask.parts';
+import type { KeyboardKeyDownEvent } from '@ts/events/core/keyboard_processor';
+import type { DateBoxBaseProperties } from '@ts/ui/date_box/date_box.base';
+import DateBoxBase from '@ts/ui/date_box/date_box.base';
+import { createCalendarDateParts, formatDateInCalendar, parseDateInCalendar } from '@ts/ui/date_box/date_box.mask.calendar';
+import { getDatePartIndexByPosition, renderDateParts } from '@ts/ui/date_box/date_box.mask.parts';
+import type { DxMouseWheelEvent } from '@ts/ui/scroll_view/types';
 
 const MASK_EVENT_NAMESPACE = 'dateBoxMask';
 const FORWARD = 1;
 const BACKWARD = -1;
 const IME_DIGIT_CODE_REGEXP = /^(?:Digit|Numpad)(\d)$/;
 
-export interface DateBoxMaskProperties extends Properties {
-  emptyDateValue?: Date;
-}
-class DateBoxMask extends DateBoxBase {
+export interface DateBoxMaskProperties<
+  TComponent = dxDateBox,
+> extends DateBoxBaseProperties<TComponent> {}
+
+class DateBoxMask<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TProperties extends DateBoxMaskProperties<any> = DateBoxMaskProperties,
+> extends DateBoxBase<TProperties> {
   _activePartIndex?: number | null;
 
   _maskValue?: Date | null;
@@ -54,6 +58,8 @@ class DateBoxMask extends DateBoxBase {
   _isIMEDigitProcessed?: boolean;
 
   _isIMECommitPending?: boolean;
+
+  _wasAllSelectedBeforeComposition = false;
 
   _supportedKeys(): Record<string, (e: KeyboardEvent) => boolean | undefined> {
     const originalHandlers = super._supportedKeys();
@@ -161,7 +167,7 @@ class DateBoxMask extends DateBoxBase {
 
   _toggleAmPm(): void {
     const currentValue = this._getActivePartProp('text');
-    const periodNames = dateLocalization.getPeriodNames(this._formatPattern);
+    const periodNames = dateLocalization.getPeriodNames();
     const indexOfCurrentValue = periodNames.indexOf(currentValue);
 
     // eslint-disable-next-line no-bitwise
@@ -170,7 +176,7 @@ class DateBoxMask extends DateBoxBase {
     this._setActivePartValue(newValue);
   }
 
-  _getDefaultOptions(): DateBoxMaskProperties {
+  _getDefaultOptions(): TProperties {
     return {
       ...super._getDefaultOptions(),
       useMaskBehavior: false,
@@ -255,16 +261,6 @@ class DateBoxMask extends DateBoxBase {
       };
     }
 
-    const isBackwardDeletion = inputType === 'deleteContentBackward';
-    const isForwardDeletion = inputType === 'deleteContentForward';
-    if (isBackwardDeletion || isForwardDeletion) {
-      const direction = isBackwardDeletion ? BACKWARD : FORWARD;
-      this._maskInputHandler = (): void => {
-        this._revertPart();
-        this._selectNextPart(direction);
-      };
-    }
-
     if (!this._useMaskBehavior() || !this._isSingleCharKey(e)) {
       return false;
     }
@@ -283,6 +279,26 @@ class DateBoxMask extends DateBoxBase {
   _keyPressHandler(e: { originalEvent: InputEvent & KeyboardEvent }): void {
     const { originalEvent: event } = e;
 
+    const isBackwardDeletion = event?.inputType === 'deleteContentBackward';
+    const isForwardDeletion = event?.inputType === 'deleteContentForward';
+
+    if (this._useMaskBehavior() && (isBackwardDeletion || isForwardDeletion)) {
+      const isInputCleared = this._input().val() === '';
+
+      if (this._wasAllSelectedBeforeComposition || isInputCleared) {
+        super._keyPressHandler(e);
+      } else {
+        const direction = isBackwardDeletion ? BACKWARD : FORWARD;
+
+        this._revertPart(direction);
+        this._syncInputWithMask();
+      }
+
+      this._wasAllSelectedBeforeComposition = false;
+
+      return;
+    }
+
     const isCompositionDigit = event?.inputType === 'insertCompositionText'
       && this._isSingleDigitKey(e);
 
@@ -292,9 +308,15 @@ class DateBoxMask extends DateBoxBase {
 
     if (isCompositionDigit && event.data) {
       if (!this._isIMEDigitProcessed) {
+        if (this._wasAllSelectedBeforeComposition || this._isAllSelected()) {
+          this._clearSearchValue();
+          this._selectFirstPart();
+        }
+
         this._processInputKey(event.data);
         this._isIMEDigitProcessed = true;
         this._isIMECommitPending = true;
+        this._wasAllSelectedBeforeComposition = false;
       }
 
       this._syncInputWithMask();
@@ -305,17 +327,21 @@ class DateBoxMask extends DateBoxBase {
     if (isIMECommitDigit) {
       this._isIMECommitPending = false;
       this._pendingIMEDigit = null;
+      this._wasAllSelectedBeforeComposition = false;
 
       this._syncInputWithMask();
 
       return;
     }
+
     super._keyPressHandler(e);
 
     if (this._maskInputHandler) {
       this._maskInputHandler();
       this._maskInputHandler = null;
     }
+
+    this._wasAllSelectedBeforeComposition = false;
   }
 
   _processInputKey(key: string): void {
@@ -377,8 +403,9 @@ class DateBoxMask extends DateBoxBase {
     if (isLDMLPattern) {
       this._formatPattern = format;
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      this._formatPattern = getFormat((value) => dateLocalization.format(value, format)) as string;
+      this._formatPattern = getFormat(
+        (value) => dateLocalization.format(value, format) as string,
+      ) as string;
     }
 
     return this._formatPattern;
@@ -514,7 +541,7 @@ class DateBoxMask extends DateBoxBase {
       .split(quantifierRegexp)
       .map((sourcePart) => (quantifierRegexp.test(sourcePart)
         ? sourcePart
-        : numberLocalization.convertDigits(sourcePart, false)) as string)
+        : numberLocalization.convertDigits(sourcePart, false)))
       .join('');
     this._regExpInfo.regexp = new RegExp(convertedSource, flags);
   }
@@ -705,7 +732,7 @@ class DateBoxMask extends DateBoxBase {
     return this._dateParts[this._activePartIndex][property] as unknown;
   }
 
-  _loadMaskValue(value: Date | null | string = this.getDateOption('value')): void {
+  _loadMaskValue(value: Date | string | null = this.getDateOption('value')): void {
     this._maskValue = value ? new Date(value) : null;
     this._initialMaskValue = value ? new Date(value) : null;
   }
@@ -786,6 +813,7 @@ class DateBoxMask extends DateBoxBase {
   _maskCompositionStartHandler(): void {
     this._isIMEDigitProcessed = false;
     this._isIMECommitPending = false;
+    this._wasAllSelectedBeforeComposition = this._isAllSelected();
   }
 
   _maskCompositionEndHandler(): void {
@@ -793,6 +821,7 @@ class DateBoxMask extends DateBoxBase {
     this._caret(this._getActivePartProp('caret'));
 
     this._maskInputHandler = null;
+    this._wasAllSelectedBeforeComposition = false;
   }
 
   _maskPasteHandler(e: DxEvent): void {
@@ -880,7 +909,7 @@ class DateBoxMask extends DateBoxBase {
     }
   }
 
-  _optionChanged(args: OptionChanged<DateBoxBaseProperties>): void {
+  _optionChanged(args: OptionChanged<TProperties>): void {
     switch (args.name) {
       case 'useMaskBehavior':
         this._renderMask();

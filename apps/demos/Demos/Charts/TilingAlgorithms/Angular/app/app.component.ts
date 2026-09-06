@@ -1,5 +1,5 @@
-import { Component, enableProdMode, provideZoneChangeDetection } from '@angular/core';
-import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
+import { ChangeDetectionStrategy, Component, enableProdMode, provideZoneChangeDetection } from '@angular/core';
+import { bootstrapApplication } from '@angular/platform-browser';
 import { DxTreeMapModule, DxSelectBoxModule } from 'devextreme-angular';
 import { PopulationByAge, Service } from './app.service';
 
@@ -14,13 +14,13 @@ if (window && window.config?.packageConfigPaths) {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'demo-app',
   templateUrl: `.${modulePrefix}/app.component.html`,
   styleUrls: [`.${modulePrefix}/app.component.css`],
   providers: [Service],
   preserveWhitespaces: true,
   imports: [
-    BrowserModule,
     DxTreeMapModule,
     DxSelectBoxModule,
   ],

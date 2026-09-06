@@ -168,7 +168,11 @@ export class ModuleItem {
   public _createComponent<TComponent extends Component<any>>(
     $container: dxElementWrapper,
     component: new (...args) => TComponent,
-    options?: TComponent extends Component<infer TOptions> ? TOptions : never,
+    options?: TComponent extends { _getDefaultOptions: () => infer TOptions }
+      ? string extends keyof TOptions ? object : Partial<TOptions> & { integrationOptions?: Record<string, unknown> }
+      : TComponent extends Component<infer TOptions>
+        ? Partial<TOptions> | Record<string, unknown>
+        : Record<string, unknown>,
   ): TComponent {
     return this.component._createComponent(
       $container,
@@ -194,7 +198,7 @@ export class ModuleItem {
     return undefined;
   }
 
-  public executeAction(actionName, options) {
+  public executeAction(actionName, options): unknown {
     const action = this._actions[actionName];
 
     return action && action(options);

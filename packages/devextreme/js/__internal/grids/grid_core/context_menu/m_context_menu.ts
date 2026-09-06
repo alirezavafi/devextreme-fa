@@ -120,7 +120,6 @@ export class ContextMenuView extends modules.View {
           params.itemData?.onItemClick?.(params);
         },
         cssClass: this.getWidgetContainerClass(),
-        // @ts-expect-error
         target: this.component.$element(),
       },
     );
@@ -129,9 +128,7 @@ export class ContextMenuView extends modules.View {
 
 export const contextMenuModule = {
   defaultOptions() {
-    return {
-      onContextMenuPreparing: null,
-    };
+    return {};
   },
   controllers: {
     contextMenu: ContextMenuController,

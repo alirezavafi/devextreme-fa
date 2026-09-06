@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 DevExtreme is an enterprise UI component suite for Angular, React, Vue, and jQuery. This is a large-scale monorepo (pnpm workspaces + Nx 22) containing the core library, framework wrappers, demos, themes, and test suites.
 
-**Required tooling:** Node.js 24.15.0, pnpm 11.6.0.
+**Required tooling:** Node.js 24.16.0, pnpm 11.9.0.
 
 ## Setup
 
@@ -18,7 +18,7 @@ Always use `--frozen-lockfile`. CI enforces it.
 
 ## Build
 
-The `dev` script is run manually in WebStorm (not by agents). It runs a Gulp watch build with hot reload and starts the QUnit test server on port 20060:
+The `dev` script is run manually in WebStorm (not by agents). It runs an Nx watch build with hot reload and starts the QUnit test server on port 20060:
 
 ```bash
 # From packages/devextreme — run manually, not via agent

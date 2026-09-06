@@ -1,7 +1,7 @@
 {
   "extends": "nx/presets/npm.json",
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "nxCloudAccessToken": "ZDFmMzkyZTYtZmU5MC00MDMyLWI3NDktYjhhYWUxZWM4YTg3fHJlYWQ=",
+  "neverConnectToCloud": true,
   "plugins": ["./packages/nx-infra-plugin/dist"],
   "namedInputs": {
     "metadataToolsCommonInputs": [
@@ -15,12 +15,12 @@
     ],
     "devextreme-build-config": [
       "{projectRoot}/build/**/*",
-      "{projectRoot}/webpack.config.js",
-      "{projectRoot}/gulpfile.js"
+      "{projectRoot}/webpack.config.js"
     ]
   },
   "targetDefaults": {
     "build": {
+      "cache": true,
       "dependsOn": [
         "^build"
       ]
@@ -31,11 +31,14 @@
       ]
     },
     "test": {
+      "cache": true,
       "dependsOn": [
         "^build"
       ]
     },
-    "lint": {},
+    "lint": {
+      "cache": true
+    },
     "e2e": {}
   },
   "workspaceLayout": {
@@ -43,6 +46,7 @@
     "libsDir": "packages"
   },
   "defaultBase": "master",
+  "maxCacheSize": "5GB",
   "tui": {
     "enabled": false
   },

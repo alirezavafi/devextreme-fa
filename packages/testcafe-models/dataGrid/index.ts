@@ -86,6 +86,7 @@ export const CLASS = {
   aiPromptEditor: 'dx-ai-prompt-editor',
   aiAssistantChat: 'dx-ai-chat',
   aiAssistantButton: 'ai-assistant-button',
+  aiAssistantConfirmDialog: 'ai-assistant-confirm-dialog',
   sortableDragging: 'dx-sortable-dragging',
 };
 
@@ -175,6 +176,23 @@ export default class DataGrid extends GridCore {
 
   getHeadersScrollContainer(): Selector {
     return this.getHeadersContainer().find(`.${CLASS.scrollContainer}`);
+  }
+
+  getHeadersScrollLeft(): Promise<number> {
+    return this.getHeadersScrollContainer().scrollLeft;
+  }
+
+  async getHeaderCellWidths(): Promise<number[]> {
+    const cells = this.getHeaders().getHeaderRow(0).getHeaderCells();
+    const count = await cells.count;
+    const widths: number[] = [];
+
+    for (let i = 0; i < count; i += 1) {
+      const { width } = await cells.nth(i).boundingClientRect;
+      widths.push(Math.round(width));
+    }
+
+    return widths;
   }
 
   getRowsView(): Selector {
@@ -434,6 +452,32 @@ export default class DataGrid extends GridCore {
     )();
   }
 
+  isScrolledToBottom(): Promise<boolean> {
+    const { getInstance } = this;
+    return ClientFunction(() => {
+      const scrollable = (getInstance() as any).getScrollable();
+
+      if (!scrollable) {
+        return false;
+      }
+
+      return scrollable.scrollHeight() - scrollable.clientHeight() - scrollable.scrollTop() <= 1;
+    }, { dependencies: { getInstance } })();
+  }
+
+  isScrolledToRight(): Promise<boolean> {
+    const { getInstance } = this;
+    return ClientFunction(() => {
+      const scrollable = (getInstance() as any).getScrollable();
+
+      if (!scrollable) {
+        return false;
+      }
+
+      return scrollable.scrollWidth() - scrollable.clientWidth() - scrollable.scrollLeft() <= 1;
+    }, { dependencies: { getInstance } })();
+  }
+
   getScrollbarWidth(isHorizontal: boolean): Promise<number> {
     const { getInstance } = this;
 
@@ -614,9 +658,25 @@ export default class DataGrid extends GridCore {
   apiGetTopVisibleRowData(): Promise<any> {
     const { getInstance } = this;
     return ClientFunction(() => {
-      const dataGrid = getInstance() as any;
-      return dataGrid.getTopVisibleRowData();
+      return (getInstance() as any).getTopVisibleRowData();
     }, { dependencies: { getInstance } })();
+  }
+
+  apiGetTopVisibleRowKey(): Promise<any> {
+    const { getInstance } = this;
+    return ClientFunction(() => {
+      const dataGrid = getInstance() as any;
+
+      return dataGrid.keyOf(dataGrid.getTopVisibleRowData());
+    }, { dependencies: { getInstance } })();
+  }
+
+  apiTotalCount(): Promise<number> {
+    const { getInstance } = this;
+    return ClientFunction(
+      () => (getInstance() as DataGridInstance).totalCount(),
+      { dependencies: { getInstance } },
+    )();
   }
 
   apiUpdateDimensions(): Promise<void> {
@@ -782,6 +842,15 @@ export default class DataGrid extends GridCore {
 
     return ClientFunction(
       () => (getInstance() as DataGridInstance).getDataSource().sort(),
+      { dependencies: { getInstance } },
+    )();
+  }
+
+  apiGetSelectedRowKeys(): Promise<any[]> {
+    const { getInstance } = this;
+
+    return ClientFunction(
+      () => (getInstance() as DataGridInstance).getSelectedRowKeys(),
       { dependencies: { getInstance } },
     )();
   }
@@ -1061,7 +1130,10 @@ export default class DataGrid extends GridCore {
   }
 
   getAIAssistantChat(): AIAssistantChat {
-    return new AIAssistantChat(this.body.find(`.${CLASS.overlayWrapper}.${CLASS.aiAssistantChat}`));
+    return new AIAssistantChat(
+      this.body.find(`.${CLASS.overlayWrapper}.${CLASS.aiAssistantChat}`),
+      this.addWidgetPrefix(CLASS.aiAssistantConfirmDialog),
+    );
   }
 
   getAIAssistantButton(): Selector {

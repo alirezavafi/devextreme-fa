@@ -36,7 +36,7 @@ import type { EditorFactory } from '@ts/grids/grid_core/editor_factory/m_editor_
 import type { SelectionController } from '@ts/grids/grid_core/selection/m_selection';
 
 import type { ColumnsController } from '../columns_controller/m_columns_controller';
-import type { DataController } from '../data_controller/m_data_controller';
+import type { DataController } from '../data_controller/data_controller';
 import modules from '../m_modules';
 import gridCoreUtils from '../m_utils';
 import { CLASSES } from './const';
@@ -193,7 +193,7 @@ export class ColumnsView extends ColumnStateMixin(modules.View) {
 
   protected _dataController!: DataController;
 
-  protected _adaptiveColumnsController!: AdaptiveColumnsController;
+  protected adaptiveColumnsController!: AdaptiveColumnsController;
 
   protected _columnChooserController!: ColumnChooserController;
 
@@ -207,7 +207,7 @@ export class ColumnsView extends ColumnStateMixin(modules.View) {
     this._scrollLeft = -1;
     this._columnsController = this.getController('columns');
     this._dataController = this.getController('data');
-    this._adaptiveColumnsController = this.getController('adaptiveColumns');
+    this.adaptiveColumnsController = this.getController('adaptiveColumns');
     this._columnChooserController = this.getController('columnChooser');
     this._editorFactoryController = this.getController('editorFactory');
     this._selectionController = this.getController('selection');
@@ -737,12 +737,7 @@ export class ColumnsView extends ColumnStateMixin(modules.View) {
    * @extended: column_fixing, filter_row, row_dragging, virtual_columns
    */
   protected _resizeCore() {
-    const scrollLeft = this._scrollLeft;
-
-    if (scrollLeft >= 0) {
-      this._scrollLeft = 0;
-      this.scrollTo({ left: scrollLeft });
-    }
+    this.updateScrollLeftPosition();
   }
 
   /**
@@ -1080,7 +1075,7 @@ export class ColumnsView extends ColumnStateMixin(modules.View) {
     return ['scrollChanged'];
   }
 
-  protected _updateScrollLeftPosition() {
+  protected updateScrollLeftPosition(): void {
     const scrollLeft = this._scrollLeft;
 
     if (scrollLeft >= 0) {
@@ -1486,15 +1481,12 @@ export class ColumnsView extends ColumnStateMixin(modules.View) {
   /**
    * @extended: column_fixing
    */
-  public setScrollerSpacing(width) {
-    const that = this;
-    const $element = that.element();
-    const rtlEnabled = that.option('rtlEnabled');
+  public setScrollerSpacing(width: number): void {
+    const $element = this.element();
 
-    $element && $element.css({
-      paddingLeft: rtlEnabled ? width : '',
-      paddingRight: !rtlEnabled ? width : '',
-    });
+    $element
+      ?.toggleClass(this.addWidgetPrefix(CLASSES.scrollerSpacing), !!width)
+      .css('paddingInlineEnd', width ? `${width}px` : '');
   }
 
   protected isScrollbarVisible(isHorizontal) {

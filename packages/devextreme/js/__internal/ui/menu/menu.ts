@@ -37,7 +37,7 @@ import type {
 } from '@js/ui/tree_view';
 import TreeView from '@js/ui/tree_view';
 import type { OptionChanged } from '@ts/core/widget/types';
-import type { KeyboardKeyDownEvent } from '@ts/events/core/m_keyboard_processor';
+import type { KeyboardKeyDownEvent } from '@ts/events/core/keyboard_processor';
 import type {
   ClickEvent,
   HoverEvent,
@@ -166,14 +166,10 @@ class Menu extends MenuBase<MenuProperties> {
         },
       },
       hideSubmenuOnMouseLeave: false,
-      // @ts-expect-error ts-error
-      onSubmenuShowing: null,
-      // @ts-expect-error ts-error
-      onSubmenuShown: null,
-      // @ts-expect-error ts-error
-      onSubmenuHiding: null,
-      // @ts-expect-error ts-error
-      onSubmenuHidden: null,
+      onSubmenuShowing: undefined,
+      onSubmenuShown: undefined,
+      onSubmenuHiding: undefined,
+      onSubmenuHidden: undefined,
       adaptivityEnabled: false,
     };
   }

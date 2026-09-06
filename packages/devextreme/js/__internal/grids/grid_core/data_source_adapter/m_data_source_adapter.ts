@@ -1,28 +1,40 @@
 /* eslint-disable @typescript-eslint/no-dynamic-delete */
 import ArrayStore from '@js/common/data/array_store';
 import { applyBatch } from '@js/common/data/array_utils';
+import type { Callback } from '@js/core/utils/callbacks';
 import Callbacks from '@js/core/utils/callbacks';
 import { getKeyHash } from '@js/core/utils/common';
+import type { DeferredObj } from '@js/core/utils/deferred';
 import { Deferred, when } from '@js/core/utils/deferred';
 import { extend } from '@js/core/utils/extend';
 import { each } from '@js/core/utils/iterator';
-import { isDefined, isFunction, isPlainObject } from '@js/core/utils/type';
+import { isDefined, isPlainObject } from '@js/core/utils/type';
+import type { StoreChange } from '@js/data/store';
+import type { StoreKey } from '@ts/data/abstract_store';
+import type Store from '@ts/data/abstract_store';
+import type { DataSource } from '@ts/data/data_source/data_source';
+import type { ChangingEvent, StoreLoadOptions } from '@ts/data/data_source/types';
+import type { BeforePushEvent } from '@ts/data/types';
 
 import modules from '../m_modules';
 import gridCoreUtils from '../m_utils';
+import { CustomLoader } from './custom_loader';
 import {
   calculateOperationTypes,
   cloneItems,
   createEmptyCachedData,
-  executeTask,
   getPageDataFromCache,
   setPageDataToCache,
 } from './m_data_source_adapter_utils';
+import type {
+  ChangedEvent, LoadOperation, OperationTypes, RawItemData, RemoteOperationsOptions,
+} from './types';
+import { normalizeRemoteOperations } from './utils/remoteOperations';
 
 export default class DataSourceAdapter extends modules.Controller {
-  protected _dataSource: any;
+  public _dataSource!: DataSource;
 
-  private _remoteOperations: any;
+  private _remoteOperations!: RemoteOperationsOptions;
 
   private _isLastPage!: boolean;
 
@@ -38,119 +50,116 @@ export default class DataSourceAdapter extends modules.Controller {
 
   private _cachedPagingData: any;
 
-  private _lastOperationTypes: any;
+  private _lastOperationTypes!: OperationTypes;
 
   private _eventsStrategy: any;
 
   protected _totalCountCorrection: any;
 
-  protected _isLoadingAll: any;
-
   protected _lastLoadOptions: any;
 
   private _dataIndexGetter: any;
 
+  private _dataIndexByKey: any;
+
   private _isRefreshing: any;
 
-  private _loadingOperationTypes: any;
+  private _loadingOperationTypes?: OperationTypes;
 
   private _isRefreshed: any;
 
   protected _lastOperationId: any;
 
-  private _operationTypes: any;
+  private _operationTypes?: OperationTypes;
 
-  private _isCustomLoading: any;
+  public changed!: Callback<[ChangedEvent?]>;
 
-  protected changed: any;
+  public loadingChanged!: Callback<[boolean]>;
 
-  protected loadingChanged: any;
+  public loadError!: Callback<[Error | string]>;
 
-  private loadError: any;
+  public customizeStoreLoadOptions!: Callback<[LoadOperation]>;
 
-  private customizeStoreLoadOptions: any;
+  public changing!: Callback<[ChangingEvent]>;
 
-  private changing: any;
+  public pushed!: Callback<[StoreChange[]]>;
 
-  private pushed: any;
+  private dataChangedHandlerProxy!: (e: ChangedEvent) => void;
 
-  private _dataChangedHandler!: (e: any) => any;
+  private customizeStoreLoadOptionsHandlerProxy!: (e: LoadOperation) => void;
 
-  private _customizeStoreLoadOptionsHandler!: (e: any) => any;
+  private customizeLoadResultHandlerProxy!: (e: any) => any;
 
-  private _dataLoadedHandler!: (e: any) => any;
+  private loadingChangedHandlerProxy!: (e: any) => any;
 
-  private _loadingChangedHandler!: (e: any) => any;
+  private loadErrorHandlerProxy!: (e: Error | string) => void;
 
-  private _loadErrorHandler!: (e: any) => any;
+  private pushHandlerProxy!: (e: BeforePushEvent) => any;
 
-  private _pushHandler!: (e: any) => any;
+  private changingHandlerProxy!: (e: ChangingEvent) => void;
 
-  private _changingHandler!: (e: any) => any;
+  public customLoader!: CustomLoader;
 
-  protected store!: () => any;
+  public init(dataSource?: DataSource): void {
+    if (!dataSource) {
+      return;
+    }
 
-  private readonly group!: (args?: any) => any;
+    this._dataSource = dataSource;
+    this._remoteOperations = normalizeRemoteOperations(
+      this.option('remoteOperations'),
+      dataSource.store(),
+    );
 
-  public init(dataSource?, remoteOperations?) {
-    const that = this;
+    this._isLastPage = !dataSource.isLastPage();
+    this._hasLastPage = false;
+    this._currentTotalCount = 0;
+    this._cachedData = createEmptyCachedData();
+    this._lastOperationTypes = {};
+    this._eventsStrategy = dataSource._eventsStrategy;
+    this._totalCountCorrection = 0;
+    this.customLoader = new CustomLoader(
+      dataSource,
+      () => this.option('loadingTimeout'),
+      (operation) => this.customizeStoreLoadOptionsHandler(operation),
+      (operation) => this.customizeLoadResultHandler(operation),
+    );
 
-    that._dataSource = dataSource;
-    that._remoteOperations = remoteOperations || {};
+    this.changed = Callbacks();
+    this.loadingChanged = Callbacks();
+    this.loadError = Callbacks();
+    this.customizeStoreLoadOptions = Callbacks();
+    this.changing = Callbacks();
+    this.pushed = Callbacks();
 
-    that._isLastPage = !dataSource.isLastPage();
-    that._hasLastPage = false;
-    that._currentTotalCount = 0;
-    that._cachedData = createEmptyCachedData();
-    that._lastOperationTypes = {};
-    that._eventsStrategy = dataSource._eventsStrategy;
-    that._totalCountCorrection = 0;
-    that._isLoadingAll = false;
+    this.dataChangedHandlerProxy = this.dataChangedHandler.bind(this);
+    this.customizeStoreLoadOptionsHandlerProxy = this.customizeStoreLoadOptionsHandler.bind(this);
+    this.customizeLoadResultHandlerProxy = this.customizeLoadResultHandler.bind(this);
+    this.loadingChangedHandlerProxy = this.loadingChangedHandler.bind(this);
+    this.loadErrorHandlerProxy = this.loadErrorHandler.bind(this);
+    this.pushHandlerProxy = this.pushHandler.bind(this);
+    this.changingHandlerProxy = this.changingHandler.bind(this);
 
-    that.changed = Callbacks();
-    that.loadingChanged = Callbacks();
-    that.loadError = Callbacks();
-    that.customizeStoreLoadOptions = Callbacks();
-    that.changing = Callbacks();
-    that.pushed = Callbacks();
-
-    that._dataChangedHandler = that._handleDataChanged.bind(that);
-    that._customizeStoreLoadOptionsHandler = that._handleCustomizeStoreLoadOptions.bind(that);
-    that._dataLoadedHandler = that._handleDataLoaded.bind(that);
-    that._loadingChangedHandler = that._handleLoadingChanged.bind(that);
-    that._loadErrorHandler = that._handleLoadError.bind(that);
-    that._pushHandler = that._handlePush.bind(that);
-    that._changingHandler = that._handleChanging.bind(that);
-
-    dataSource.on('changed', that._dataChangedHandler);
-    dataSource.on('customizeStoreLoadOptions', that._customizeStoreLoadOptionsHandler);
-    dataSource.on('customizeLoadResult', that._dataLoadedHandler);
-    dataSource.on('loadingChanged', that._loadingChangedHandler);
-    dataSource.on('loadError', that._loadErrorHandler);
-    dataSource.on('changing', that._changingHandler);
-    dataSource.store().on('beforePush', that._pushHandler);
-
-    each(dataSource, (memberName, member) => {
-      if (!that[memberName] && isFunction(member)) {
-        that[memberName] = function () {
-          return this._dataSource[memberName].apply(this._dataSource, arguments);
-        };
-      }
-    });
+    dataSource.on('changed', this.dataChangedHandlerProxy);
+    dataSource.on('customizeStoreLoadOptions', this.customizeStoreLoadOptionsHandlerProxy);
+    dataSource.on('customizeLoadResult', this.customizeLoadResultHandlerProxy);
+    dataSource.on('loadingChanged', this.loadingChangedHandlerProxy);
+    dataSource.on('loadError', this.loadErrorHandlerProxy);
+    dataSource.on('changing', this.changingHandlerProxy);
+    dataSource.store().on('beforePush', this.pushHandlerProxy);
   }
 
-  public dispose(isSharedDataSource?) {
-    const that = this;
-    const dataSource = that._dataSource;
+  public dispose(isSharedDataSource?: boolean): void {
+    const dataSource = this._dataSource;
     const store = dataSource.store();
 
-    dataSource.off('changed', that._dataChangedHandler);
-    dataSource.off('customizeStoreLoadOptions', that._customizeStoreLoadOptionsHandler);
-    dataSource.off('customizeLoadResult', that._dataLoadedHandler);
-    dataSource.off('loadingChanged', that._loadingChangedHandler);
-    dataSource.off('loadError', that._loadErrorHandler);
-    dataSource.off('changing', that._changingHandler);
-    store && store.off('beforePush', that._pushHandler);
+    dataSource.off('changed', this.dataChangedHandlerProxy);
+    dataSource.off('customizeStoreLoadOptions', this.customizeStoreLoadOptionsHandlerProxy);
+    dataSource.off('customizeLoadResult', this.customizeLoadResultHandlerProxy);
+    dataSource.off('loadingChanged', this.loadingChangedHandlerProxy);
+    dataSource.off('loadError', this.loadErrorHandlerProxy);
+    dataSource.off('changing', this.changingHandlerProxy);
+    store?.off('beforePush', this.pushHandlerProxy);
 
     if (!isSharedDataSource) {
       dataSource.dispose();
@@ -160,31 +169,103 @@ export default class DataSourceAdapter extends modules.Controller {
   /**
    * @extended: TreeLists's data_source_adapter
    */
-  protected remoteOperations() {
+  public filter(): StoreLoadOptions['filter'];
+  public filter(filterExpr: StoreLoadOptions['filter']): void;
+  public filter(...args: unknown[]): unknown {
+    return (this._dataSource.filter as (...a: unknown[]) => unknown)(...args);
+  }
+
+  public sort(): StoreLoadOptions['sort'];
+  public sort(sortExpr: StoreLoadOptions['sort']): void;
+  public sort(...args: unknown[]): unknown {
+    return (this._dataSource.sort as (...a: unknown[]) => unknown)(...args);
+  }
+
+  public group(): StoreLoadOptions['group'];
+  public group(groupExpr: StoreLoadOptions['group']): void;
+  public group(...args: unknown[]): unknown {
+    return (this._dataSource.group as (...a: unknown[]) => unknown)(...args);
+  }
+
+  public select(): StoreLoadOptions['select'];
+  public select(selectExpr: StoreLoadOptions['select']): void;
+  public select(...args: unknown[]): unknown {
+    return (this._dataSource.select as (...a: unknown[]) => unknown)(...args);
+  }
+
+  public paginate(): boolean | undefined;
+  public paginate(value: boolean): void;
+  public paginate(value?: boolean): boolean | undefined {
+    return (this._dataSource.paginate as (...a: unknown[]) => boolean | undefined)(value);
+  }
+
+  public requireTotalCount(): StoreLoadOptions['requireTotalCount'];
+  public requireTotalCount(value: boolean): void;
+  public requireTotalCount(value?: boolean): unknown {
+    return (this._dataSource.requireTotalCount as (...a: unknown[]) => unknown)(value);
+  }
+
+  public store(): Store {
+    return this._dataSource.store();
+  }
+
+  public key(): StoreKey | undefined {
+    return this._dataSource.key();
+  }
+
+  public isLoading(): boolean {
+    return this._dataSource.isLoading();
+  }
+
+  public beginLoading(): void {
+    this._dataSource.beginLoading();
+  }
+
+  public endLoading(): void {
+    this._dataSource.endLoading();
+  }
+
+  public loadOptions(): StoreLoadOptions {
+    return this._dataSource.loadOptions();
+  }
+
+  public cancel(operationId: number): boolean {
+    return this._dataSource.cancel(operationId);
+  }
+
+  public cancelAll(): void {
+    (this._dataSource as unknown as { cancelAll: () => void }).cancelAll();
+  }
+
+  public remoteOperations(): RemoteOperationsOptions {
     return this._remoteOperations;
   }
 
   /**
    * @extended: virtual_scrolling
    */
-  public refresh(options, operationTypes) {
-    const that = this;
-    const dataSource = that._dataSource;
+  public refresh(options: LoadOperation, operationTypes: OperationTypes): void {
+    const dataSource = this._dataSource;
 
     if (operationTypes.reload) {
-      that.resetCurrentTotalCount();
-      that._isLastPage = !dataSource.paginate();
-      that._hasLastPage = that._isLastPage;
+      this.resetCurrentTotalCount();
+      this._isLastPage = !dataSource.paginate();
+      this._hasLastPage = this._isLastPage;
     }
   }
 
-  private resetCurrentTotalCount() {
+  public resetCurrentTotalCount(): void {
     this._currentTotalCount = 0;
     this._totalCountCorrection = 0;
   }
 
+  protected setCachedStoreData(data): void {
+    this._cachedStoreData = data;
+    this._dataIndexByKey = undefined;
+  }
+
   protected resetCache() {
-    this._cachedStoreData = undefined;
+    this.setCachedStoreData(undefined);
     this._cachedPagingData = undefined;
   }
 
@@ -198,17 +279,17 @@ export default class DataSourceAdapter extends modules.Controller {
 
   private _needClearStoreDataCache() {
     const remoteOperations = this.remoteOperations();
-    const operationTypes = calculateOperationTypes(this._lastLoadOptions || {}, {});
+    const operationTypes = this._calculateOperationTypes(this._lastLoadOptions || {}, {});
     const isLocalOperations = Object.keys(remoteOperations).every((operationName) => !operationTypes[operationName] || !remoteOperations[operationName]);
 
     return !isLocalOperations;
   }
 
-  private push(changes, fromStore) {
+  public push(changes: StoreChange[], fromStore: boolean): void {
     const store = this.store();
 
     if (this._needClearStoreDataCache()) {
-      this._cachedStoreData = undefined;
+      this.setCachedStoreData(undefined);
     }
 
     this._cachedPagingData = undefined;
@@ -222,6 +303,8 @@ export default class DataSourceAdapter extends modules.Controller {
         data: this._cachedStoreData,
         changes,
       });
+      // applyBatch mutates _cachedStoreData in place, bypassing setCachedStoreData
+      this._dataIndexByKey = undefined;
     }
 
     if (!fromStore) {
@@ -231,22 +314,22 @@ export default class DataSourceAdapter extends modules.Controller {
     this.pushed.fire(changes);
   }
 
-  private getDataIndexGetter() {
+  public getDataIndexGetter(): (data: RawItemData) => number {
     if (!this._dataIndexGetter) {
-      let indexByKey;
-      let storeData;
       const store = this.store();
 
       this._dataIndexGetter = (data) => {
-        const isCacheUpdated = storeData && storeData !== this._cachedStoreData;
-        if (!indexByKey || isCacheUpdated) {
-          storeData = this._cachedStoreData || [];
-          indexByKey = {};
+        if (!this._dataIndexByKey) {
+          const storeData = this._cachedStoreData ?? [];
+
+          this._dataIndexByKey = {};
+
           for (let i = 0; i < storeData.length; i++) {
-            indexByKey[getKeyHash(store.keyOf(storeData[i]))] = i;
+            this._dataIndexByKey[getKeyHash(store.keyOf(storeData[i]))] = i;
           }
         }
-        return indexByKey[getKeyHash(store.keyOf(data))];
+
+        return this._dataIndexByKey[getKeyHash(store.keyOf(data))];
       };
     }
 
@@ -316,11 +399,11 @@ export default class DataSourceAdapter extends modules.Controller {
   /**
    * @extended: TreeLists's data_source_adapter
    */
-  protected _handlePush({ changes }) {
+  protected pushHandler({ changes }: BeforePushEvent): void {
     this.push(changes, true);
   }
 
-  protected _handleChanging(e) {
+  protected changingHandler(e: ChangingEvent): void {
     this.changing.fire(e);
     this._applyBatch(e.changes, true);
   }
@@ -331,6 +414,14 @@ export default class DataSourceAdapter extends modules.Controller {
     const currentOperationTypes = operationTypeIndex >= 0 ? operationTypesByOrder.slice(operationTypeIndex) : [operationType];
 
     return currentOperationTypes.some((operationType) => remoteOperations[operationType]);
+  }
+
+  protected _calculateOperationTypes(
+    loadOptions,
+    lastLoadOptions,
+    isFullReload?: boolean,
+  ): OperationTypes {
+    return calculateOperationTypes(loadOptions, lastLoadOptions, isFullReload);
   }
 
   /**
@@ -377,15 +468,15 @@ export default class DataSourceAdapter extends modules.Controller {
     options.cachedData = cachedData;
 
     if (!options.isCustomLoading) {
-      this._cachedStoreData = cachedStoreData;
+      this.setCachedStoreData(cachedStoreData);
       this._cachedPagingData = cachedPagingData;
       this._cachedData = cachedData;
     }
   }
 
-  protected _handleCustomizeStoreLoadOptions(options) {
+  protected customizeStoreLoadOptionsHandler(options: LoadOperation): void {
     this._handleDataLoading(options);
-    if (!(options.data?.length === 0)) {
+    if (!(Array.isArray(options.data) && options.data.length === 0)) {
       // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
       options.data = getPageDataFromCache(options, true) || options.cachedStoreData;
     }
@@ -394,7 +485,7 @@ export default class DataSourceAdapter extends modules.Controller {
   /**
    * @extended: virtual_scrolling
    */
-  protected _handleDataLoading(options) {
+  protected _handleDataLoading(options: LoadOperation): void {
     const dataSource = this._dataSource;
     const lastLoadOptions = this._lastLoadOptions;
 
@@ -412,7 +503,7 @@ export default class DataSourceAdapter extends modules.Controller {
 
     const loadOptions = extend({ pageIndex: this.pageIndex(), pageSize: this.pageSize() }, options.storeLoadOptions);
 
-    const operationTypes = calculateOperationTypes(loadOptions, lastLoadOptions, isFullReload);
+    const operationTypes = this._calculateOperationTypes(loadOptions, lastLoadOptions, isFullReload);
 
     this._customizeRemoteOperations(options, operationTypes);
 
@@ -433,7 +524,9 @@ export default class DataSourceAdapter extends modules.Controller {
           });
         }
       }).fail(() => {
-        dataSource.cancel(options.operationId);
+        // `operationId` is only absent on the synthetic load operations
+        // `loadAll` builds, and those are always custom loading.
+        dataSource.cancel(options.operationId!);
       }).always(() => {
         this._isRefreshing = false;
       });
@@ -481,7 +574,7 @@ export default class DataSourceAdapter extends modules.Controller {
   /**
    * @extended: TreeLists's data_source_adapter
    */
-  protected _handleDataLoaded(options) {
+  public customizeLoadResultHandler(options: LoadOperation): void {
     const { loadOptions } = options;
     const localPaging = options.remoteOperations && !options.remoteOperations.paging;
     const { cachedData } = options;
@@ -492,7 +585,7 @@ export default class DataSourceAdapter extends modules.Controller {
     const needStoreCache = needPagingCache && !options.isCustomLoading;
 
     if (!loadOptions) {
-      this._dataSource.cancel(options.operationId);
+      this._dataSource.cancel(options.operationId!);
       return;
     }
 
@@ -511,11 +604,11 @@ export default class DataSourceAdapter extends modules.Controller {
     const groupCount = gridCoreUtils.normalizeSortingInfo(options.group || storeLoadOptions.group || loadOptions.group).length;
 
     if (options.cachedDataPartBegin) {
-      options.data = options.cachedDataPartBegin.concat(options.data);
+      options.data = options.cachedDataPartBegin.concat(options.data as RawItemData[]);
     }
 
     if (options.cachedDataPartEnd) {
-      options.data = options.data.concat(options.cachedDataPartEnd);
+      options.data = (options.data as RawItemData[]).concat(options.cachedDataPartEnd);
     }
 
     if (!needPageCache || !getPageDataFromCache(options)) {
@@ -524,13 +617,14 @@ export default class DataSourceAdapter extends modules.Controller {
       } else {
         if (needStoreCache) {
           if (!this._cachedStoreData) {
-            this._cachedStoreData = cloneItems(options.data, gridCoreUtils.normalizeSortingInfo(storeLoadOptions.group).length);
+            this.setCachedStoreData(cloneItems(options.data, gridCoreUtils.normalizeSortingInfo(storeLoadOptions.group).length));
           } else if (options.mergeStoreLoadData) {
-            options.data = this._cachedStoreData = this._cachedStoreData.concat(options.data);
+            this.setCachedStoreData(this._cachedStoreData.concat(options.data));
+            options.data = this._cachedStoreData;
           }
         }
-        new ArrayStore(options.data).load(loadOptions).done((data) => {
-          options.data = data;
+        new ArrayStore(options.data as RawItemData[]).load(loadOptions).done((data) => {
+          options.data = data as RawItemData[];
           if (needStoreCache) {
             this._cachedPagingData = cloneItems(options.data, groupCount);
           }
@@ -542,10 +636,10 @@ export default class DataSourceAdapter extends modules.Controller {
 
       if (loadOptions.requireTotalCount && localPaging) {
         options.extra = isPlainObject(options.extra) ? options.extra : {};
-        options.extra.totalCount = options.data.length;
+        options.extra.totalCount = (options.data as RawItemData[]).length;
       }
 
-      if (options.extra && options.extra.totalCount >= 0 && (storeLoadOptions.requireTotalCount === false || loadOptions.requireTotalCount === false)) {
+      if (options.extra && (options.extra.totalCount ?? -1) >= 0 && (storeLoadOptions.requireTotalCount === false || loadOptions.requireTotalCount === false)) {
         options.extra.totalCount = -1;
       }
 
@@ -553,7 +647,7 @@ export default class DataSourceAdapter extends modules.Controller {
         this._totalCountCorrection = 0;
       }
 
-      this._handleDataLoadedCore(options);
+      this.customizeLoadResultHandlerCore(options);
 
       if (needPageCache) {
         cachedData.extra = cachedData.extra || extend({}, options.extra);
@@ -566,18 +660,20 @@ export default class DataSourceAdapter extends modules.Controller {
     when(options.data).done(() => {
       if (options.lastLoadOptions) {
         this._lastLoadOptions = options.lastLoadOptions;
-        Object.keys(options.operationTypes).forEach((operationType) => {
-          this._lastOperationTypes[operationType] = this._lastOperationTypes[operationType] || options.operationTypes[operationType];
+
+        Object.keys(options.operationTypes ?? {}).forEach((operationType) => {
+          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+          this._lastOperationTypes[operationType] ||= options.operationTypes?.[operationType];
         });
       }
     });
-    options.storeLoadOptions = options.originalStoreLoadOptions;
+    options.storeLoadOptions = options.originalStoreLoadOptions as typeof options.storeLoadOptions;
   }
 
   /**
    * @extended: TreeLists's data_source_adapter
    */
-  protected _handleDataLoadedCore(options) {
+  protected customizeLoadResultHandlerCore(options) {
     if (options.remoteOperations && !options.remoteOperations.paging && Array.isArray(options.data)) {
       if (options.skip !== undefined) {
         options.data = options.data.slice(options.skip);
@@ -591,14 +687,14 @@ export default class DataSourceAdapter extends modules.Controller {
   /**
    * @extended virtual_scrolling
    */
-  protected _handleLoadingChanged(isLoading) {
+  protected loadingChangedHandler(isLoading: boolean): void {
     this.loadingChanged.fire(isLoading);
   }
 
   /**
    * @extended virtual_scrolling
    */
-  protected _handleLoadError(error) {
+  protected loadErrorHandler(error: Error | string): void {
     this.loadError.fire(error);
     this.changed.fire({
       changeType: 'loadError',
@@ -616,11 +712,14 @@ export default class DataSourceAdapter extends modules.Controller {
   /**
    * @extended: virtual_scrolling
    */
-  protected _handleDataChanged(args) {
+  // ChangedEvent
+  protected dataChangedHandler(e?: ChangedEvent): void {
     let currentTotalCount;
     const dataSource = this._dataSource;
     let isLoading = false;
-    const isDataLoading = !args || isDefined(args.changeType);
+
+    // At this stage e.changeType can be defined only if virtual scrolling and scrolling.legacyMode is true
+    const isDataLoading = !e || isDefined(e.changeType);
 
     const itemsCount = this.itemsCount();
 
@@ -662,29 +761,20 @@ export default class DataSourceAdapter extends modules.Controller {
       this._lastOperationTypes = {};
 
       this.component._optionCache = {};
-      this.changed.fire(args);
+      this.changed.fire(e);
       this.component._optionCache = undefined;
     }
   }
 
-  private _scheduleCustomLoadCallbacks(deferred) {
-    const that = this;
-
-    that._isCustomLoading = true;
-    deferred.always(() => {
-      that._isCustomLoading = false;
-    });
-  }
-
-  private loadingOperationTypes() {
+  public loadingOperationTypes(): OperationTypes | undefined {
     return this._loadingOperationTypes;
   }
 
-  private operationTypes() {
-    return this._operationTypes;
+  public operationTypes(): OperationTypes | null {
+    return this._operationTypes ?? null;
   }
 
-  private lastLoadOptions() {
+  public lastLoadOptions(): NonNullable<LoadOperation['lastLoadOptions']> {
     return this._lastLoadOptions || {};
   }
 
@@ -709,14 +799,16 @@ export default class DataSourceAdapter extends modules.Controller {
    * @extended: TreeLists's data_source_adapter
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected changeRowExpand(path?: any): any {}
+  public changeRowExpand(path?: unknown): DeferredObj<unknown> | undefined {
+    return undefined;
+  }
 
-  private totalCount() {
+  public totalCount(): number {
     // eslint-disable-next-line radix
     return parseInt((this._currentTotalCount || this._dataSourceTotalCount()) + this._totalCountCorrection);
   }
 
-  private totalCountCorrection() {
+  public totalCountCorrection(): number {
     return this._totalCountCorrection;
   }
 
@@ -724,35 +816,38 @@ export default class DataSourceAdapter extends modules.Controller {
    * @extended: virtual_scrolling
    * @protected
    */
-  protected items(): any {}
+  public items(): RawItemData[] {
+    return (this._items ?? []) as RawItemData[];
+  }
 
   /**
    * @extended: virtual_scrolling
    */
-  protected itemsCount() {
+  public itemsCount(): number {
     return this._dataSource.items().length;
   }
 
   /**
    * @extended: TreeLists's data_source_adapter
    */
-  protected totalItemsCount() {
+  public totalItemsCount(): number {
     return this.totalCount();
   }
 
-  protected pageSize() {
-    const dataSource = this._dataSource;
-
-    if (!arguments.length && !dataSource.paginate()) {
-      return 0;
+  public pageSize(): number;
+  public pageSize(value: number): void;
+  public pageSize(value?: number): number | void {
+    if (value === undefined) {
+      return this._dataSource.paginate()
+        ? this._dataSource.pageSize()
+        : 0;
     }
-    return dataSource.pageSize.apply(dataSource, arguments);
+    return this._dataSource.pageSize(value);
   }
 
-  protected pageCount() {
-    const that = this;
-    const count = that.totalItemsCount() - that._totalCountCorrection;
-    const pageSize = that.pageSize();
+  public pageCount(): number {
+    const count = this.totalItemsCount() - this._totalCountCorrection;
+    const pageSize = this.pageSize();
 
     if (pageSize && count > 0) {
       return Math.max(1, Math.ceil(count / pageSize));
@@ -760,112 +855,42 @@ export default class DataSourceAdapter extends modules.Controller {
     return 1;
   }
 
-  protected hasKnownLastPage() {
+  public hasKnownLastPage(): boolean {
     return this._hasLastPage || this._dataSource.totalCount() >= 0;
   }
 
-  protected loadFromStore(loadOptions, store?) {
-    const dataSource = this._dataSource;
-    // @ts-expect-error
-    const d = new Deferred();
-
-    if (!dataSource) return;
-
-    store = store || dataSource.store();
-
-    store.load(loadOptions).done((data, extra) => {
-      if (data && !Array.isArray(data) && Array.isArray(data.data)) {
-        extra = data;
-        data = data.data;
-      }
-      d.resolve(data, extra);
-    }).fail(d.reject);
-
-    return d;
-  }
-
-  protected isCustomLoading() {
-    return !!this._isCustomLoading;
+  /**
+   * @extended: virtual_scrolling
+   */
+  public load(): DeferredObj<unknown> {
+    return this._dataSource.load() as unknown as DeferredObj<unknown>;
   }
 
   /**
    * @extended: virtual_scrolling
    */
-  protected load(options?) {
-    const that = this;
-    const dataSource = that._dataSource;
-    // @ts-expect-error
-    const d = new Deferred();
-
-    if (options) {
-      const store = dataSource.store();
-      const dataSourceLoadOptions = dataSource.loadOptions();
-      const loadResult: any = {
-        storeLoadOptions: extend({}, options, { langParams: dataSourceLoadOptions?.langParams }),
-        isCustomLoading: true,
-      };
-
-      each(store._customLoadOptions() || [], (_, optionName) => {
-        if (!(optionName in loadResult.storeLoadOptions)) {
-          loadResult.storeLoadOptions[optionName] = dataSourceLoadOptions[optionName];
-        }
-      });
-
-      this._isLoadingAll = options.isLoadingAll;
-
-      that._scheduleCustomLoadCallbacks(d);
-      dataSource._scheduleLoadCallbacks(d);
-
-      that._handleCustomizeStoreLoadOptions(loadResult);
-      executeTask(() => {
-        if (!dataSource.store()) {
-          return d.reject('canceled');
-        }
-
-        when(loadResult.data || that.loadFromStore(loadResult.storeLoadOptions)).done((data, extra) => {
-          loadResult.data = data;
-          loadResult.extra = extra || {};
-          that._handleDataLoaded(loadResult);
-
-          if (options.requireTotalCount && loadResult.extra.totalCount === undefined) {
-            loadResult.extra.totalCount = store.totalCount(loadResult.storeLoadOptions);
-          }
-          // TODO map function??
-          when(loadResult.data, loadResult.extra.totalCount).done((data, totalCount) => {
-            loadResult.extra.totalCount = totalCount;
-            d.resolve(data, loadResult.extra);
-          }).fail(d.reject);
-        }).fail(d.reject);
-      }, that.option('loadingTimeout'));
-
-      return d.fail(function () {
-        that._eventsStrategy.fireEvent('loadError', arguments);
-      }).always(() => {
-        this._isLoadingAll = false;
-      }).promise();
-    }
-    return dataSource.load();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public reload(full?: boolean, changesOnly?: boolean): DeferredObj<unknown> {
+    const result = full ? this._dataSource.reload() : this._dataSource.load();
+    return result as unknown as DeferredObj<unknown>;
   }
 
-  /**
-   * @extended: virtual_scrolling
-   */
-  protected reload(full) {
-    return full ? this._dataSource.reload() : this._dataSource.load();
-  }
-
-  private getCachedStoreData() {
+  public getCachedStoreData(): RawItemData[] | undefined {
     return this._cachedStoreData;
   }
 
   /**
    * @exended: virtual_scrolling
    */
-  protected isLoaded(): any {}
+  public isLoaded(): boolean {
+    return this._dataSource.isLoaded();
+  }
 
   /**
    * @extended: virtual_scrolling
    */
+  public pageIndex(): number;
+  public pageIndex(pageIndex: number): void;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected pageIndex(pageIndex?) {}
+  public pageIndex(pageIndex?: number): number | void {}
 }

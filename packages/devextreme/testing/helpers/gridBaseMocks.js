@@ -31,13 +31,29 @@ module.exports = function($, gridCore, columnResizingReordering, domUtils, commo
         }
 
         return {
-            _applyFilter: function() {
+            applyFilter: function() {
                 this._isFilterApplied = true;
             },
 
             changedArgs: [],
 
             dataSource: function() {
+                const store = function() {
+                    return new ArrayStore(options.items);
+                };
+
+                const loadCustomResult = (loadOptions) => {
+                    const d = $.Deferred();
+
+                    store().load(loadOptions)
+                        .done((data, extra) => {
+                            d.resolve({ data: data, extra: extra });
+                        })
+                        .fail(d.reject);
+
+                    return d;
+                };
+
                 return {
                     beginLoading: function() {
                     },
@@ -49,11 +65,19 @@ module.exports = function($, gridCore, columnResizingReordering, domUtils, commo
                     loadOptions: function() {
                         return {};
                     },
-                    store: function() {
-                        return new ArrayStore(options.items);
+                    store: store,
+                    load: function(loadOptions) {
+                        return store().load(loadOptions);
                     },
-                    load: function(options) {
-                        return this.store().load(options);
+                    customLoader: {
+                        load: loadCustomResult,
+                        loadFromStore: loadCustomResult,
+                        isLoading: function() {
+                            return false;
+                        },
+                        isLoadingAll: function() {
+                            return false;
+                        }
                     }
                 };
             },
@@ -236,6 +260,10 @@ module.exports = function($, gridCore, columnResizingReordering, domUtils, commo
 
             getCombinedFilter: commonUtils.noop,
 
+            getFilterExcludedColumn: commonUtils.noop,
+
+            getCombinedFilterWithExcludedColumn: commonUtils.noop,
+
             getRowIndexByKey: function(key) {
                 return gridCore.getIndexByKey(key, options.items);
             },
@@ -247,13 +275,12 @@ module.exports = function($, gridCore, columnResizingReordering, domUtils, commo
             skipProcessingPagingChange: commonUtils.noop,
             changed: $.Callbacks(),
             loadingChanged: $.Callbacks(),
+            dataErrorOccurred: $.Callbacks('stopOnFalse'),
             pageChanged: $.Callbacks(),
             dataSourceChanged: $.Callbacks(),
             pushed: $.Callbacks(),
+            rowIndicesChanged: $.Callbacks(),
             fireError: function() { },
-            getMaxRowIndex: function() {
-                this.items().length - 1;
-            },
             loadViewport: commonUtils.noop,
             updateViewport: commonUtils.noop,
             getScrollingTimeout: function() {
@@ -804,6 +831,21 @@ module.exports = function($, gridCore, columnResizingReordering, domUtils, commo
             changing: $.Callbacks(),
 
             cancelAll: commonUtils.noop,
+
+            loadOptions: function() {
+                return {};
+            },
+            beginLoading: commonUtils.noop,
+            endLoading: commonUtils.noop,
+            key: function() {
+                return options.key;
+            },
+            select: function() {
+                return options.select;
+            },
+            cancel: function() {
+                return false;
+            },
 
             on(eventName, eventHandler) {
                 this[eventName].add(eventHandler);

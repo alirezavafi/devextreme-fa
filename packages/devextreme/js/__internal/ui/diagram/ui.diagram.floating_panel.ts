@@ -187,12 +187,10 @@ class DiagramFloatingPanel extends DiagramPanel {
     }
 
     return {
-      // @ts-expect-error ts-error
       animation: hasWindow() ? this._getPopupAnimation() : null,
       shading: false,
       showTitle: false,
       focusStateEnabled: false,
-      // @ts-expect-error ts-error
       container: this._getPopupContainer(),
       width: this._getPopupWidth(),
       height: this._getPopupHeight(),
@@ -232,14 +230,12 @@ class DiagramFloatingPanel extends DiagramPanel {
 
   _createOnVisibilityChangingAction(): void {
     this._onVisibilityChangingAction = this._createActionByOption(
-      // @ts-expect-error ts-error
       'onVisibilityChanging',
     );
   }
 
   _createOnVisibilityChangedAction(): void {
     this._onVisibilityChangedAction = this._createActionByOption(
-      // @ts-expect-error ts-error
       'onVisibilityChanged',
     );
   }

@@ -1,4 +1,5 @@
-import type { DataType, Format, SortOrder } from '@js/common';
+import type { DataType, SortOrder } from '@js/common';
+import type { Format } from '@js/common/core/localization';
 import type { ColumnBase, FilterType } from '@js/common/grids';
 import type { DeepPartial } from '@js/core/index';
 import type * as dxForm from '@js/ui/form';
@@ -77,7 +78,7 @@ export type Column = Pick<Required<ColumnBase>, InheritedColumnProps> & {
 
   setFieldValue: (
     this: Column, newData: DeepPartial<DataObject>, value: unknown, currentRowData: DataObject,
-  ) => (void | Promise<void>);
+  ) => (Promise<void> | void);
   defaultSetFieldValue: Column['setFieldValue'];
 
   filterType?: FilterType;

@@ -11,7 +11,8 @@ import type TextBox from '@js/ui/text_box';
 import type { Column } from '@ts/grids/grid_core/columns_controller/types';
 import type { ToolbarItem } from '@ts/grids/new/grid_core/toolbar/types';
 
-import type { DataController, Filter } from '../data_controller/m_data_controller';
+import type { DataController } from '../data_controller/data_controller';
+import type { DataFilter } from '../data_controller/types';
 import type { HeaderPanel } from '../header_panel/m_header_panel';
 import modules from '../m_modules';
 import type { ModuleType, OptionChanged } from '../m_types';
@@ -49,7 +50,7 @@ const dataController = (
     switch (args.fullName) {
       case 'searchPanel.text':
       case 'searchPanel':
-        this._applyFilter();
+        this.applyFilter();
         args.handled = true;
         break;
       default:
@@ -61,11 +62,11 @@ const dataController = (
     return super.publicMethods().concat(['searchByText']);
   }
 
-  protected _calculateAdditionalFilter(): Filter {
-    const dataSource = this._dataController?.getDataSource?.();
+  protected calculateAdditionalFilter(): DataFilter {
+    const dataSource = this.getDataSource();
     const langParams = dataSource?.loadOptions?.()?.langParams;
 
-    const filter = super._calculateAdditionalFilter();
+    const filter = super.calculateAdditionalFilter();
     const searchFilter = this.calculateSearchFilter(this.option('searchPanel.text'), langParams);
 
     return gridCoreUtils.combineFilters([filter, searchFilter]);
@@ -75,7 +76,7 @@ const dataController = (
     this.option('searchPanel.text', text);
   }
 
-  private calculateSearchFilter(text: string | undefined, langParams?: LangParams): Filter {
+  private calculateSearchFilter(text: string | undefined, langParams?: LangParams): DataFilter {
     let column;
     const columns = this._columnsController.getColumns();
     const searchVisibleColumnsOnly = this.option('searchPanel.searchVisibleColumnsOnly');

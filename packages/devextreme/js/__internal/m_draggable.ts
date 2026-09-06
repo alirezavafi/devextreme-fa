@@ -1,6 +1,7 @@
 /* eslint-disable max-classes-per-file */
 import positionUtils from '@js/common/core/animation/position';
 import { locate, move } from '@js/common/core/animation/translator';
+import type { Cancelable } from '@js/common/core/events';
 import eventsEngine from '@js/common/core/events/core/events_engine';
 import {
   end as dragEventEnd,
@@ -33,10 +34,25 @@ import { quadToObject } from '@js/core/utils/string';
 import { isFunction, isNumeric, isObject } from '@js/core/utils/type';
 import { value as viewPort } from '@js/core/utils/view_port';
 import { getWindow } from '@js/core/utils/window';
+import type { PointerInteractionEvent } from '@js/events/events.types';
 import type { Properties } from '@js/ui/draggable';
 import DOMComponent from '@ts/core/widget/dom_component';
 
 import Animator from './ui/scroll_view/animator';
+
+type BoundOffset = number | string | { h?: number; v?: number };
+
+export interface DraggableProperties extends Omit<Properties, 'boundary' | 'onDisposing' | 'onInitialized' | 'onOptionChanged'> {
+  allowMoveByClick?: boolean;
+
+  boundOffset?: BoundOffset | (() => BoundOffset);
+
+  boundary?: Properties['boundary'] | dxElementWrapper;
+
+  component?: unknown;
+
+  contentTemplate?: string | null;
+}
 
 const window = getWindow();
 const KEYDOWN_EVENT = 'keydown';
@@ -72,6 +88,16 @@ interface Offset {
   left: number;
   top: number;
 }
+
+interface DragEventOffset {
+  x: number;
+  y: number;
+}
+
+type DragEvent = Cancelable & PointerInteractionEvent & {
+  _cancelPreventDefault?: boolean;
+  offset?: DragEventOffset;
+};
 
 class ScrollHelper {
   private _preventScroll: boolean;
@@ -225,9 +251,10 @@ class ScrollHelper {
         that._$scrollableAtPointer[that._scrollValue](nextScrollPosition);
       }
 
-      const dragMoveArgs = that._component._dragMoveArgs;
-      if (dragMoveArgs) {
-        that._component._dragMoveHandler(dragMoveArgs);
+      const dragMoveEvent = that._component._dragMoveEvent;
+
+      if (dragMoveEvent) {
+        that._component.dragMoveHandler(dragMoveEvent);
       }
     }
   }
@@ -270,7 +297,7 @@ class ScrollAnimator extends Animator {
   }
 }
 
-class Draggable extends DOMComponent<Draggable, Properties> {
+class Draggable extends DOMComponent<Draggable, DraggableProperties> {
   _$sourceElement?: dxElementWrapper | null;
 
   _initScrollTop!: number;
@@ -284,6 +311,8 @@ class Draggable extends DOMComponent<Draggable, Properties> {
   _$dragElement?: dxElementWrapper | null;
 
   dragInProgress?: boolean;
+
+  _dragMoveEvent?: DragEvent;
 
   _scrollAnimator!: ScrollAnimator;
 
@@ -311,20 +340,18 @@ class Draggable extends DOMComponent<Draggable, Properties> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _fireRemoveEvent(sourceEvent?) {}
 
-  _getDefaultOptions(): Properties {
+  _getDefaultOptions(): DraggableProperties {
     return {
       ...super._getDefaultOptions(),
+      onDragStart: undefined,
+      onDragMove: undefined,
+      onDragEnd: undefined,
       // @ts-expect-error
-      onDragStart: null,
-      // @ts-expect-error
-      onDragMove: null,
-      // @ts-expect-error
-      onDragEnd: null,
-      onDragEnter: null,
-      onDragLeave: null,
-      onDragCancel: null,
+      onDragEnter: undefined,
+      onDragLeave: undefined,
+      onDragCancel: undefined,
+      onDrop: undefined,
       onCancelByEsc: false,
-      onDrop: null,
       immediate: true,
       dragDirection: 'both',
       boundOffset: 0,
@@ -494,7 +521,7 @@ class Draggable extends DOMComponent<Draggable, Properties> {
     }
     // @ts-expect-error
     eventsEngine.on($element, DRAGSTART_EVENT_NAME, itemsSelector, data, this._dragStartHandler.bind(this));
-    eventsEngine.on($element, DRAG_EVENT_NAME, data, this._dragMoveHandler.bind(this));
+    eventsEngine.on($element, DRAG_EVENT_NAME, data, this.dragMoveHandler.bind(this));
     eventsEngine.on($element, DRAGEND_EVENT_NAME, data, this._dragEndHandler.bind(this));
     eventsEngine.on($element, DRAG_ENTER_EVENT_NAME, data, this._dragEnterHandler.bind(this));
     eventsEngine.on($element, DRAGEND_LEAVE_EVENT_NAME, data, this._dragLeaveHandler.bind(this));
@@ -636,7 +663,6 @@ class Draggable extends DOMComponent<Draggable, Properties> {
 
   _dragStartHandler(e) {
     const $element = this._getDraggableElement(e);
-    this.dragInProgress = true;
 
     if (!this._isValidElement(e, $element)) {
       e.cancel = true;
@@ -654,6 +680,7 @@ class Draggable extends DOMComponent<Draggable, Properties> {
       return;
     }
 
+    this.dragInProgress = true;
     this.option('itemData', dragStartArgs.itemData);
     this._setSourceDraggable();
 
@@ -742,7 +769,6 @@ class Draggable extends DOMComponent<Draggable, Properties> {
     if (isFunction(area)) {
       area = area.call(this);
     }
-    // @ts-expect-error ts-error
     return $(area);
   }
 
@@ -789,17 +815,16 @@ class Draggable extends DOMComponent<Draggable, Properties> {
     return this.option('clone') || this.option('dragTemplate');
   }
 
-  _dragMoveHandler(e) {
-    // @ts-expect-error ts-error
-    this._dragMoveArgs = e;
+  public dragMoveHandler(e: DragEvent): void {
+    this._allowNativeScrollingWhenNotDragging(e);
+    this._dragMoveEvent = e;
+
     if (!this._$dragElement) {
       e.cancel = true;
       return;
     }
 
-    const offset = this._getDraggableElementOffset(e.offset.x, e.offset.y);
-
-    this._move(offset);
+    this._moveDragElement(e);
     this._updateScrollable(e);
 
     const eventArgs = this._getEventArgs(e);
@@ -809,11 +834,24 @@ class Draggable extends DOMComponent<Draggable, Properties> {
       return;
     }
 
-    const targetDraggable = this._getTargetDraggable();
-    targetDraggable.dragMove(e, scrollBy);
+    this._getTargetDraggable().dragMove(e, scrollBy);
   }
 
-  _updateScrollable(e) {
+  // Without an active drag the gesture emitter must not call preventDefault on the
+  // move event, otherwise native scrolling is blocked on touch devices (T1329643).
+  private _allowNativeScrollingWhenNotDragging(e: DragEvent): void {
+    if (!this.dragInProgress) {
+      e._cancelPreventDefault = true;
+    }
+  }
+
+  private _moveDragElement(e: DragEvent): void {
+    const offset = this._getDraggableElementOffset(e.offset?.x ?? 0, e.offset?.y ?? 0);
+
+    this._move(offset);
+  }
+
+  private _updateScrollable(e: DragEvent): void {
     const that = this;
 
     if (that.option('autoScroll')) {
@@ -857,7 +895,6 @@ class Draggable extends DOMComponent<Draggable, Properties> {
     const component = this.option('component');
 
     if (component) {
-      // @ts-expect-error ts-error
       args.component = component;
       // @ts-expect-error ts-error
       args.element = component.element();
@@ -1164,6 +1201,13 @@ class Draggable extends DOMComponent<Draggable, Properties> {
 
     this._getAction('onDragLeave')(args);
   }
+
+  /// #DEBUG
+  // Test-only accessor, removed from production builds.
+  getDragInProgress(): boolean {
+    return !!this.dragInProgress;
+  }
+  /// #ENDDEBUG
 }
 
 registerComponent(DRAGGABLE, Draggable);

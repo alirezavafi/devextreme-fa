@@ -8,13 +8,12 @@ import dateUtils from '@js/core/utils/date';
 import type { CalendarType } from '@ts/core/localization/calendar';
 import numberLocalization from '@ts/core/localization/number';
 import type { OptionChanged } from '@ts/core/widget/types';
+import uiDateUtils from '@ts/ui/date_box/date_utils';
+import type { CalendarRollerType } from '@ts/ui/date_box/date_view.calendar';
+import { applyCalendarRollerValue, buildCalendarRollerConfig } from '@ts/ui/date_box/date_view.calendar';
+import DateViewRoller from '@ts/ui/date_box/date_view_roller';
+import type { EditorProperties } from '@ts/ui/editor/editor';
 import Editor from '@ts/ui/editor/editor';
-
-import type { EditorProperties } from '../editor/editor';
-import uiDateUtils from './date_utils';
-import type { CalendarRollerType } from './date_view.calendar';
-import { applyCalendarRollerValue, buildCalendarRollerConfig } from './date_view.calendar';
-import DateViewRoller from './date_view_roller';
 
 const DATEVIEW_CLASS = 'dx-dateview';
 const DATEVIEW_COMPACT_CLASS = 'dx-dateview-compact';

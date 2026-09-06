@@ -123,6 +123,7 @@ type AccessibleOptions = Pick<Properties,
   "defaultPane" |
   "disabled" |
   "elementAttr" |
+  "encodeHtml" |
   "export" |
   "legend" |
   "loadingIndicator" |
@@ -203,6 +204,7 @@ const componentConfig = {
     defaultPane: String,
     disabled: Boolean,
     elementAttr: Object as PropType<Record<string, any>>,
+    encodeHtml: Boolean,
     export: Object as PropType<Record<string, any>>,
     legend: Object as PropType<Record<string, any>>,
     loadingIndicator: Object as PropType<Record<string, any>>,
@@ -279,6 +281,7 @@ const componentConfig = {
     "update:defaultPane": null,
     "update:disabled": null,
     "update:elementAttr": null,
+    "update:encodeHtml": null,
     "update:export": null,
     "update:legend": null,
     "update:loadingIndicator": null,
@@ -693,7 +696,7 @@ const DxArgumentAxisConfig = {
     minVisualRangeLength: [Number, Object, String] as PropType<number | Record<string, any> | TimeInterval>,
     offset: Number,
     opacity: Number,
-    placeholderSize: Number,
+    placeholderSize: Number as PropType<null | number>,
     position: String as PropType<Position>,
     singleWorkdays: Array as PropType<(Array<Date | string>) | Array<number>>,
     strips: Array as PropType<Array<Record<string, any>>>,
@@ -1215,7 +1218,7 @@ const DxCommonAxisSettingsConfig = {
     minorTick: Object as PropType<Record<string, any>>,
     minValueMargin: Number,
     opacity: Number,
-    placeholderSize: Number,
+    placeholderSize: Number as PropType<null | number>,
     stripStyle: Object as PropType<Record<string, any>>,
     tick: Object as PropType<Record<string, any>>,
     title: Object as PropType<Record<string, any>>,
@@ -3440,7 +3443,7 @@ const DxValueAxisConfig = {
     offset: Number,
     opacity: Number,
     pane: String,
-    placeholderSize: Number,
+    placeholderSize: Number as PropType<null | number>,
     position: String as PropType<Position>,
     showZero: Boolean,
     strips: Array as PropType<Array<Record<string, any>>>,

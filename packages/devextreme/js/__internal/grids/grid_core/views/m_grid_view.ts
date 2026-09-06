@@ -21,7 +21,8 @@ import type { FooterView } from '../../data_grid/summary/m_summary';
 import type { AdaptiveColumnsController } from '../adaptivity/m_adaptivity';
 import type { ColumnHeadersView } from '../column_headers/m_column_headers';
 import type { ColumnsController } from '../columns_controller/m_columns_controller';
-import type { DataController } from '../data_controller/m_data_controller';
+import type { DataController } from '../data_controller/data_controller';
+import type { DataChange } from '../data_controller/types';
 import modules from '../m_modules';
 import gridCoreUtils from '../m_utils';
 import type { RowsView } from './m_rows_view';
@@ -114,7 +115,7 @@ export class ResizingController extends modules.ViewController {
 
   private _lastHeight: any;
 
-  protected _adaptiveColumnsController!: AdaptiveColumnsController;
+  protected adaptiveColumnsController!: AdaptiveColumnsController;
 
   private _editorFactoryController!: EditorFactory;
 
@@ -131,7 +132,7 @@ export class ResizingController extends modules.ViewController {
     this._dataController = this.getController('data');
     this._columnsController = this.getController('columns');
     this._columnHeadersView = this.getView('columnHeadersView');
-    this._adaptiveColumnsController = this.getController('adaptiveColumns');
+    this.adaptiveColumnsController = this.getController('adaptiveColumns');
     this._editorFactoryController = this.getController('editorFactory');
     this._footerView = this.getView('footerView');
     this._rowsView = this.getView('rowsView');
@@ -140,11 +141,12 @@ export class ResizingController extends modules.ViewController {
 
   private _initPostRenderHandlers() {
     if (!this._refreshSizesHandler) {
-      this._refreshSizesHandler = (e) => {
+      this._refreshSizesHandler = (change: DataChange) => {
         // @ts-expect-error
         let resizeDeferred = new Deferred<null>().resolve(null);
-        const changeType = e?.changeType;
-        const isDelayed = e?.isDelayed;
+        const changeType = change?.changeType;
+        // @ts-expect-error e.isDelayed is set for virtual scrolling with scrolling.legacyMode
+        const isDelayed = change?.isDelayed;
         const needFireContentReady = changeType
           && changeType !== 'updateSelection'
           && changeType !== 'updateFocusedRow'
@@ -154,12 +156,12 @@ export class ResizingController extends modules.ViewController {
         this._dataController.changed.remove(this._refreshSizesHandler);
 
         if (this._checkSize()) {
-          resizeDeferred = this._refreshSizes(e);
+          resizeDeferred = this._refreshSizes(change);
         }
 
         if (needFireContentReady) {
           when(resizeDeferred).done(() => {
-            this._setAriaLabel(e);
+            this._setAriaLabel(change);
             this.fireContentReadyAction();
           });
         }
@@ -172,38 +174,45 @@ export class ResizingController extends modules.ViewController {
   }
 
   private _refreshSizes(e) {
-    // @ts-expect-error
-    let resizeDeferred = new Deferred<null>().resolve(null);
     const changeType = e?.changeType;
     const isDelayed = e?.isDelayed;
-    const items = this._dataController.items();
 
-    if (!e || changeType === 'refresh' || changeType === 'prepend' || changeType === 'append') {
+    if (!e || ['refresh', 'prepend', 'append'].includes(changeType)) {
       if (!isDelayed) {
-        resizeDeferred = this.resize();
+        return this.resize();
       }
-    } else if (changeType === 'update') {
-      if (e.changeTypes?.length === 0) {
-        return resizeDeferred;
-      }
-      if ((items.length > 1 || e.changeTypes[0] !== 'insert')
-                && !(items.length === 0 && e.changeTypes[0] === 'remove') && !e.needUpdateDimensions) {
+    }
+
+    if (changeType === 'update') {
+      if (!e.changeTypes?.length) {
         // @ts-expect-error
-        resizeDeferred = new Deferred();
+        return new Deferred<null>().resolve(null);
+      }
+
+      const items = this._dataController.items();
+      const isHidingNoDataPanel = items.length <= 1 && e.changeTypes[0] === 'insert';
+      const isShowingNoDataPanel = items.length === 0 && e.changeTypes[0] === 'remove';
+
+      if (!isHidingNoDataPanel && !isShowingNoDataPanel && !e.needUpdateDimensions) {
+        // @ts-expect-error
+        const deferred = new Deferred();
 
         this._waitAsyncTemplates().done(() => {
           deferUpdate(() => deferRender(() => deferUpdate(() => {
             this._setScrollerSpacing();
             this._rowsView.resize();
-            resizeDeferred.resolve();
+            deferred.resolve();
           })));
-        }).fail(resizeDeferred.reject);
-      } else {
-        resizeDeferred = this.resize();
+        }).fail(deferred.reject);
+
+        return deferred;
       }
+
+      return this.resize();
     }
 
-    return resizeDeferred;
+    // @ts-expect-error
+    return new Deferred<null>().resolve(null);
   }
 
   /**

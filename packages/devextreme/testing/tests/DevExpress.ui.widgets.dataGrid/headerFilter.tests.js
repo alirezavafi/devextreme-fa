@@ -1,4 +1,4 @@
-import 'generic_light.css!';
+import 'fluent_blue_light.css!';
 
 import 'ui/data_grid';
 import gridCoreUtils from '__internal/grids/grid_core/m_utils';
@@ -1581,7 +1581,7 @@ QUnit.module('Header Filter', {
         const $headerFilter = that.headerPanel.element().find('.dx-group-panel-item').first().find('.dx-header-filter');
         assert.equal($headerFilter.length, 1, 'have header filter');
         assert.ok(!$headerFilter.hasClass('dx-header-filter-empty'), 'has no class dx-header-filter-empty');
-        assert.strictEqual($headerFilter.css('color'), $headerFilter.parent().css('color'), 'color of the header should be as parent color');
+        assert.strictEqual($headerFilter.css('color'), 'rgb(15, 108, 189)', 'color of the header should be accented');
     });
 
     QUnit.test('Header filter popup should be shown on header filter icon click in groupPanel', function(assert) {
@@ -1678,7 +1678,7 @@ QUnit.module('Header Filter', {
         const $headerFilter = that.headerPanel.element().find('.dx-group-panel-item').first().find('.dx-header-filter');
         assert.equal($headerFilter.length, 1, 'have header filter');
         assert.ok($headerFilter.hasClass('dx-header-filter-empty'), 'has no class dx-header-filter-empty');
-        assert.notStrictEqual($headerFilter.css('color'), $headerFilter.parent().css('color'), 'color of the header filter should hava alpha');
+        assert.equal($headerFilter.css('color'), $headerFilter.parent().css('color'), 'color of the header filter should not be accented');
     });
 
     // T260241
@@ -2678,7 +2678,7 @@ QUnit.module('Header Filter with real columnsController', {
         that.columnHeadersView.render(testElement);
         that.headerFilterView.render(testElement);
 
-        that.dataController._applyFilter = function() {
+        that.dataController.applyFilter = function() {
             applyFilterCallCount++;
         };
 
@@ -3272,7 +3272,7 @@ QUnit.module('Header Filter with real columnsController', {
         that.columnHeadersView.render(testElement);
         that.headerFilterView.render(testElement);
 
-        that.dataController._applyFilter = function() {
+        that.dataController.applyFilter = function() {
             applyFilterCallCount++;
         };
 
@@ -3317,7 +3317,7 @@ QUnit.module('Header Filter with real columnsController', {
         that.columnHeadersView.render(testElement);
         that.headerFilterView.render(testElement);
 
-        that.dataController._applyFilter = function() {
+        that.dataController.applyFilter = function() {
             applyFilterCallCount++;
         };
 
@@ -3400,7 +3400,7 @@ QUnit.module('Header Filter with real columnsController', {
         that.columnHeadersView.render(testElement);
         that.headerFilterView.render(testElement);
 
-        that.dataController._applyFilter = function() {
+        that.dataController.applyFilter = function() {
             applyFilterCallCount++;
         };
 
@@ -3589,7 +3589,7 @@ QUnit.module('Header Filter with real columnsController', {
         that.columnHeadersView.render(testElement);
         that.headerFilterView.render(testElement);
 
-        that.dataController._applyFilter = function() {
+        that.dataController.applyFilter = function() {
             applyFilterCallCount++;
         };
 
@@ -3642,7 +3642,7 @@ QUnit.module('Header Filter with real columnsController', {
         that.columnHeadersView.render(testElement);
         that.headerFilterView.render(testElement);
 
-        that.dataController._applyFilter = function() {
+        that.dataController.applyFilter = function() {
             applyFilterCallCount++;
         };
 
@@ -4135,7 +4135,7 @@ QUnit.module('Header Filter with real columnsController', {
         that.setupDataGrid();
         that.columnHeadersView.render($testElement);
         that.headerFilterView.render($testElement);
-        that.dataController._applyFilter = function() {
+        that.dataController.applyFilter = function() {
             callApplyFilter = true;
         };
 

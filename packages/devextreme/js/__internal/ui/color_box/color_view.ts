@@ -3,18 +3,18 @@ import registerComponent from '@js/core/component_registrator';
 import type { DefaultOptionsRule } from '@js/core/options/utils';
 import type { dxElementWrapper } from '@js/core/renderer';
 import $ from '@js/core/renderer';
+import { Color, type ColorInstance } from '@ts/color';
 import { locate, move } from '@ts/common/core/animation/translator';
+import { Guid } from '@ts/core/guid';
 import messageLocalization from '@ts/core/localization/message';
 import devices from '@ts/core/m_devices';
-import { Guid } from '@ts/core/m_guid';
 import { extend } from '@ts/core/utils/m_extend';
 import { getHeight, getOuterHeight, getWidth } from '@ts/core/utils/m_size';
 import type { OptionChanged } from '@ts/core/widget/types';
 import type { SupportedKeyHandler, SupportedKeys } from '@ts/core/widget/widget';
-import eventsEngine from '@ts/events/core/m_events_engine';
-import { name as clickEventName } from '@ts/events/m_click';
+import { name as clickEventName } from '@ts/events/click';
+import eventsEngine from '@ts/events/core/events_engine';
 import { isCommandKeyPressed } from '@ts/events/utils/index';
-import Color, { type ColorInstance } from '@ts/m_color';
 import Draggable from '@ts/m_draggable';
 import type { EditorProperties, ValueChangedEvent } from '@ts/ui/editor/editor';
 import Editor from '@ts/ui/editor/editor';
@@ -507,7 +507,6 @@ class ColorView extends Editor<ColorViewProperties> {
 
     this._createComponent(this._$paletteHandle, Draggable, {
       contentTemplate: null,
-      // @ts-expect-error need to fix type for Draggable boundary option
       boundary: this._$palette,
       allowMoveByClick: true,
       boundOffset: () => -this._paletteHandleHeight / 2,
@@ -588,7 +587,6 @@ class ColorView extends Editor<ColorViewProperties> {
         .appendTo(this._$hueScaleWrapper);
       this._createComponent(this._$hueScaleHandle, Draggable, {
         contentTemplate: null,
-        // @ts-expect-error need to fix type for Draggable boundary option
         boundary: this._$hueScaleWrapper,
         allowMoveByClick: true,
         dragDirection: 'vertical',
@@ -833,7 +831,7 @@ class ColorView extends Editor<ColorViewProperties> {
       step: 0.1,
       onValueChanged: (args) => {
         let { value } = args;
-        value = this._currentColor.isValidAlpha(value) ? value : this._currentColor.a;
+        value = Color.isValidAlpha(value) ? value : this._currentColor.a;
         if (args.event) {
           this._saveValueChangeEvent(args.event);
         }
@@ -860,7 +858,6 @@ class ColorView extends Editor<ColorViewProperties> {
       .appendTo($parent);
     this._createComponent(this._$alphaChannelHandle, Draggable, {
       contentTemplate: null,
-      // @ts-expect-error need to fix type for Draggable
       boundary: $parent,
       allowMoveByClick: true,
       dragDirection: 'horizontal',
@@ -952,7 +949,7 @@ class ColorView extends Editor<ColorViewProperties> {
       if (this._alphaChannelInput) {
         const { value: alphaValue } = this._alphaChannelInput.option();
         const isValidAlpha = alphaValue !== undefined
-          && this._currentColor.isValidAlpha(alphaValue);
+          && Color.isValidAlpha(alphaValue);
 
         const valueToAdd = isValidAlpha ? alphaValue : this._currentColor.a;
 
@@ -972,7 +969,7 @@ class ColorView extends Editor<ColorViewProperties> {
   }
 
   _validateHex(hex: string): string {
-    return this._currentColor.isValidHex(hex) ? hex : this._currentColor.toHex();
+    return Color.isValidHex(hex) ? hex : this._currentColor.toHex();
   }
 
   _validateRgb(): number[] {
@@ -980,7 +977,7 @@ class ColorView extends Editor<ColorViewProperties> {
     let { value: g } = this._rgbInputs[1].option();
     let { value: b } = this._rgbInputs[2].option();
 
-    const isInvalidRgb = !this._currentColor.isValidRGB(r, g, b);
+    const isInvalidRgb = !Color.isValidRGB(r, g, b);
     if (isInvalidRgb) {
       r = this._currentColor.r;
       g = this._currentColor.g;

@@ -5,7 +5,7 @@ import { extend } from '@js/core/utils/extend';
 import { each, map } from '@js/core/utils/iterator';
 import { format } from '@js/core/utils/string';
 import { isDefined, isString } from '@js/core/utils/type';
-import stateStoring from '@ts/grids/grid_core/state_storing/m_state_storing_core';
+import stateStoring from '@ts/grids/grid_core/state_storing/state_storing_controller_core';
 import { createColumnsInfo, foreachColumnInfo } from '@ts/grids/grid_core/virtual_columns/m_virtual_columns_core';
 import VirtualScrollControllerModule from '@ts/grids/grid_core/virtual_scrolling/m_virtual_scrolling_core';
 
@@ -1334,6 +1334,18 @@ class DataController {
       this._columnPageIndex = index;
     }
     return this._columnPageIndex || 0;
+  }
+
+  getColumnIndexOffset() {
+    return this._columnsScrollController
+      ? this._columnsScrollController.beginPageIndex() * this._columnsScrollController.pageSize()
+      : 0;
+  }
+
+  getRowIndexOffset() {
+    return this._rowsScrollController
+      ? this._rowsScrollController.beginPageIndex() * this._rowsScrollController.pageSize()
+      : 0;
   }
 
   getCellsInfo(getAllData) {

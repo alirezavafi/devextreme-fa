@@ -5,12 +5,12 @@ import { isDefined } from '@js/core/utils/type';
 import { hasWindow } from '@js/core/utils/window';
 import type { ResizingController } from '@ts/grids/grid_core/views/m_grid_view';
 
-import type { ColumnHeadersView } from '../column_headers/m_column_headers';
 import type { ColumnsController } from '../columns_controller/m_columns_controller';
 import type { ModuleType } from '../m_types';
 import gridCoreUtils from '../m_utils';
 import type { ColumnsView } from '../views/m_columns_view';
 import type { RowsView } from '../views/m_rows_view';
+import type { RowsViewScrollEvent } from '../views/types';
 import { createColumnsInfo } from './m_virtual_columns_core';
 
 const baseView = <T extends ModuleType<ColumnsView>>(Base: T) => class BaseViewVirtualColumnsExtender extends Base {
@@ -35,7 +35,7 @@ const rowsView = (Base: ModuleType<RowsView>) => class VirtualColumnsRowsViewExt
     this._columnsController.resize();
   }
 
-  protected _handleScroll(e) {
+  protected _handleScroll(e: RowsViewScrollEvent): void {
     const left = this.normalizeScrollLeft(e.scrollOffset.left);
 
     this._scrollLeft = left;
@@ -73,18 +73,6 @@ const rowsView = (Base: ModuleType<RowsView>) => class VirtualColumnsRowsViewExt
 
     // @ts-expect-error
     return super._renderCore.apply(this, arguments);
-  }
-};
-
-const columnHeadersView = (Base: ModuleType<ColumnHeadersView>) => class VirtualColumnsColumnHeaderViewExtender extends baseView(Base) {
-  protected _renderCore() {
-    // @ts-expect-error
-    const deferred = super._renderCore.apply(this, arguments);
-
-    if (this._columnsController.isVirtualMode()) {
-      this._updateScrollLeftPosition();
-    }
-    return deferred;
   }
 };
 
@@ -348,7 +336,6 @@ export const virtualColumnsModule = {
       columns,
     },
     views: {
-      columnHeadersView,
       rowsView,
     },
   },

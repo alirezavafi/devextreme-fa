@@ -1,4 +1,5 @@
 import type { dxElementWrapper } from '@js/core/renderer';
+import type { ItemContextMenuEvent } from '@js/ui/list';
 import type { Appointment, Properties } from '@js/ui/scheduler';
 import type { CalendarType } from '@ts/core/localization/calendar';
 import type { Component } from '@ts/core/widget/component';
@@ -25,9 +26,10 @@ export interface TargetedAppointment extends Appointment {
 export type CreateComponentFn = <TTComponent, IProperties = Record<string, unknown>>(
   element: string | HTMLElement | dxElementWrapper | Element,
   component: string | (new (...args) => TTComponent),
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-  componentConfiguration: TTComponent extends Component<any, infer TTProperties>
-    ? TTProperties
+  componentConfiguration: TTComponent extends { _getDefaultOptions: () => infer TTProperties }
+    ? string extends keyof TTProperties
+      ? object
+      : Partial<TTProperties> & { integrationOptions?: Record<string, unknown> }
     : IProperties,
 ) => TTComponent;
 
@@ -113,7 +115,7 @@ export type TimePanelCellData = Omit<ViewCellData, 'endDate'>;
 export interface CountGenerationConfig {
   intervalCount: number;
   currentDate: Date;
-  viewType: string;
+  viewType: ViewType;
   hoursInterval: number;
   startDayHour: number;
   endDayHour: number;
@@ -206,7 +208,7 @@ export interface DOMMetaData {
   allDayPanelCellsMeta: CellRect[];
 }
 
-export interface DateHeaderCellData extends ViewCellData {
+export interface DateHeaderCellData extends Omit<ViewCellData, 'endDate'> {
   colSpan: number;
 }
 
@@ -299,6 +301,17 @@ export interface AppointmentTooltipItem {
   color: Promise<string | undefined>;
   settings: AppointmentItemViewModel;
 }
+
+export interface MappedAppointmentFields {
+  appointmentData: SafeAppointment;
+  appointmentElement: dxElementWrapper;
+  targetedAppointmentData: SafeAppointment | TargetedAppointment;
+}
+
+export type AppointmentTooltipContextMenuEventArgs = MappedAppointmentFields & Pick<
+  ItemContextMenuEvent<AppointmentTooltipItem>,
+  'component' | 'element' | 'event' | 'model'
+>;
 
 export interface CompactAppointmentOptions {
   $container: dxElementWrapper;

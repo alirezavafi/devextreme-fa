@@ -34,7 +34,6 @@
         { "env": "CHANGEDFILEINFOSPATH" },
         { "env": "BROWSERS" },
         { "env": "DEBUG" },
-        { "env": "TCQUARANTINE" },
         { "env": "CONSTEL" },
         { "env": "THEME" },
         { "env": "DISABLE_DEMO_TEST_SETTINGS" },
@@ -49,20 +48,31 @@
       ]
     },
     "prepare-bundles": {
-      "executor": "nx:run-script",
+      "executor": "nx:run-commands",
       "options": {
-        "script": "prepare-bundles"
+        "commands": [
+          "pnpm run generate-devextreme-angular-umd",
+          "node scripts/build-bundles.js",
+          "node scripts/update-config.js"
+        ],
+        "parallel": false,
+        "cwd": "{projectRoot}"
       },
       "dependsOn": [
         // "^build" uncomment me after migrating to PNPM
       ],
       "inputs": [
         "default",
-        "{projectRoot}/gulpfile.js/**/*",
+        "{projectRoot}/scripts/**/*",
+        "{projectRoot}/utils/bundle/**/*",
+        "{projectRoot}/utils/internal/create-config.js",
+        "{projectRoot}/menuMeta.json",
         "{projectRoot}/rollup.devextreme-angular.umd.config.mjs"
       ],
       "outputs": [
-        "{projectRoot}/bundles"
+        "{projectRoot}/bundles",
+        "{projectRoot}/Demos/**/config.js",
+        "{projectRoot}/Demos/**/tsconfig.json"
       ]
     },
     "lint-js": {
@@ -74,7 +84,23 @@
         "default",
         "test",
         "!{projectRoot}/Demos/**/*",
-        "{projectRoot}/.eslint*"
+        "{projectRoot}/eslint.config.mjs",
+        "{projectRoot}/tsconfig.eslint.json"
+      ]
+    },
+    "lint-demos": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "lint-demos"
+      },
+      "inputs": [
+        "{projectRoot}/Demos/**/*.js",
+        "{projectRoot}/Demos/**/*.jsx",
+        "{projectRoot}/Demos/**/*.ts",
+        "{projectRoot}/Demos/**/*.tsx",
+        "{projectRoot}/Demos/**/*.vue",
+        "{projectRoot}/eslint.config.mjs",
+        "{projectRoot}/tsconfig.eslint.json"
       ]
     },
     "lint-css": {
@@ -83,9 +109,14 @@
         "script": "lint-css"
       },
       "inputs": [
-        "{projectRoot}/Demos/**/*.css",
-        "{projectRoot}/Demos/**/*.vue",
-        "{projectRoot}/Demos/.stylelintrc.json"
+        "{projectRoot}/**/*.css",
+        "{projectRoot}/**/*.vue",
+        "!{projectRoot}/node_modules/**/*",
+        "!{projectRoot}/coverage/**/*",
+        "!{projectRoot}/publish-demos/**/*",
+        "!{projectRoot}/testing/artifacts/**/*",
+        "{projectRoot}/.stylelintrc.json",
+        "{projectRoot}/.stylelintignore"
       ]
     },
     "lint-html": {
@@ -94,7 +125,11 @@
         "script": "lint-html"
       },
       "inputs": [
-        "{projectRoot}/**/*"
+        "{projectRoot}/**/*",
+        "!{projectRoot}/node_modules/**/*",
+        "!{projectRoot}/coverage/**/*",
+        "!{projectRoot}/publish-demos/**/*",
+        "!{projectRoot}/testing/artifacts/**/*"
       ]
     },
     "prepare-js": {
@@ -103,15 +138,25 @@
         "commands": [
           "pnpm nx build devextreme",
           "pnpm nx run-many --targets=pack --projects=devextreme-angular,devextreme-react,devextreme-vue --parallel",
-          "pnpm run prepare-js"
+          "node scripts/prepare-js-configs.js",
+          "pnpm run generate-ng-umd",
+          "pnpm run generate-devextreme-angular-umd",
+          "pnpm run generate-external-bundles",
+          "pnpm run generate-tgz-packages"
         ],
         "parallel": false,
         "cwd": "{projectRoot}"
       },
       "inputs": [
         "default",
-        "{projectRoot}/gulpfile.js/**/*",
-        "{projectRoot}/rollup.devextreme-angular.umd.config.mjs"
+        "{projectRoot}/scripts/**/*",
+        "{projectRoot}/utils/shared/config-helper.js",
+        "{projectRoot}/utils/internal/create-config.js",
+        "{projectRoot}/utils/copy-shared-resources/**/*",
+        "{projectRoot}/menuMeta.json",
+        "{projectRoot}/rollup.ng.umd.config.mjs",
+        "{projectRoot}/rollup.devextreme-angular.umd.config.mjs",
+        "{projectRoot}/rollup.external.bundles.config.mjs"
       ],
       "outputs": [
         "{projectRoot}/Demos/**/config.js"

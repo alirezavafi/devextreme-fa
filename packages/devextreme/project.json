@@ -28,9 +28,9 @@
       "executor": "devextreme-nx-infra-plugin:localization",
       "options": {
         "messagesDir": "./js/localization/messages",
-        "messageTemplate": "./build/gulp/localization-template.jst",
+        "messageTemplate": "./build/localization-templates/localization-template.jst",
         "messageOutputDir": "./artifacts/js/localization",
-        "generatedTemplate": "./build/gulp/generated_js.jst",
+        "generatedTemplate": "./build/localization-templates/generated_js.jst",
         "cldrDataOutputDir": "./js/__internal/core/localization/cldr-data",
         "defaultMessagesOutputDir": "./js/__internal/core/localization",
         "applyLicenseHeaders": {
@@ -41,8 +41,8 @@
       },
       "inputs": [
         "{projectRoot}/js/localization/messages/**/*.json",
-        "{projectRoot}/build/gulp/localization-template.jst",
-        "{projectRoot}/build/gulp/generated_js.jst"
+        "{projectRoot}/build/localization-templates/localization-template.jst",
+        "{projectRoot}/build/localization-templates/generated_js.jst"
       ],
       "outputs": [
         "{projectRoot}/artifacts/js/localization",
@@ -50,7 +50,16 @@
         "{projectRoot}/js/__internal/core/localization/cldr-data"
       ]
     },
+    "build:community-localization": {
+      "cache": false,
+      "executor": "devextreme-nx-infra-plugin:generate-community-locales",
+      "options": {
+        "messagesDir": "./js/localization/messages",
+        "defaultLocale": "en"
+      }
+    },
     "build:localization": {
+      "cache": true,
       "executor": "nx:run-commands",
       "options": {
         "commands": [
@@ -61,8 +70,9 @@
       },
       "inputs": [
         "{projectRoot}/js/localization/messages/**/*.json",
-        "{projectRoot}/build/gulp/localization-template.jst",
-        "{projectRoot}/build/gulp/generated_js.jst"
+        "{projectRoot}/build/localization-templates/localization-template.jst",
+        "{projectRoot}/build/localization-templates/generated_js.jst",
+        { "externalDependencies": ["cldrjs", "cldr-core", "devextreme-cldr-data"] }
       ],
       "outputs": [
         "{projectRoot}/artifacts/js/localization",
@@ -142,6 +152,54 @@
         "{projectRoot}/artifacts/npm/devextreme-internal/bundles/dx.custom.config.js"
       ]
     },
+    "build:devextreme-bundler-config:watch": {
+      "executor": "devextreme-nx-infra-plugin:concatenate-files",
+      "cache": false,
+      "options": {
+        "sourceFiles": [
+          "./build/bundle-templates/modules/parts/core.js",
+          "./build/bundle-templates/modules/parts/data.js",
+          "./build/bundle-templates/modules/parts/widgets-base.js",
+          "./build/bundle-templates/modules/parts/widgets-web.js",
+          "./build/bundle-templates/modules/parts/viz.js",
+          "./build/bundle-templates/modules/parts/aspnet.js"
+        ],
+        "outputFile": "./build/bundle-templates/dx.custom.js",
+        "extractPattern": "[^]*BUNDLER_PARTS.*?$([^]*)^.*?BUNDLER_PARTS_END[^]*",
+        "extractPatternFlags": "gm",
+        "header": "\"use strict\";\n\n/* Comment lines below for the widgets you don't require and run \"devextreme-bundler\" in this directory, then include dx.custom.js in your project */\n\n",
+        "transforms": [
+          {
+            "find": "require *\\( *[\"']..\\/\\.\\.\\/",
+            "replace": "require('"
+          },
+          {
+            "find": "^[ ]{4}",
+            "replace": "",
+            "flags": "gm"
+          },
+          {
+            "find": "\\n{3,}",
+            "replace": "\n\n",
+            "flags": "g"
+          }
+        ],
+        "additionalPasses": [
+          {
+            "sourceFiles": ["./build/bundle-templates/dx.custom.js"],
+            "outputFile": "./artifacts/npm/devextreme/bundles/dx.custom.config.js",
+            "transforms": [
+              {
+                "find": "require *\\( *[\"']\\.\\.\\/",
+                "replace": "require('devextreme/"
+              }
+            ]
+          }
+        ],
+        "watch": true,
+        "watchPaths": ["./build/bundle-templates/modules/parts/**/*.js"]
+      }
+    },
     "clean:dist-ts": {
       "executor": "devextreme-nx-infra-plugin:clean",
       "options": {
@@ -179,10 +237,22 @@
         "{projectRoot}/artifacts/dist_ts"
       ]
     },
+    "build:ts:internal:watch": {
+      "executor": "devextreme-nx-infra-plugin:build-typescript",
+      "cache": false,
+      "options": {
+        "srcPattern": "./js/__internal/**/*.{ts,tsx}",
+        "tsconfig": "./js/__internal/tsconfig.json",
+        "outDir": "./artifacts/dist_ts",
+        "resolvePaths": true,
+        "resolvePathsBaseDir": "./js",
+        "watch": true
+      }
+    },
     "build:cjs": {
       "executor": "devextreme-nx-infra-plugin:babel-transform",
       "options": {
-        "babelConfigPath": "./build/gulp/transpile-config.js",
+        "babelConfigPath": "./build/transpile-config.js",
         "configKey": "cjs",
         "sourcePattern": "./js/**/*.{js,jsx}",
         "excludePatterns": [
@@ -210,10 +280,35 @@
         "{projectRoot}/artifacts/transpiled-renovation-npm"
       ]
     },
+    "build:cjs:watch": {
+      "executor": "devextreme-nx-infra-plugin:babel-transform",
+      "cache": false,
+      "options": {
+        "babelConfigPath": "./build/transpile-config.js",
+        "configKey": "cjs",
+        "sourcePattern": "./js/**/*.{js,jsx}",
+        "excludePatterns": [
+          "./js/**/*.d.ts",
+          "./js/__internal/**/*"
+        ],
+        "outDir": "./artifacts/transpiled",
+        "watch": true,
+        "copyAssets": [
+          { "from": "./js/localization/messages", "to": "./localization/messages" },
+          { "from": "./js/viz/vector_map.utils/_settings.json", "to": "./viz/vector_map.utils/_settings.json" }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "outDir": "./artifacts/transpiled-renovation-npm",
+          "removeDebug": true
+        }
+      }
+    },
     "build:npm:esm": {
       "executor": "devextreme-nx-infra-plugin:babel-transform",
       "options": {
-        "babelConfigPath": "./build/gulp/transpile-config.js",
+        "babelConfigPath": "./build/transpile-config.js",
         "configKey": "esm",
         "sourcePattern": "./js/**/*.{js,jsx}",
         "excludePatterns": [
@@ -238,7 +333,7 @@
     "build:npm:cjs": {
       "executor": "devextreme-nx-infra-plugin:babel-transform",
       "options": {
-        "babelConfigPath": "./build/gulp/transpile-config.js",
+        "babelConfigPath": "./build/transpile-config.js",
         "configKey": "cjs",
         "sourcePattern": "./js/**/*.{js,jsx}",
         "excludePatterns": [
@@ -263,7 +358,7 @@
     "build:cjs:internal": {
       "executor": "devextreme-nx-infra-plugin:babel-transform",
       "options": {
-        "babelConfigPath": "./build/gulp/transpile-config.js",
+        "babelConfigPath": "./build/transpile-config.js",
         "configKey": "tsCjs",
         "sourcePattern": "./artifacts/dist_ts/__internal/**/*.{js,jsx}",
         "outDir": "./artifacts/transpiled/__internal",
@@ -283,10 +378,30 @@
         "{projectRoot}/artifacts/transpiled-renovation-npm/__internal"
       ]
     },
+    "build:cjs:internal:watch": {
+      "executor": "devextreme-nx-infra-plugin:babel-transform",
+      "cache": false,
+      "options": {
+        "babelConfigPath": "./build/transpile-config.js",
+        "configKey": "tsCjs",
+        "sourcePattern": "./artifacts/dist_ts/__internal/**/*.{js,jsx}",
+        "outDir": "./artifacts/transpiled/__internal",
+        "renameExtensions": {
+          ".jsx": ".js"
+        },
+        "watch": true
+      },
+      "configurations": {
+        "production": {
+          "outDir": "./artifacts/transpiled-renovation-npm/__internal",
+          "removeDebug": true
+        }
+      }
+    },
     "build:npm:esm:internal": {
       "executor": "devextreme-nx-infra-plugin:babel-transform",
       "options": {
-        "babelConfigPath": "./build/gulp/transpile-config.js",
+        "babelConfigPath": "./build/transpile-config.js",
         "configKey": "esm",
         "sourcePattern": "./artifacts/dist_ts/__internal/**/*.{js,jsx}",
         "outDir": "./artifacts/transpiled-esm-npm/esm/__internal",
@@ -305,7 +420,7 @@
     "build:npm:cjs:internal": {
       "executor": "devextreme-nx-infra-plugin:babel-transform",
       "options": {
-        "babelConfigPath": "./build/gulp/transpile-config.js",
+        "babelConfigPath": "./build/transpile-config.js",
         "configKey": "tsCjs",
         "sourcePattern": "./artifacts/dist_ts/__internal/**/*.{js,jsx}",
         "outDir": "./artifacts/transpiled-esm-npm/cjs/__internal",
@@ -324,7 +439,7 @@
     "build:cjs:bundles": {
       "executor": "devextreme-nx-infra-plugin:babel-transform",
       "options": {
-        "babelConfigPath": "./build/gulp/transpile-config.js",
+        "babelConfigPath": "./build/transpile-config.js",
         "configKey": "cjs",
         "sourcePattern": "./build/bundle-templates/**/*.js",
         "outDir": "./artifacts/transpiled/bundles",
@@ -449,6 +564,34 @@
         }
       }
     },
+    "build:transpile:watch": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "commands": [
+          "pnpm nx build:ts:internal:watch devextreme",
+          "pnpm nx build:cjs:watch devextreme",
+          "pnpm nx build:cjs:watch devextreme -c production",
+          "pnpm nx build:cjs:internal:watch devextreme",
+          "pnpm nx build:cjs:internal:watch devextreme -c production"
+        ],
+        "cwd": "{projectRoot}",
+        "parallel": true
+      },
+      "dependsOn": ["build:ts:internal"]
+    },
+    "transpile:tests": {
+      "executor": "devextreme-nx-infra-plugin:babel-transform",
+      "cache": false,
+      "options": {
+        "babelConfigPath": "./testing/tests.babelrc.json",
+        "sourcePattern": "./testing/**/*.js",
+        "outDir": "./testing"
+      },
+      "dependsOn": [
+        "build:devextreme-bundler-config"
+      ]
+    },
     "state-manager:optimize": {
       "executor": "devextreme-nx-infra-plugin:state-manager-optimize",
       "options": {
@@ -569,6 +712,34 @@
         "{projectRoot}/artifacts/js/dx.{all,web,viz,ai-integration,custom}.debug.js"
       ]
     },
+    "bundle:watch": {
+      "executor": "devextreme-nx-infra-plugin:bundle",
+      "options": {
+        "watch": true,
+        "entries": [
+          "bundles/dx.all.js",
+          "bundles/dx.web.js",
+          "bundles/dx.viz.js",
+          "bundles/dx.ai-integration.js",
+          "bundles/dx.custom.js"
+        ],
+        "sourceDir": "./artifacts/transpiled-renovation-npm",
+        "outDir": "./artifacts/js",
+        "mode": "debug",
+        "webpackConfigPath": "./webpack.config.js",
+        "applyLicenseHeaders": {
+          "prependAfterLicense": "\"use strict\";\n\n",
+          "separator": "",
+          "includePatterns": ["dx.*.debug.js"]
+        }
+      },
+      "configurations": {
+        "production": {
+          "sourceMap": false
+        }
+      },
+      "cache": false
+    },
     "bundle:prod": {
       "executor": "nx:run-commands",
       "options": {
@@ -665,8 +836,8 @@
         "sourcesSettingsFile": "./_settings.js",
         "utilsOutDir": "./artifacts/js/vectormap-utils",
         "dataOutDir": "./artifacts/js/vectormap-data",
-        "utilsTemplatePath": "./build/gulp/vectormaputils-template.jst",
-        "dataTemplatePath": "./build/gulp/vectormapdata-template.jst",
+        "utilsTemplatePath": "./build/vectormap-templates/vectormaputils-template.jst",
+        "dataTemplatePath": "./build/vectormap-templates/vectormapdata-template.jst",
         "applyLicenseHeaders": {
           "separator": "",
           "prependAfterLicense": "\"use strict\";\n\n"
@@ -675,8 +846,8 @@
       "inputs": [
         "{projectRoot}/js/viz/vector_map.utils/**/*",
         "{projectRoot}/build/vectormap-sources/**/*",
-        "{projectRoot}/build/gulp/vectormaputils-template.jst",
-        "{projectRoot}/build/gulp/vectormapdata-template.jst"
+        "{projectRoot}/build/vectormap-templates/vectormaputils-template.jst",
+        "{projectRoot}/build/vectormap-templates/vectormapdata-template.jst"
       ],
       "outputs": [
         "{projectRoot}/artifacts/js/vectormap-utils",
@@ -713,6 +884,7 @@
       }
     },
     "build:vectormap": {
+      "cache": true,
       "executor": "nx:run-commands",
       "options": {
         "commands": [
@@ -724,8 +896,8 @@
       "inputs": [
         "{projectRoot}/js/viz/vector_map.utils/**/*",
         "{projectRoot}/build/vectormap-sources/**/*",
-        "{projectRoot}/build/gulp/vectormaputils-template.jst",
-        "{projectRoot}/build/gulp/vectormapdata-template.jst"
+        "{projectRoot}/build/vectormap-templates/vectormaputils-template.jst",
+        "{projectRoot}/build/vectormap-templates/vectormapdata-template.jst"
       ],
       "outputs": [
         "{projectRoot}/artifacts/js/vectormap-utils",
@@ -787,18 +959,79 @@
       },
       "outputs": ["{projectRoot}/artifacts/js/dx.aspnet.mvc.js"]
     },
-    "build:declarations": {
-      "executor": "nx:run-commands",
+    "verify:ts-modules": {
+      "executor": "devextreme-nx-infra-plugin:check-declarations",
       "options": {
-        "command": "gulp ts",
-        "cwd": "{projectRoot}"
+        "mode": "modules",
+        "typescriptModule": "typescript-min"
+      },
+      "inputs": ["{projectRoot}/js/**/*.d.ts"]
+    },
+    "verify:ts-bundle": {
+      "executor": "devextreme-nx-infra-plugin:check-declarations",
+      "options": {
+        "mode": "bundle",
+        "typescriptModule": "typescript-min"
+      },
+      "dependsOn": [{ "target": "build:npm:dts-bundle", "params": "forward" }],
+      "configurations": {
+        "internal": {}
+      },
+      "inputs": [
+        "{projectRoot}/artifacts/ts/dx.all.d.ts",
+        "{projectRoot}/ts/dx.all.d.ts",
+        "{projectRoot}/ts/aliases.d.ts"
+      ]
+    },
+    "verify:ts-jquery": {
+      "executor": "devextreme-nx-infra-plugin:check-declarations",
+      "options": {
+        "mode": "jquery",
+        "typescriptModule": "typescript-min"
+      },
+      "dependsOn": [{ "target": "build:npm:dts-bundle", "params": "forward" }],
+      "configurations": {
+        "internal": {}
+      },
+      "inputs": [
+        "{projectRoot}/artifacts/ts/dx.all.d.ts",
+        "{projectRoot}/ts/dx.all.d.ts",
+        "{projectRoot}/ts/aliases.d.ts",
+        "{projectRoot}/build/modules_metadata.json"
+      ]
+    },
+    "copy:ts-vendor": {
+      "executor": "devextreme-nx-infra-plugin:copy-files",
+      "options": {
+        "files": [
+          { "from": "./ts/vendor/*", "to": "./artifacts/ts" }
+        ]
+      },
+      "inputs": ["{projectRoot}/ts/vendor/**/*"],
+      "outputs": ["{projectRoot}/artifacts/ts/**/*"]
+    },
+    "build:declarations": {
+      "executor": "nx:noop",
+      "cache": true,
+      "dependsOn": [
+        "copy:ts-vendor",
+        { "target": "verify:ts-jquery", "params": "forward" },
+        { "target": "verify:ts-bundle", "params": "forward" }
+      ],
+      "configurations": {
+        "internal": {}
       },
       "inputs": [
         "{projectRoot}/ts/**/*.d.ts",
-        "{projectRoot}/build/gulp/ts.js"
+        "{projectRoot}/ts/vendor/**/*",
+        "{projectRoot}/build/modules_metadata.json",
+        "{workspaceRoot}/pnpm-lock.yaml"
       ],
       "outputs": [
-        "{projectRoot}/artifacts/ts"
+        "{projectRoot}/artifacts/ts",
+        "{projectRoot}/artifacts/ts/dx.all.d.ts",
+        "{projectRoot}/artifacts/npm/devextreme/bundles/dx.all.d.ts",
+        "{projectRoot}/artifacts/npm/devextreme-internal/bundles/dx.all.d.ts"
       ]
     },
     "compress:ts-modules": {
@@ -839,6 +1072,7 @@
       ]
     },
     "build:npm:dts-bundle": {
+      "cache": true,
       "executor": "devextreme-nx-infra-plugin:dts-bundle",
       "options": {
         "bundleSources": ["./ts/dx.all.d.ts", "./ts/aliases.d.ts"],
@@ -1112,6 +1346,7 @@
       }
     },
     "copy:vendor:js": {
+      "cache": true,
       "executor": "devextreme-nx-infra-plugin:copy-files",
       "options": {
         "files": [
@@ -1135,7 +1370,7 @@
           { "from": "./node_modules/devexpress-gantt/dist/dx-gantt.min.js", "to": "./artifacts/js/dx-gantt.min.js" },
           { "from": "./node_modules/devextreme-quill/dist/dx-quill.js", "to": "./artifacts/js/dx-quill.js" },
           { "from": "./node_modules/devextreme-quill/dist/dx-quill.min.js", "to": "./artifacts/js/dx-quill.min.js" },
-          { "from": "./node_modules/devextreme-aspnet-data/js/dx.aspnet.data.js", "to": "./artifacts/js/dx.aspnet.data.js" }
+          { "from": "../../apps/demos/node_modules/devextreme-aspnet-data/js/dx.aspnet.data.js", "to": "./artifacts/js/dx.aspnet.data.js" }
         ]
       },
       "inputs": [
@@ -1167,6 +1402,7 @@
       ]
     },
     "copy:vendor:css": {
+      "cache": true,
       "executor": "devextreme-nx-infra-plugin:copy-files",
       "options": {
         "files": [
@@ -1237,14 +1473,51 @@
       }
     },
     "verify:public-modules": {
-      "executor": "nx:run-commands",
+      "executor": "devextreme-nx-infra-plugin:check-declarations",
       "options": {
-        "command": "cross-env BUILD_ESM_PACKAGE=true gulp ts-check-public-modules",
-        "cwd": "{projectRoot}"
+        "mode": "public-modules",
+        "typescriptModule": "typescript-min"
       },
+      "dependsOn": [
+        { "target": "build:npm:dts-modules", "params": "forward" },
+        { "target": "build:npm:dts-bundle", "params": "forward" }
+      ],
       "inputs": [
         "{projectRoot}/artifacts/npm/devextreme/**/*.d.ts",
-        "{projectRoot}/build/gulp/modules_metadata.json"
+        "{projectRoot}/artifacts/npm/devextreme/bundles/dx.all.d.ts",
+        "{projectRoot}/artifacts/npm/devextreme-internal/**/*.d.ts",
+        "{projectRoot}/artifacts/npm/devextreme-internal/bundles/dx.all.d.ts",
+        "{projectRoot}/build/modules_metadata.json",
+        "{projectRoot}/ts/dx.all.d.ts",
+        "{projectRoot}/ts/aliases.d.ts"
+      ],
+      "configurations": {
+        "internal": {
+          "internalPackage": true,
+          "npmPackageDir": "devextreme-internal"
+        }
+      }
+    },
+    "validate:ts": {
+      "executor": "nx:noop",
+      "cache": true,
+      "dependsOn": [
+        "verify:ts-modules",
+        { "target": "verify:ts-bundle", "params": "forward" },
+        { "target": "verify:ts-jquery", "params": "forward" },
+        { "target": "verify:public-modules", "params": "forward" }
+      ],
+      "configurations": {
+        "internal": {}
+      },
+      "inputs": [
+        "{projectRoot}/js/**/*.d.ts",
+        "{projectRoot}/ts/dx.all.d.ts",
+        "{projectRoot}/ts/aliases.d.ts",
+        "{projectRoot}/build/modules_metadata.json",
+        "{projectRoot}/artifacts/npm/devextreme/**/*.d.ts",
+        "{projectRoot}/artifacts/npm/devextreme-internal/**/*.d.ts",
+        "{workspaceRoot}/pnpm-lock.yaml"
       ]
     },
     "build:npm": {
@@ -1276,7 +1549,7 @@
         "{projectRoot}/license/**/*",
         "{projectRoot}/build/npm-bin/**/*",
         "{projectRoot}/build/npm-templates/**/*",
-        "{projectRoot}/build/gulp/modules_metadata.json",
+        "{projectRoot}/build/modules_metadata.json",
         "{projectRoot}/ts/dx.all.d.ts",
         "{projectRoot}/ts/aliases.d.ts",
         "webpackConfig",
@@ -1368,7 +1641,10 @@
       "inputs": [
         "internalPackageEnv",
         "default",
-        "test"
+        "!{projectRoot}/js/__internal/core/localization/cldr-data/**/*",
+        "!{projectRoot}/js/__internal/core/localization/default_messages.ts",
+        "test",
+        "{workspaceRoot}/pnpm-lock.yaml"
       ],
       "outputs": [
         "{projectRoot}/artifacts",
@@ -1376,6 +1652,7 @@
         "{projectRoot}/js/__internal/core/localization/cldr-data",
         "{projectRoot}/js/__internal/core/localization/default_messages.ts"
       ],
+      "cache": true,
       "configurations": {
         "testing": {
           "env": {
@@ -1397,31 +1674,64 @@
             "pnpm nx build:transpile devextreme",
             "pnpm nx state-manager:optimize devextreme",
             "pnpm nx run-many --targets=bundle:debug,bundle:prod,build:vectormap,copy:vendor,build:aspnet,build:declarations --projects=devextreme --parallel -c production",
-            "pnpm nx build:npm devextreme",
+            "pnpm nx build:npm devextreme -c production",
+            "pnpm nx verify:licenses devextreme"
+          ]
+        },
+        "production-internal": {
+          "env": {
+            "BUILD_INTERNAL_PACKAGE": "true"
+          },
+          "commands": [
+            "pnpm nx clean:artifacts devextreme",
+            "pnpm nx build:localization devextreme",
+            "pnpm nx build:transpile devextreme -c internal",
+            "pnpm nx state-manager:optimize devextreme",
+            "pnpm nx run-many --targets=bundle:debug,bundle:prod,build:vectormap,copy:vendor,build:aspnet --projects=devextreme --parallel -c production",
+            "pnpm nx build:declarations devextreme -c internal",
+            "pnpm nx build:npm devextreme -c production-internal",
             "pnpm nx verify:licenses devextreme"
           ]
         }
       }
     },
     "build-dist": {
-      "executor": "nx:run-script",
+      "executor": "nx:run-commands",
       "options": {
-        "script": "build-dist"
+        "command": "pnpm nx run devextreme:build -c production"
       },
       "inputs": [
         "internalPackageEnv",
         "default",
-        "test"
+        "test",
+        "{workspaceRoot}/pnpm-lock.yaml"
       ],
       "outputs": [
-        "{projectRoot}/artifacts",
-        "{projectRoot}/scss/bundles"
-      ]
+        "{projectRoot}/artifacts"
+      ],
+      "cache": true,
+      "configurations": {
+        "internal": {
+          "command": "pnpm nx run devextreme:build -c production-internal"
+        }
+      },
+      "metadata": {
+        "description": "Production dist build. Use -c internal for BUILD_INTERNAL_PACKAGE parity."
+      }
     },
     "build:dev": {
-      "executor": "nx:run-script",
+      "executor": "nx:run-commands",
       "options": {
-        "script": "build:dev"
+        "env": {
+          "DEVEXTREME_TEST_CI": "true"
+        },
+        "commands": [
+          "pnpm nx clean:artifacts devextreme",
+          "pnpm nx build:localization devextreme",
+          "pnpm nx build:transpile devextreme -c ci",
+          "pnpm nx run-many --targets=bundle:debug,build:vectormap,copy:vendor --projects=devextreme --parallel"
+        ],
+        "parallel": false
       },
       "dependsOn": [
         "^build"
@@ -1432,31 +1742,111 @@
           "env": "DEVEXTREME_TEST_CI"
         },
         "default",
-        "test"
+        "!{projectRoot}/js/__internal/core/localization/cldr-data/**/*",
+        "!{projectRoot}/js/__internal/core/localization/default_messages.ts",
+        "test",
+        "{workspaceRoot}/pnpm-lock.yaml"
       ],
       "outputs": [
         "{projectRoot}/artifacts",
         "{projectRoot}/build/bundle-templates/dx.custom.js",
         "{projectRoot}/js/__internal/core/localization/cldr-data",
         "{projectRoot}/js/__internal/core/localization/default_messages.ts"
-      ]
-    },
-    "dev": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "dev"
-      },
-      "dependsOn": [
-        "^build"
-      ]
+      ],
+      "cache": true,
+      "metadata": {
+        "description": "Dev/CI test build. Skips prod bundles, aspnet, declarations, npm, and license checks."
+      }
     },
     "build:systemjs": {
-      "executor": "nx:run-script",
+      "executor": "nx:run-commands",
       "options": {
-        "script": "build:systemjs"
+        "cwd": "{projectRoot}",
+        "parallel": true,
+        "commands": [
+          "node testing/systemjs-builder.js --transpile=modules",
+          "node testing/systemjs-builder.js --transpile=testing",
+          "node testing/systemjs-builder.js --transpile=css",
+          "node testing/systemjs-builder.js --transpile=js-vendors"
+        ]
       },
       "dependsOn": [
         "build:dev"
+      ],
+      "inputs": [
+        "internalPackageEnv",
+        {
+          "env": "DEVEXTREME_TEST_CI"
+        },
+        {
+          "dependentTasksOutputFiles": "packages/devextreme/artifacts/transpiled/**/*"
+        },
+        {
+          "dependentTasksOutputFiles": "packages/devextreme/artifacts/css/dx.light.css"
+        },
+        {
+          "dependentTasksOutputFiles": "packages/devextreme/artifacts/css/dx.material.blue.light.css"
+        },
+        {
+          "dependentTasksOutputFiles": "packages/devextreme/artifacts/css/dx.fluent.blue.light.css"
+        },
+        {
+          "dependentTasksOutputFiles": "packages/devextreme/artifacts/css/dx-gantt.css"
+        },
+        "{projectRoot}/testing/content/**/*",
+        "{projectRoot}/testing/helpers/**/*",
+        "{projectRoot}/testing/tests/**/*",
+        "{projectRoot}/testing/systemjs-builder.js",
+        "{workspaceRoot}/pnpm-lock.yaml"
+      ],
+      "outputs": [
+        "{projectRoot}/artifacts/transpiled-systemjs",
+        "{projectRoot}/artifacts/transpiled-testing",
+        "{projectRoot}/artifacts/css-systemjs",
+        "{projectRoot}/artifacts/js-systemjs"
+      ],
+      "cache": true
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        "build:dev"
+      ],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "pnpm nx dev-watch devextreme"
+      }
+    },
+    "dev-watch": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "parallel": true,
+        "commands": [
+          "pnpm nx build:transpile:watch devextreme",
+          "pnpm nx build:devextreme-bundler-config:watch devextreme",
+          "pnpm nx bundle:watch devextreme",
+          "pnpm nx test-env devextreme"
+        ]
+      }
+    },
+    "test-env": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node ./testing/launch",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "lint": {
+      "executor": "nx:noop",
+      "dependsOn": [
+        "lint-js",
+        "lint-ts",
+        "lint-dts",
+        "lint-texts"
       ]
     },
     "lint-css": {
@@ -1503,8 +1893,26 @@
         },
         "{projectRoot}/**/*.ts?(x)",
         "{projectRoot}/.eslint*",
-        "!{projectRoot}/**/*.d.ts",
-        "!{projectRoot}/testing/renovation/**/*"
+        "!{projectRoot}/**/*.d.ts"
+      ]
+    },
+    "lint-texts": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "lint-texts"
+      },
+      "inputs": [
+        "{projectRoot}/**/*",
+        "!{projectRoot}/**/*.{js,ts,tsx}",
+        "!{projectRoot}/**/*.{jpg,gif,ico,png}",
+        "!{projectRoot}/artifacts/**",
+        "!{projectRoot}/build/**",
+        "!{projectRoot}/fonts/**",
+        "!{projectRoot}/icons/**",
+        "!{projectRoot}/localization/**",
+        "!{projectRoot}/node_modules/**",
+        "{projectRoot}/build/linters/validate-non-latin-symbols.js",
+        "{projectRoot}/.gitignore"
       ]
     },
     "test-jest": {

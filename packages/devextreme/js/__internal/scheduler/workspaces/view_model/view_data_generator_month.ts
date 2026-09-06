@@ -8,12 +8,11 @@ import {
   getCalendarSpanEnd,
   getToday, isCustomCalendar, isFirstCellInMonthWithIntervalCount, monthUtils, setOptionHour,
 } from '@ts/scheduler/r1/utils/index';
-import type { ViewDataProviderOptions } from '@ts/scheduler/types';
 
 import timezoneUtils from '../../utils_time_zone';
-import { ViewDataGenerator } from './m_view_data_generator';
-import type { MonthViewCellDataSimple, ViewDataProviderExtendedOptions } from './types';
+import type { MonthViewCellDataSimple, ViewDataProviderExtendedOptions, ViewDataProviderOptions } from './types';
 import { calculateAlignedWeeksBetweenDates } from './utils/view_generator_utils';
+import { ViewDataGenerator } from './view_data_generator';
 
 /**
  * Resolve the effective first day of week for the calendar-aware month view.
@@ -131,7 +130,7 @@ export class ViewDataGeneratorMonth extends ViewDataGenerator {
     );
   }
 
-  protected setVisibilityDates(options: ViewDataProviderOptions): void {
+  protected setVisibilityDates(options: ViewDataProviderExtendedOptions): void {
     if (isCustomCalendar(options.calendar)) {
       this.minVisibleDate = getCalendarMonthStart(options.currentDate, options.calendar);
       this.maxVisibleDate = getCalendarSpanEnd(
@@ -202,11 +201,5 @@ export class ViewDataGeneratorMonth extends ViewDataGenerator {
 
   setHiddenInterval(): void {
     this.hiddenInterval = 0;
-  }
-
-  protected getCellEndDate(cellStartDate: Date, options: ViewDataProviderOptions): Date {
-    const { startDayHour, endDayHour } = options;
-    const durationMs = (endDayHour - startDayHour) * toMs('hour');
-    return timezoneUtils.addOffsetsWithoutDST(cellStartDate, durationMs);
   }
 }

@@ -46,7 +46,6 @@ import type { ValidationResult } from '@js/ui/validation_group';
 import errors from '@js/ui/widget/ui.errors';
 import { invokeConditionally } from '@ts/core/utils/conditional_invoke';
 import { logger } from '@ts/core/utils/m_console';
-import type { Component } from '@ts/core/widget/component';
 import type { OptionChanged } from '@ts/core/widget/types';
 import type { SupportedKeyHandler } from '@ts/core/widget/widget';
 import Widget, { FOCUSED_STATE_CLASS } from '@ts/core/widget/widget';
@@ -103,14 +102,14 @@ import {
 } from '@ts/ui/form/form.utils';
 import type { LoadPanelProperties } from '@ts/ui/load_panel';
 import LoadPanel from '@ts/ui/load_panel';
-import ValidationEngine from '@ts/ui/m_validation_engine';
-import ValidationSummary from '@ts/ui/m_validation_summary';
 import type { ScreenSizeQualifier } from '@ts/ui/responsive_box';
 import Scrollable from '@ts/ui/scroll_view/scrollable';
 import type { TabPanelProperties } from '@ts/ui/tab_panel/tab_panel';
 import TabPanel from '@ts/ui/tab_panel/tab_panel';
 import { TEXTEDITOR_CLASS, TEXTEDITOR_INPUT_CLASS } from '@ts/ui/text_box/text_editor.base';
 import { TOOLBAR_CLASS } from '@ts/ui/toolbar/constants';
+import ValidationEngine from '@ts/ui/validation_engine';
+import ValidationSummary from '@ts/ui/validation_summary';
 
 export type FormAICommandName = 'smartPaste';
 export interface AICommandParamsMap {
@@ -160,7 +159,6 @@ class Form extends Widget<FormProperties> {
 
   _groupsColCount!: number[];
 
-  // eslint-disable-next-line no-restricted-globals
   autoColCountChangedTimeoutId?: ReturnType<typeof setTimeout>;
 
   _rootLayoutManager!: LayoutManager;
@@ -203,12 +201,9 @@ class Form extends Widget<FormProperties> {
       screenByWidth: defaultScreenFactorFunc,
       labelLocation: 'left',
       readOnly: false,
-      // @ts-expect-error ts-error
-      onFieldDataChanged: null,
-      // @ts-expect-error ts-error
-      customizeItem: null,
-      // @ts-expect-error ts-error
-      onEditorEnterKey: null,
+      onFieldDataChanged: undefined,
+      customizeItem: undefined,
+      onEditorEnterKey: undefined,
       minColWidth: 200,
       alignItemLabels: true,
       alignItemLabelsInAllGroups: true,
@@ -225,10 +220,8 @@ class Form extends Widget<FormProperties> {
       stylingMode: config().editorStylingMode,
       labelMode: 'outside',
       isDirty: false,
-      // @ts-expect-error ts-error
-      onSmartPasting: null,
-      // @ts-expect-error ts-error
-      onSmartPasted: null,
+      onSmartPasting: undefined,
+      onSmartPasted: undefined,
     };
   }
 
@@ -1035,9 +1028,10 @@ class Form extends Widget<FormProperties> {
   _createComponent<TTComponent, IProperties = Record<string, unknown>>(
     element: string | HTMLElement | dxElementWrapper,
     component: string | (new (...args) => TTComponent),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    componentConfiguration: TTComponent extends Component<any, infer TTProperties>
-      ? TTProperties
+    componentConfiguration: TTComponent extends { _getDefaultOptions: () => infer TTProperties }
+      ? string extends keyof TTProperties
+        ? object
+        : Partial<TTProperties> & { integrationOptions?: Record<string, unknown> }
       : IProperties,
   ): TTComponent {
     const { readOnly } = this.option();
@@ -1189,7 +1183,7 @@ class Form extends Widget<FormProperties> {
     const nameParts = fullName.split('.');
 
     const itemPath = this._getItemPath(nameParts);
-    const item = this.option(itemPath);
+    const item = this.option(itemPath) as Item & Record<string, unknown>;
     const optionNameWithoutPath = fullName.replace(`${itemPath}.`, '');
     const simpleOptionName = optionNameWithoutPath.split('.')[0].replace(/\[\d+]/, '');
     const itemAction = this._tryCreateItemOptionAction(
@@ -1840,7 +1834,7 @@ class Form extends Widget<FormProperties> {
     id: string,
     option?: string,
     value?: Item[] | TabbedItem['tabs'] | undefined,
-  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+
   ): Item | void {
     const { items } = this.option();
 

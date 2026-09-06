@@ -219,7 +219,7 @@ export interface dxDateBoxOptions extends DateBoxBaseOptions<dxDateBox> {
      * @type_function_param1_field component:dxDateBox
      * @public
      */
-    disabledDates?: Array<Date> | ((data: DisabledDate) => boolean);
+    disabledDates?: Array<Date> | ((data: DisabledDate) => boolean) | null;
     /**
      * @docid
      * @default {}
@@ -249,7 +249,7 @@ export interface dxDateBoxOptions extends DateBoxBaseOptions<dxDateBox> {
      * @default null
      * @public
      */
-    maxLength?: string | number;
+    maxLength?: string | number | null;
     /**
      * @docid
      * @default ""
@@ -347,7 +347,7 @@ export interface DateBoxBaseOptions<TComponent> extends Omit<
      * @default null
      * @public
      */
-    displayFormat?: Format;
+    displayFormat?: Format | null;
     /**
      * @docid
      * @type Date|number|string|null|undefined

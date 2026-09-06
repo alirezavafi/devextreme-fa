@@ -100,14 +100,14 @@ jobs:
         pnpm run validate-declarations
 
   notify:
-    runs-on: devextreme-shr2
+    runs-on: ubuntu-latest
     name: Send notifications
     needs: [check-ts-bundle, validate-declarations]
     if: github.event_name != 'pull_request' && contains(needs.*.result, 'failure')
 
     steps:
       - uses: actions/checkout@v6
-      - uses: DevExpress/github-actions/send-teams-notification@v1
+      - uses: DevExpress/github-actions/send-teams-notification@send-teams-notification
         with:
           hook_url: ${{secrets.TEAMS_ALERT}}
           bearer_token: ${{secrets.GITHUB_TOKEN}}

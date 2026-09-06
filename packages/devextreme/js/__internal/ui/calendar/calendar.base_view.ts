@@ -90,7 +90,7 @@ export interface BaseViewProperties extends WidgetProperties {
 
   colCount: number;
 
-  disabledDates?: Date[] | ((data: DisabledDate) => boolean);
+  disabledDates?: Date[] | ((data: DisabledDate) => boolean) | null;
 
   zoomLevel?: CalendarZoomLevel;
 

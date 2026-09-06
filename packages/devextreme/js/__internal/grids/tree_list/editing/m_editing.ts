@@ -7,12 +7,14 @@ import { Deferred } from '@js/core/utils/deferred';
 import { extend } from '@js/core/utils/extend';
 import { isDefined } from '@js/core/utils/type';
 import errors from '@js/ui/widget/ui.errors';
-import type { DataController } from '@ts/grids/grid_core/data_controller/m_data_controller';
-import { dataControllerEditingExtenderMixin, editingModule } from '@ts/grids/grid_core/editing/m_editing';
+import type { DataController } from '@ts/grids/grid_core/data_controller/data_controller';
+import { editingDataControllerExtender } from '@ts/grids/grid_core/editing/extenders/editing_data_controller';
+import { editingModule } from '@ts/grids/grid_core/editing/m_editing';
 import type { ModuleType } from '@ts/grids/grid_core/m_types';
 import gridCoreUtils from '@ts/grids/grid_core/m_utils';
 
 import type { RowsView } from '../../grid_core/views/m_rows_view';
+import type { TreeListDataController } from '../data_controller/m_data_controller';
 import treeListCore from '../m_core';
 
 const TREELIST_EXPAND_ICON_CONTAINER_CLASS = 'dx-treelist-icon-container';
@@ -21,6 +23,8 @@ const SELECT_CHECKBOX_CLASS = 'dx-select-checkbox';
 const DATA_EDIT_DATA_INSERT_TYPE = 'insert';
 
 class EditingController extends editingModule.controllers.editing {
+  protected declare _dataController: TreeListDataController;
+
   protected _generateNewItem(key) {
     const item: any = super._generateNewItem(key);
 
@@ -50,21 +54,22 @@ class EditingController extends editingModule.controllers.editing {
     }
   }
 
-  protected _getLoadedRowIndex(items, change) {
+  protected _getLoadedRowIndex(items, change, isProcessedItems?) {
     const dataSourceAdapter = this._dataController.dataSource();
-    const parentKey = dataSourceAdapter?.parentKeyOf(change.data);
+    const insertParentKey = this._getInternalData(change.key)?.insertInfo?.parentKey;
+    const parentKey = insertParentKey !== undefined
+      ? insertParentKey
+      : dataSourceAdapter?.parentKeyOf(change.data);
 
     if (parentKey !== undefined && parentKey !== this.option('rootValue')) {
       const rowIndex = gridCoreUtils.getIndexByKey(parentKey, items);
       // @ts-expect-error
-      if (rowIndex >= 0 && this._dataController.isRowExpanded(parentKey)) {
-        // @ts-expect-error
-        return super._getLoadedRowIndex.apply(this, arguments);
+      if (!(rowIndex >= 0 && this._dataController.isRowExpanded(parentKey))) {
+        return -1;
       }
-      return -1;
     }
-    // @ts-expect-error
-    return super._getLoadedRowIndex.apply(this, arguments);
+
+    return super._getLoadedRowIndex(items, change, isProcessedItems);
   }
 
   protected _isEditColumnVisible() {
@@ -131,9 +136,9 @@ class EditingController extends editingModule.controllers.editing {
   protected _addRowCore(data, parentKey, oldEditRowIndex) {
     const rootValue = this.option('rootValue');
     const dataSourceAdapter = this._dataController.dataSource();
-    const parentKeyGetter = dataSourceAdapter.createParentIdGetter();
+    const parentKeyGetter = dataSourceAdapter?.createParentIdGetter();
 
-    parentKey = parentKeyGetter(data);
+    parentKey = parentKeyGetter ? parentKeyGetter(data) : parentKey;
 
     // @ts-expect-error
     if (parentKey !== undefined && parentKey !== rootValue && !this._dataController.isRowExpanded(parentKey)) {
@@ -155,9 +160,9 @@ class EditingController extends editingModule.controllers.editing {
 
   protected _initNewRow(options, parentKey?) {
     const dataSourceAdapter = this._dataController.dataSource();
-    const parentIdSetter = dataSourceAdapter.createParentIdSetter();
+    const parentIdSetter = dataSourceAdapter?.createParentIdSetter();
 
-    parentIdSetter(options.data, parentKey);
+    parentIdSetter?.(options.data, parentKey);
 
     // @ts-expect-error
     return super._initNewRow.apply(this, arguments);
@@ -232,7 +237,7 @@ const rowsView = (Base: ModuleType<RowsView>) => class TreeListEditingRowsViewEx
   }
 };
 
-const data = (Base: ModuleType<DataController>) => class DataControllerTreeListEditingExtender extends dataControllerEditingExtenderMixin(Base) {
+const data = (Base: ModuleType<DataController>) => class TreeListEditingDataControllerExtender extends editingDataControllerExtender(Base) {
   private changeRowExpand() {
     this._editingController.refresh();
     // @ts-expect-error

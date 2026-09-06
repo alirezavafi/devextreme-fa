@@ -1,8 +1,9 @@
 import { Deferred } from '@js/core/utils/deferred';
 import { focusModule } from '@ts/grids/grid_core/focus/m_focus';
 
-import type { DataController } from '../grid_core/data_controller/m_data_controller';
+import type { DataController } from '../grid_core/data_controller/data_controller';
 import type { ModuleType } from '../grid_core/m_types';
+import type { DataSourceAdapterTreeList } from './data_source_adapter/m_data_source_adapter';
 import core from './m_core';
 
 function findIndex(items, callback) {
@@ -20,6 +21,8 @@ function findIndex(items, callback) {
 const data = (
   Base: ModuleType<DataController>,
 ) => class TreeListDataControllerExtender extends focusModule.extenders.controllers.data(Base) {
+  public declare _dataSource?: DataSourceAdapterTreeList | null;
+
   private changeRowExpand(key) {
     // @ts-expect-error
     if (this.option('focusedRowEnabled') && this.isRowExpanded(key)) {
@@ -51,7 +54,7 @@ const data = (
 
   private getParentKey(key) {
     const that = this;
-    const dataSource = that._dataSource;
+    const dataSource = that._dataSource!;
     // @ts-expect-error
     const node = that.getNodeByKey(key);
     // @ts-expect-error
@@ -60,10 +63,10 @@ const data = (
     if (node) {
       d.resolve(node.parent ? node.parent.key : undefined);
     } else {
-      dataSource.load({
+      dataSource.customLoader.load({
         filter: [dataSource.getKeyExpr(), '=', key],
-      }).done((items) => {
-        const parentData = items[0];
+      }).done((loadResult) => {
+        const parentData = loadResult.data[0];
 
         if (parentData) {
           d.resolve(dataSource.parentKeyOf(parentData));
@@ -98,21 +101,25 @@ const data = (
   }
 
   protected getPageIndexByKey(key) {
-    const that = this;
-    const dataSource = that._dataSource;
+    const dataSource = this._dataSource!;
     // @ts-expect-error
     const d = new Deferred();
 
-    that.expandAscendants(key).done(() => {
-      dataSource.load({
+    this.expandAscendants(key).done(() => {
+      dataSource.customLoader.load({
         parentIds: [],
-      }).done((nodes) => {
-        const offset = findIndex(nodes, (node) => that.keyOf(node.data) === key);
+      }).done(({ data: nodes }) => {
+        if (this._dataSource !== dataSource) {
+          d.resolve(-1);
+          return;
+        }
+
+        const offset = findIndex(nodes, (node) => this.keyOf(node.data) === key);
 
         let pageIndex = -1;
 
         if (offset >= 0) {
-          pageIndex = Math.floor(offset / that.pageSize());
+          pageIndex = Math.floor(offset / this.pageSize());
         }
 
         d.resolve(pageIndex);

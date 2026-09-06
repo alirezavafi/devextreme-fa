@@ -16,7 +16,7 @@ import { restoreFocus, saveFocusedElementInfo } from '@js/ui/shared/accessibilit
 import filterUtils from '@js/ui/shared/filtering';
 import { getCalendarMonthNamesInActiveLocale } from '@ts/core/localization/calendar';
 import type { ColumnHeadersView } from '@ts/grids/grid_core/column_headers/m_column_headers';
-import type { DataController } from '@ts/grids/grid_core/data_controller/m_data_controller';
+import type { DataController } from '@ts/grids/grid_core/data_controller/data_controller';
 import type { HeaderPanel } from '@ts/grids/grid_core/header_panel/m_header_panel';
 import Modules from '@ts/grids/grid_core/m_modules';
 import type { ModuleType } from '@ts/grids/grid_core/m_types';
@@ -151,8 +151,6 @@ export class HeaderFilterController extends Modules.ViewController {
 
   private _headerFilterView!: HeaderFilterView;
 
-  private _currentColumn: any;
-
   public init() {
     this._columnsController = this.getController('columns');
     this._dataController = this.getController('data');
@@ -280,9 +278,7 @@ export class HeaderFilterController extends Modules.ViewController {
       isLookup = true;
 
       if (this.option('syncLookupFilterValues')) {
-        this._currentColumn = column;
-        const filter = this._dataController.getCombinedFilter();
-        this._currentColumn = null;
+        const filter = this._dataController.getCombinedFilterWithExcludedColumn(column);
 
         options.dataSource = gridCoreUtils.getWrappedLookupDataSource(column, dataSource, filter);
       } else {
@@ -291,9 +287,7 @@ export class HeaderFilterController extends Modules.ViewController {
     } else {
       const cutoffLevel = Array.isArray(group) ? group.length - 1 : 0;
 
-      this._currentColumn = column;
-      const filter = this._dataController.getCombinedFilter();
-      this._currentColumn = null;
+      const filter = this._dataController.getCombinedFilterWithExcludedColumn(column);
 
       options.dataSource = {
         filter,
@@ -305,7 +299,7 @@ export class HeaderFilterController extends Modules.ViewController {
           // TODO remove in 16.1
           options.dataField = column.dataField || column.name;
 
-          dataSource.load(options).done((data) => {
+          dataSource.customLoader.load(options).done(({ data }) => {
             const convertUTCDates = remoteGrouping && isUTCFormat(column.serializationFormat) && cutoffLevel > 3;
             if (convertUTCDates) {
               data = convertDataFromUTCToLocal(data, column);
@@ -352,10 +346,6 @@ export class HeaderFilterController extends Modules.ViewController {
     };
 
     return options.dataSource;
-  }
-
-  public getCurrentColumn() {
-    return this._currentColumn;
   }
 
   public showHeaderFilterMenu(columnIndex, isGroupPanel) {
@@ -535,21 +525,20 @@ const data = (Base: ModuleType<DataController>) => class DataControllerFilterRow
     return false;
   }
 
-  protected _calculateAdditionalFilter() {
+  protected calculateAdditionalFilter() {
     if (this.skipCalculateColumnFilters()) {
-      return super._calculateAdditionalFilter();
+      return super.calculateAdditionalFilter();
     }
 
     const that = this;
-    const filters = [super._calculateAdditionalFilter()];
+    const filters = [super.calculateAdditionalFilter()];
     const columns = that._columnsController.getVisibleColumns(null, true);
-    const headerFilterController = this._headerFilterController;
-    const currentColumn = headerFilterController.getCurrentColumn();
+    const excludedColumn = this.getFilterExcludedColumn();
 
     each(columns, (_, column) => {
       let filter;
 
-      if (currentColumn && currentColumn.index === column.index) {
+      if (excludedColumn && excludedColumn.index === column.index) {
         return;
       }
 

@@ -2511,12 +2511,22 @@ QUnit.module('popup options', {
         const lookup = $('#lookup').dxLookup({ }).dxLookup('instance');
         const dropDownOptionsAfterInit = { ... lookup.option('dropDownOptions') };
 
+        const normalizeOptions = (options) => {
+            const filteredEntries = Object.entries(options).filter(([key, value]) => {
+                return value !== undefined;
+            });
+            return Object.fromEntries(filteredEntries);
+        };
+
         lookup.open();
         lookup.option('dropDownOptions.width', 123);
 
         const { _cached_dropDownOptions } = lookup.option();
 
-        assert.deepEqual(_cached_dropDownOptions, { ...dropDownOptionsAfterInit, width: 123 }, 'updated part of dropDownOptions is cached in _cached_dropDownOptions');
+        assert.deepEqual(
+            normalizeOptions(_cached_dropDownOptions),
+            normalizeOptions({ ...dropDownOptionsAfterInit, width: 123 }),
+            'updated part of dropDownOptions is cached in _cached_dropDownOptions');
     });
 
     [
@@ -2554,6 +2564,23 @@ QUnit.module('popup options', {
                 });
             }
         });
+    });
+
+    QUnit.test('should not log W0017 deprecation warning on popup open for function-valued width/height (T1330990)', function(assert) {
+        const logStub = sinon.stub(errors, 'log');
+
+        try {
+            $('#lookup').dxLookup({
+                items: [1, 2, 3],
+                opened: true,
+            });
+
+            const warningCalls = logStub.args.filter(args => args[0] === 'W0017');
+
+            assert.strictEqual(warningCalls.length, 0, 'no W0017 warnings should be logged when opening the popup');
+        } finally {
+            logStub.restore();
+        }
     });
 });
 

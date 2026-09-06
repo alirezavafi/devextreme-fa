@@ -1,10 +1,10 @@
 /* eslint-disable spellcheck/spell-checker */
 import type { Format as LocalizationFormat, FormatObject } from '@js/localization';
+import { resolvePresetOverride } from '@ts/core/global_format_config';
 import { formatDateInCalendar, parseDateInCalendar } from '@ts/core/localization/calendar/date_format';
 import localizationCoreUtils from '@ts/core/localization/core';
 import type { DateFormatter, Format } from '@ts/core/localization/date';
 import numberLocalization from '@ts/core/localization/number';
-import { resolvePresetOverride } from '@ts/core/m_global_format_config';
 import { extend } from '@ts/core/utils/m_extend';
 
 interface DateArgs {
@@ -185,7 +185,7 @@ export default {
   engine(): string {
     return 'intl';
   },
-  getMonthNames(format: Format, type: string): string[] {
+  getMonthNames(format: Format, type?: string): string[] {
     // eslint-disable-next-line @typescript-eslint/no-shadow
     const intlFormats: Record<Exclude<Format, 'short'>, Intl.DateTimeFormatOptions['month']> = {
       wide: 'long',
@@ -194,14 +194,12 @@ export default {
     };
 
     const monthFormat = intlFormats[format || 'wide'];
-
-    // eslint-disable-next-line no-param-reassign
-    type = type === 'format' ? type : 'standalone';
+    const nameType = type === 'format' ? type : 'standalone';
 
     return Array.from(
       { length: 12 },
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      (_, monthIndex): string => monthNameStrategies[type](monthIndex, monthFormat),
+      (_, monthIndex): string => monthNameStrategies[nameType](monthIndex, monthFormat),
     );
   },
 
@@ -299,7 +297,7 @@ export default {
     return getIntlFormatter(format)(date);
   },
 
-  parse(dateString: string, format: FormatObject | string): Date | null | undefined {
+  parse(dateString: string, format?: FormatObject | string): Date | null | undefined {
     // eslint-disable-next-line @typescript-eslint/init-declarations
     let formatter: DateFormatter | undefined;
 

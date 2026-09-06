@@ -1,12 +1,11 @@
 import { equalByValue } from '@js/core/utils/common';
 import { compileGetter } from '@js/core/utils/data';
 import { Deferred } from '@js/core/utils/deferred';
-import { isDefined } from '@js/core/utils/type';
-import type { DataController } from '@ts/grids/grid_core/data_controller/m_data_controller';
+import type { DataController } from '@ts/grids/grid_core/data_controller/data_controller';
 import { focusModule } from '@ts/grids/grid_core/focus/m_focus';
 import type { ModuleType } from '@ts/grids/grid_core/m_types';
 
-import type { GroupingDataControllerExtension } from '../grouping/m_grouping';
+import type { GroupingDataControllerExtension, GroupingDataSourceAdapter } from '../grouping/m_grouping';
 import gridCore from '../m_core';
 import { createGroupFilter } from '../m_utils';
 
@@ -25,10 +24,12 @@ DataController
 & GroupingDataControllerExtension>;
 
 const data = (Base: DataControllerBase) => class FocusDataControllerExtender extends focusModule.extenders.controllers.data(Base) {
+  public declare _dataSource?: GroupingDataSourceAdapter | null;
+
   private changeRowExpand(path, isRowClick) {
     // @ts-expect-error
     if (this.option('focusedRowEnabled') && Array.isArray(path) && this.isRowExpanded(path)) {
-      if ((!isRowClick || !this._keyboardNavigationController.isKeyboardEnabled()) && this._isFocusedRowInsideGroup(path)) {
+      if ((!isRowClick || !this.keyboardNavigationController.isKeyboardEnabled()) && this._isFocusedRowInsideGroup(path)) {
         this.option('focusedRowKey', path);
       }
     }
@@ -88,48 +89,52 @@ const data = (Base: DataControllerBase) => class FocusDataControllerExtender ext
   }
 
   private _calculateGlobalRowIndexByGroupedData(key) {
-    const that = this;
-    const dataSource = that._dataSource;
-    const filter = that._generateFilterByKey(key);
+    const dataSource = this._dataSource;
+    const filter = this._generateFilterByKey(key);
     // @ts-expect-error
     const deferred = new Deferred();
     const isGroupKey = Array.isArray(key);
-    const group = dataSource.group();
 
-    if (isGroupKey) {
+    if (isGroupKey || !dataSource) {
       return deferred.resolve(-1).promise();
     }
 
+    const group = dataSource.group();
+
     if (!dataSource._grouping._updatePagingOptions) {
-      that._calculateGlobalRowIndexByFlatData(key, null, true)
+      this._calculateGlobalRowIndexByFlatData(key, null, true)
         .done(deferred.resolve)
         .fail(deferred.reject);
       return deferred;
     }
 
-    dataSource.load({
-      filter: that._concatWithCombinedFilter(filter),
+    dataSource.customLoader.load({
+      filter: this._concatWithCombinedFilter(filter),
       group,
-    }).done((data) => {
-      const hasData = isDefined(data) && data.length > 0;
+    }).done(({ data }) => {
+      const hasData = Array.isArray(data) && data.length > 0;
 
-      if (!hasData) {
+      if (this._dataSource !== dataSource || !hasData) {
         return deferred.resolve(-1).promise();
       }
 
-      const groupPath = that._getGroupPath(data, group.length);
+      const groupPath = this._getGroupPath(data, gridCore.normalizeSortingInfo(group).length);
 
-      that._expandGroupByPath(that, groupPath, 0).done(() => {
-        that._calculateExpandedRowGlobalIndex(deferred, key, groupPath, group);
+      this._expandGroupByPath(this, groupPath, 0).done(() => {
+        this._calculateExpandedRowGlobalIndex(deferred, key, groupPath, group, dataSource);
       }).fail(deferred.reject);
     }).fail(deferred.reject);
 
     return deferred.promise();
   }
 
-  private _calculateExpandedRowGlobalIndex(deferred, key, groupPath, group) {
+  private _calculateExpandedRowGlobalIndex(deferred, key, groupPath, group, dataSource) {
+    if (this._dataSource !== dataSource) {
+      deferred.resolve(-1);
+      return;
+    }
+
     const groupFilter = createGroupFilter(groupPath, { group });
-    const dataSource = this._dataSource;
     const scrollingMode = this.option('scrolling.mode');
     const isVirtualScrolling = scrollingMode === 'virtual' || scrollingMode === 'infinite';
     const pageSize = dataSource.pageSize();

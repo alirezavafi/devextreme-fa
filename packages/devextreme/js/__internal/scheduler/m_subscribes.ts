@@ -5,18 +5,17 @@ import dateUtils from '@js/core/utils/date';
 import { extend } from '@js/core/utils/extend';
 
 import { getDeltaTime } from './appointments/resizing/get_delta_time';
-import { getDateFormatType, getDateText } from './appointments_new/utils/get_date_text';
 import { VERTICAL_VIEW_TYPES } from './constants';
-import type Scheduler from './m_scheduler';
 import { isAppointmentTakesAllDay } from './r1/utils/base';
+import type Scheduler from './scheduler';
 import type {
   AppointmentTooltipItem,
   CompactAppointmentOptions,
   SafeAppointment,
   TargetedAppointment,
 } from './types';
-import { utils } from './utils';
 import { AppointmentAdapter } from './utils/appointment_adapter/appointment_adapter';
+import { getDateFormatType, getDateText } from './utils/get_date_text';
 import type { AppointmentItemViewModel } from './view_model/types';
 
 const toMs = dateUtils.dateToMilliseconds;
@@ -65,7 +64,7 @@ const subscribes = {
   },
 
   updateAppointmentAfterResize(options) {
-    const { info } = utils.dataAccessors.getAppointmentSettings(options.$appointment) as AppointmentItemViewModel;
+    const { info } = this._appointments.getAppointmentSettings(options.$appointment) as AppointmentItemViewModel;
     const { startDate } = info.sourceAppointment;
 
     this.checkRecurringAppointment(options.target, options.data, startDate, () => {
@@ -75,16 +74,14 @@ const subscribes = {
     });
   },
 
-  // TODO<Appointments>: delete this method when old impl is removed
   getUpdatedData(rawAppointment) {
     return this.getUpdatedData(rawAppointment);
   },
 
-  // TODO<Appointments>: delete this method when old impl is removed
   updateAppointmentAfterDrag({
     event, element, rawAppointment, isDropToTheSameCell, isDropToSelfScheduler,
   }) {
-    const { info } = utils.dataAccessors.getAppointmentSettings(element) as AppointmentItemViewModel;
+    const { info } = this._appointments.getAppointmentSettings(element) as AppointmentItemViewModel;
     // NOTE: enrich target appointment with additional data from the source
     // in case of one appointment of series will change
     const targetedRawAppointment = extend({}, rawAppointment, this.getUpdatedData(rawAppointment));
@@ -112,7 +109,6 @@ const subscribes = {
     }
   },
 
-  // TODO<Appointments>: delete this method when old impl is removed
   onDeleteButtonPress(options) {
     const targetedData = this.getTargetedAppointment(options.data, $(options.target));
     this.checkAndDeleteAppointment(options.data, targetedData);
@@ -120,7 +116,10 @@ const subscribes = {
     this.hideAppointmentTooltip();
   },
 
-  // TODO<Appointments>: delete this method when old impl is removed
+  focusFallbackAfterDelete() {
+    this.focusFallbackAfterDelete();
+  },
+
   createFormattedDateText(
     appointment: AppointmentTooltipItem['appointment'],
     targetedAppointmentRaw: TargetedAppointment,
@@ -225,12 +224,10 @@ const subscribes = {
     return updatedEndDate;
   },
 
-  // TODO<Appointments>: delete this method when old impl is removed
   renderCompactAppointments(options: CompactAppointmentOptions): dxElementWrapper {
     return this._compactAppointmentsHelper.render(options);
   },
 
-  // TODO<Appointments>: delete this method when old impl is removed
   clearCompactAppointments() {
     this._compactAppointmentsHelper.clear();
   },
@@ -239,7 +236,6 @@ const subscribes = {
     return this._workSpace.getGroupCount();
   },
 
-  // TODO<Appointments>: delete this method when old impl is removed
   mapAppointmentFields(config) {
     const { itemData, itemElement, targetedAppointment } = config;
     const targetedData = targetedAppointment || this.getTargetedAppointment(itemData, itemElement);
@@ -279,7 +275,6 @@ const subscribes = {
     return this.forceMaxAppointmentPerCell();
   },
 
-  // TODO<Appointments>: delete this method when old impl is removed
   getTargetedAppointmentData(appointment, element) {
     return this.getTargetedAppointment(appointment, element);
   },
@@ -300,7 +295,6 @@ const subscribes = {
     return this.option('adaptivityEnabled');
   },
 
-  // TODO<Appointments>: delete this method when old impl is removed
   removeDroppableCellClass() {
     this._workSpace.removeDroppableCellClass();
   },

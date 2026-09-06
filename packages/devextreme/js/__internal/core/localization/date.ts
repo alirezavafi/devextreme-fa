@@ -1,5 +1,6 @@
 /* eslint-disable spellcheck/spell-checker */
 import type { Format as LocalizationFormat, FormatObject } from '@js/localization';
+import { resolvePresetOverride } from '@ts/core/global_format_config';
 import { formatDateInCalendar, parseDateInCalendar } from '@ts/core/localization/calendar/date_format';
 import firstDayOfWeekData from '@ts/core/localization/cldr-data/first_day_of_week_data';
 import localizationCore from '@ts/core/localization/core';
@@ -10,8 +11,7 @@ import { getFormatter as getLDMLDateFormatter } from '@ts/core/localization/ldml
 import { getParser as getLDMLDateParser } from '@ts/core/localization/ldml/date.parser';
 import numberLocalization from '@ts/core/localization/number';
 import errors from '@ts/core/m_errors';
-import { resolvePresetOverride } from '@ts/core/m_global_format_config';
-import { injector as dependencyInjector } from '@ts/core/utils/m_dependency_injector';
+import { injector as dependencyInjector } from '@ts/core/utils/dependency_injector';
 import { each } from '@ts/core/utils/m_iterator';
 import { isString } from '@ts/core/utils/m_type';
 
@@ -86,7 +86,6 @@ const dateLocalization = dependencyInjector({
         (presetOverride as string).toLowerCase()
       ] || presetOverride as string;
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return numberLocalization.convertDigits(
         getLDMLDateFormatter(pattern, this)(date),
       );
@@ -115,16 +114,20 @@ const dateLocalization = dependencyInjector({
 
     return result;
   },
-  getMonthNames(format: BaseFormat): string[] {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getMonthNames(format: Format, type?: string): string[] {
     return defaultDateNames.getMonthNames(format);
   },
-  getDayNames(format: BaseFormat): string[] {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getDayNames(format: Format, type?: string): string[] {
     return defaultDateNames.getDayNames(format);
   },
-  getQuarterNames(format: BaseFormat): string[] {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getQuarterNames(format: Format, type?: string): string[] {
     return defaultDateNames.getQuarterNames(format);
   },
-  getPeriodNames(format: BaseFormat): string[] {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getPeriodNames(format?: Format, type?: string): string[] {
     return defaultDateNames.getPeriodNames(format);
   },
   getTimeSeparator(): string {
@@ -244,7 +247,6 @@ const dateLocalization = dependencyInjector({
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const text: string = that.format(value, format);
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return numberLocalization.convertDigits(text, true);
       };
       try {

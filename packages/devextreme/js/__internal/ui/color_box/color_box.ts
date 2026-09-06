@@ -3,8 +3,8 @@ import type { dxElementWrapper } from '@js/core/renderer';
 import $ from '@js/core/renderer';
 import type { DeferredObj } from '@js/core/utils/deferred';
 import type { Properties } from '@js/ui/color_box';
+import { Color } from '@ts/color';
 import type { OptionChanged } from '@ts/core/widget/types';
-import Color from '@ts/m_color';
 import DropDownEditor from '@ts/ui/drop_down_editor/drop_down_editor';
 import type { ValueChangedEvent } from '@ts/ui/editor/editor';
 import type { PopupProperties } from '@ts/ui/popup/popup';
@@ -42,7 +42,7 @@ export interface ColorBoxProperties extends Omit<Properties,
 | 'onEnterKey' | 'onFocusIn'
 | 'onFocusOut' | 'onInput'
 | 'onKeyDown' | 'onKeyUp' | 'onPaste'
-| 'onValueChanged' | 'validationMessagePosition'
+| 'onValueChanged' | 'validationMessagePosition' | 'dropDownOptions'
 | 'onContentReady' | 'onDisposing'
 | 'onOptionChanged' | 'onInitialized'> {
   buttonsLocation?: string;
@@ -116,7 +116,6 @@ class ColorBox extends DropDownEditor<ColorBoxProperties> {
       editAlphaChannel: false,
       applyValueMode: 'useButtons',
       keyStep: 1,
-      // @ts-expect-error fieldTemplate is deprecated --- IGNORE ---
       fieldTemplate: null,
       buttonsLocation: 'bottom after',
     };

@@ -8,7 +8,7 @@ import dxChat, {
 import { Component as BaseComponent, IHtmlOptions, ComponentRef, NestedComponentMeta } from "./core/component";
 import NestedOption from "./core/nested-option";
 
-import type { Message, AttachmentDownloadClickEvent, DisposingEvent, InitializedEvent, MessageDeletedEvent, MessageDeletingEvent, MessageEditCanceledEvent, MessageEditingStartEvent, MessageEnteredEvent, MessageUpdatedEvent, MessageUpdatingEvent, TypingEndEvent, TypingStartEvent, Attachment as ChatAttachment, User as ChatUser, SendButtonAction, SendButtonClickEvent } from "devextreme/ui/chat";
+import type { Message, AttachmentDownloadClickEvent, DisposingEvent, InitializedEvent, MessageDeletedEvent, MessageDeletingEvent, MessageEditCanceledEvent, MessageEditingStartEvent, MessageEnteredEvent, MessageUpdatedEvent, MessageUpdatingEvent, TypingEndEvent, TypingStartEvent, Attachment as ChatAttachment, User as ChatUser, MessageType, SendButtonAction, SendButtonClickEvent } from "devextreme/ui/chat";
 import type { DisposingEvent as FileUploaderDisposingEvent, InitializedEvent as FileUploaderInitializedEvent, BeforeSendEvent, ContentReadyEvent, DropZoneEnterEvent, DropZoneLeaveEvent, FilesUploadedEvent, OptionChangedEvent, ProgressEvent, UploadAbortedEvent, UploadedEvent, UploadErrorEvent, UploadStartedEvent, ValueChangedEvent, UploadHttpMethod, FileUploadMode } from "devextreme/ui/file_uploader";
 import type { DisposingEvent as SpeechToTextDisposingEvent, InitializedEvent as SpeechToTextInitializedEvent, ContentReadyEvent as SpeechToTextContentReadyEvent, OptionChangedEvent as SpeechToTextOptionChangedEvent, CustomSpeechRecognizer as SpeechToTextCustomSpeechRecognizer, EndEvent, ErrorEvent, ResultEvent, StartClickEvent, StopClickEvent, SpeechRecognitionConfig as SpeechToTextSpeechRecognitionConfig } from "devextreme/ui/speech_to_text";
 import type { DisposingEvent as ButtonGroupDisposingEvent, InitializedEvent as ButtonGroupInitializedEvent, ContentReadyEvent as ButtonGroupContentReadyEvent, OptionChangedEvent as ButtonGroupOptionChangedEvent, dxButtonGroupItem, ItemClickEvent, SelectionChangedEvent } from "devextreme/ui/button_group";
@@ -187,7 +187,7 @@ type IChatItemProps = React.PropsWithChildren<{
   src?: string;
   text?: string;
   timestamp?: Date | number | string;
-  type?: string | undefined;
+  type?: MessageType;
 }>
 const _componentChatItem = (props: IChatItemProps) => {
   return React.createElement(NestedOption<IChatItemProps>, {
@@ -297,20 +297,20 @@ type IFileUploaderOptionsProps = React.PropsWithChildren<{
   minFileSize?: number;
   multiple?: boolean;
   name?: string;
-  onBeforeSend?: ((e: BeforeSendEvent) => void);
+  onBeforeSend?: ((e: BeforeSendEvent) => void) | undefined;
   onContentReady?: ((e: ContentReadyEvent) => void);
   onDisposing?: ((e: FileUploaderDisposingEvent) => void);
-  onDropZoneEnter?: ((e: DropZoneEnterEvent) => void);
-  onDropZoneLeave?: ((e: DropZoneLeaveEvent) => void);
-  onFilesUploaded?: ((e: FilesUploadedEvent) => void);
+  onDropZoneEnter?: ((e: DropZoneEnterEvent) => void) | undefined;
+  onDropZoneLeave?: ((e: DropZoneLeaveEvent) => void) | undefined;
+  onFilesUploaded?: ((e: FilesUploadedEvent) => void) | undefined;
   onInitialized?: ((e: FileUploaderInitializedEvent) => void);
   onOptionChanged?: ((e: OptionChangedEvent) => void);
-  onProgress?: ((e: ProgressEvent) => void);
-  onUploadAborted?: ((e: UploadAbortedEvent) => void);
-  onUploaded?: ((e: UploadedEvent) => void);
-  onUploadError?: ((e: UploadErrorEvent) => void);
-  onUploadStarted?: ((e: UploadStartedEvent) => void);
-  onValueChanged?: ((e: ValueChangedEvent) => void);
+  onProgress?: ((e: ProgressEvent) => void) | undefined;
+  onUploadAborted?: ((e: UploadAbortedEvent) => void) | undefined;
+  onUploaded?: ((e: UploadedEvent) => void) | undefined;
+  onUploadError?: ((e: UploadErrorEvent) => void) | undefined;
+  onUploadStarted?: ((e: UploadStartedEvent) => void) | undefined;
+  onValueChanged?: ((e: ValueChangedEvent) => void) | undefined;
   progress?: number;
   readOnly?: boolean;
   readyToUploadMessage?: string;
@@ -329,8 +329,8 @@ type IFileUploaderOptionsProps = React.PropsWithChildren<{
   uploadMethod?: UploadHttpMethod;
   uploadMode?: FileUploadMode;
   uploadUrl?: string;
-  validationError?: any;
-  validationErrors?: Array<any>;
+  validationError?: any | null;
+  validationErrors?: Array<any> | null;
   validationStatus?: ValidationStatus;
   value?: Array<any>;
   visible?: boolean;
@@ -367,7 +367,7 @@ type IItemProps = React.PropsWithChildren<{
   src?: string;
   text?: string;
   timestamp?: Date | number | string;
-  type?: string | undefined | ButtonType;
+  type?: MessageType | ButtonType | string;
   disabled?: boolean;
   elementAttr?: Record<string, any>;
   hint?: string;
@@ -532,9 +532,9 @@ type ISuggestionsProps = React.PropsWithChildren<{
   onContentReady?: ((e: ButtonGroupContentReadyEvent) => void);
   onDisposing?: ((e: ButtonGroupDisposingEvent) => void);
   onInitialized?: ((e: ButtonGroupInitializedEvent) => void);
-  onItemClick?: ((e: ItemClickEvent) => void);
+  onItemClick?: ((e: ItemClickEvent) => void) | undefined;
   onOptionChanged?: ((e: ButtonGroupOptionChangedEvent) => void);
-  onSelectionChanged?: ((e: SelectionChangedEvent) => void);
+  onSelectionChanged?: ((e: SelectionChangedEvent) => void) | undefined;
   rtlEnabled?: boolean;
   selectedItemKeys?: Array<any>;
   selectedItems?: Array<any>;

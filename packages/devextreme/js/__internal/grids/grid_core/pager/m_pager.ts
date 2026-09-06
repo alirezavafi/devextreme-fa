@@ -36,7 +36,7 @@ export class PagerView extends modules.View {
         } else {
           this.render();
         }
-      } else if (!e || e.changeType !== 'update' && e.changeType !== 'updateSelection' && e.changeType !== 'updateFocusedRow') {
+      } else if (!e || (e.changeType !== 'update' && e.changeType !== 'updateSelection' && e.changeType !== 'updateFocusedRow')) {
         this._pager = null;
         this.render();
       }
@@ -161,7 +161,6 @@ export class PagerView extends modules.View {
     const scrolling = this.option('scrolling');
 
     if (pagerVisible === 'auto') {
-      // @ts-expect-error
       if (scrolling && (scrolling.mode === 'virtual' || scrolling.mode === 'infinite')) {
         pagerVisible = false;
       } else {

@@ -16,27 +16,30 @@ import { getWindow, hasWindow } from '@js/core/utils/window';
 import type { DxEvent, InteractionEvent } from '@js/events';
 import type { Format } from '@js/localization';
 import type { CalendarSwitcher } from '@js/ui/calendar';
+import type dxDateBox from '@js/ui/date_box';
 import type {
+  DateBoxBaseOptions,
   DateLike,
   DatePickerType,
   DateType,
-  Properties,
+  Properties as dxDateBoxOptions,
 } from '@js/ui/date_box';
 import type { ToolbarItem } from '@js/ui/popup';
 import type { CalendarType } from '@ts/core/localization/calendar';
 import { getCalendarDefaultDateFormat } from '@ts/core/localization/calendar';
 import dateLocalization from '@ts/core/localization/date';
-import type { OptionChanged } from '@ts/core/widget/types';
+import type { OptionChanged, OwnLeafOptions } from '@ts/core/widget/types';
+import Calendar from '@ts/ui/date_box/date_box.strategy.calendar';
+import CalendarWithTime from '@ts/ui/date_box/date_box.strategy.calendar_with_time';
+import DateView from '@ts/ui/date_box/date_box.strategy.date_view';
+import List from '@ts/ui/date_box/date_box.strategy.list';
+import Native from '@ts/ui/date_box/date_box.strategy.native';
+import uiDateUtils from '@ts/ui/date_box/date_utils';
+import type { DropDownEditorInternalProperties } from '@ts/ui/drop_down_editor/drop_down_editor';
 import DropDownEditor from '@ts/ui/drop_down_editor/drop_down_editor';
 import type { ValueChangedEvent } from '@ts/ui/editor/editor';
+import type { PopoverProperties } from '@ts/ui/popover/popover';
 import type { PopupProperties } from '@ts/ui/popup/popup';
-
-import uiDateUtils from './date_utils';
-import Calendar from './m_date_box.strategy.calendar';
-import CalendarWithTime from './m_date_box.strategy.calendar_with_time';
-import DateView from './m_date_box.strategy.date_view';
-import List from './m_date_box.strategy.list';
-import Native from './m_date_box.strategy.native';
 
 const window = getWindow();
 
@@ -66,7 +69,7 @@ const STRATEGY_NAME = {
   native: 'Native',
   calendarWithTime: 'CalendarWithTime',
   list: 'List',
-};
+} as const;
 
 const STRATEGY_CLASSES = {
   Calendar,
@@ -76,16 +79,46 @@ const STRATEGY_CLASSES = {
   List,
 };
 
-export interface DateBoxBaseProperties extends Omit<Properties, 'onClosed' | 'onOpened'> {
-  buttonsLocation?: string;
+type StrategyName = keyof typeof STRATEGY_CLASSES;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type StrategyInstance = Calendar<any, any, any> | DateView | Native | CalendarWithTime | List;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type StrategyCtor = new (dateBox: DateBox<any>) => StrategyInstance;
+
+export interface DateBoxBaseInternalProperties extends DropDownEditorInternalProperties {
   emptyDateValue?: Date;
+
   _showValidationIcon?: boolean;
   calendar?: CalendarType;
   calendarSwitcher?: CalendarSwitcher;
+
+  // NOTE: the drop down is an internal Popup or Popover, which accept more options
+  // than the public types the member is declared with.
+  dropDownOptions?: PopupProperties | PopoverProperties;
 }
 
-class DateBox extends DropDownEditor<DateBoxBaseProperties> {
-  _strategy!: Calendar | DateView | Native | CalendarWithTime | List;
+type DateBoxLeafOptions = OwnLeafOptions<
+  dxDateBoxOptions,
+  keyof DateBoxBaseOptions<unknown>,
+  DateBoxBaseOptions<dxDateBox>
+>;
+
+export interface DateBoxBaseProperties<
+  TComponent = dxDateBox,
+> extends Omit<
+    DateBoxBaseOptions<TComponent>,
+  keyof DateBoxLeafOptions | keyof DateBoxBaseInternalProperties
+  >,
+  DateBoxLeafOptions,
+  DateBoxBaseInternalProperties {}
+
+class DateBox<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TProperties extends DateBoxBaseProperties<any> = DateBoxBaseProperties,
+> extends DropDownEditor<TProperties> {
+  _strategy!: StrategyInstance;
 
   _pickerType?: DatePickerType;
 
@@ -106,16 +139,14 @@ class DateBox extends DropDownEditor<DateBoxBaseProperties> {
     this._strategy.customizeButtons();
   }
 
-  _getDefaultOptions(): DateBoxBaseProperties {
+  _getDefaultOptions(): TProperties {
     return {
       ...super._getDefaultOptions(),
       type: 'date',
       showAnalogClock: true,
       value: null,
-      // @ts-expect-error ts-error
       displayFormat: null,
       interval: 30,
-      // @ts-expect-error ts-error
       disabledDates: null,
       pickerType: PICKER_TYPE.calendar,
       calendar: 'gregorian',
@@ -130,7 +161,7 @@ class DateBox extends DropDownEditor<DateBoxBaseProperties> {
     };
   }
 
-  _defaultOptionsRules(): DefaultOptionsRule<DateBoxBaseProperties>[] {
+  _defaultOptionsRules(): DefaultOptionsRule<TProperties>[] {
     return super._defaultOptionsRules().concat([
       {
         device: { platform: 'ios' },
@@ -165,10 +196,10 @@ class DateBox extends DropDownEditor<DateBoxBaseProperties> {
           buttonsLocation: 'bottom after',
         },
       },
-    ]);
+    ] as DefaultOptionsRule<TProperties>[]);
   }
 
-  _initOptions(options: DateBoxBaseProperties): void {
+  _initOptions(options: TProperties): void {
     this._userOptions = extend({}, options);
     super._initOptions(options);
     this._updatePickerOptions();
@@ -217,7 +248,7 @@ class DateBox extends DropDownEditor<DateBoxBaseProperties> {
 
   _initStrategy(): void {
     const strategyName = this._getStrategyName(this._getFormatType());
-    const strategy = STRATEGY_CLASSES[strategyName];
+    const strategy: StrategyCtor = STRATEGY_CLASSES[strategyName];
 
     if (!(this._strategy?.NAME === strategyName)) {
       // eslint-disable-next-line new-cap
@@ -241,7 +272,7 @@ class DateBox extends DropDownEditor<DateBoxBaseProperties> {
     return TYPE.date;
   }
 
-  _getStrategyName(type: DateType): string {
+  _getStrategyName(type: DateType): StrategyName {
     const pickerType = this._pickerType;
 
     if (pickerType === PICKER_TYPE.rollers) {
@@ -775,7 +806,7 @@ class DateBox extends DropDownEditor<DateBoxBaseProperties> {
   }
 
   _applyButtonHandler(e: { event: InteractionEvent }): void {
-    const value = this._strategy.getValue();
+    const value = this._strategy.getValue() as Date | null;
     this.dateValue(value, e.event);
 
     super._applyButtonHandler();
@@ -794,7 +825,7 @@ class DateBox extends DropDownEditor<DateBoxBaseProperties> {
     this._popup?.option('title', this._getPopupTitle());
   }
 
-  _optionChanged(args: OptionChanged<DateBoxBaseProperties>): void {
+  _optionChanged(args: OptionChanged<TProperties>): void {
     switch (args.name) {
       case 'showClearButton':
       case 'buttons':
