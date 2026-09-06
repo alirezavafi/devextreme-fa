@@ -26,13 +26,13 @@ the user sees (green):
 **Calendar picker** — all zoom levels render in the calendar, with the optional
 in-picker calendar switcher at the bottom:
 
-![Persian calendar picker with in-picker switcher](docs/images/multi-calendar-datebox-picker.png)
+<img src="docs/images/multi-calendar-datebox-picker.png" alt="Persian calendar picker with in-picker switcher" width="304">
 
 **DataGrid** — calendar-aware date column, filter row and inline editing; the
 header-filter funnel builds a Year → Month → Day tree in the selected calendar:
 
 ![DataGrid with Persian date column](docs/images/multi-calendar-datagrid.png)
-![Header filter date tree in Persian](docs/images/multi-calendar-headerfilter.png)
+<img src="docs/images/multi-calendar-headerfilter.png" alt="Header filter date tree in Persian" width="252">
 
 **Scheduler** — the month grid starts on the 1st of the *calendar* month, the
 navigator caption and day numbers follow the calendar, and monthly/yearly recurrence
