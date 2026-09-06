@@ -12,7 +12,7 @@ import {
 } from '@js/core/utils/type';
 import type { DxEvent, InteractionEvent } from '@js/events';
 import type dxDateBox from '@js/ui/date_box';
-import type { DateLike, Properties } from '@js/ui/date_box';
+import type { DateLike } from '@js/ui/date_box';
 import type { CalendarType } from '@ts/core/localization/calendar';
 import { getCalendar } from '@ts/core/localization/calendar';
 import dateLocalization from '@ts/core/localization/date';
@@ -521,7 +521,7 @@ class DateBoxMask<
         pattern,
         dateLocalization,
       );
-      return numberLocalization.convertDigits(text) as string;
+      return numberLocalization.convertDigits(text);
     }
 
     return super._getDisplayedText(value);

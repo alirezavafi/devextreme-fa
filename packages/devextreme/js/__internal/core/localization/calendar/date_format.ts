@@ -94,7 +94,7 @@ export function formatDateInCalendar(
   const dateParts = createCalendarDateParts(calendar, baseDateParts);
   const proxy = createCalendarDateProxy(date, calendar);
 
-  return getLDMLDateFormatter(pattern, dateParts)(proxy) as string;
+  return getLDMLDateFormatter(pattern, dateParts)(proxy);
 }
 
 /**

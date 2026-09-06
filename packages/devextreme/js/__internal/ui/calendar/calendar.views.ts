@@ -44,7 +44,7 @@ import {
 } from './calendar.views.calendar';
 
 const formatCalendarNumber = (value: number): string => numberLocalization
-  .convertDigits(String(value)) as string;
+  .convertDigits(String(value));
 
 const CALENDAR_OTHER_MONTH_CLASS = 'dx-calendar-other-month';
 const CALENDAR_OTHER_VIEW_CLASS = 'dx-calendar-other-view';

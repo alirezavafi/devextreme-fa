@@ -29,7 +29,7 @@ export function formatWeekdayAndDayInCalendar(date: Date, calendarType: Calendar
   const weekday = dateLocalization.getDayNames('abbreviated')[date.getDay()];
   const day = numberLocalization.convertDigits(
     String(getCalendarDayNumber(date, calendarType)),
-  ) as string;
+  );
 
   return `${weekday} ${day}`;
 }

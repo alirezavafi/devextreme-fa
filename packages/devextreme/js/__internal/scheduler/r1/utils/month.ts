@@ -59,14 +59,14 @@ export const getCellText = (date: Date, intervalCount: number, calendar?: string
 
   if (isCustomCalendar(calendar)) {
     const parts = getCalendar(calendar as string).toParts(date);
-    const day = numberLocalization.convertDigits(String(parts.day)) as string;
+    const day = numberLocalization.convertDigits(String(parts.day));
 
     if (parts.day === 1) {
       const monthName = getCalendarMonthNamesInActiveLocale(calendar as string, 'abbreviated')[parts.month];
       return [monthName, day].join(' ');
     }
 
-    return numberLocalization.convertDigits(String(parts.day).padStart(2, '0')) as string;
+    return numberLocalization.convertDigits(String(parts.day).padStart(2, '0'));
   }
 
   if (isFirstCellInMonthWithIntervalCount(date, intervalCount)) {

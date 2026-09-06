@@ -283,7 +283,7 @@ class DateView extends Editor<DateViewProperties> {
       curDate,
       minDate,
       maxDate,
-      (value: number): string => numberLocalization.convertDigits(String(value)) as string,
+      (value: number): string => numberLocalization.convertDigits(String(value)),
     );
 
     this._rollerConfigs[componentName] = {

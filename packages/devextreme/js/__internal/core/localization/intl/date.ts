@@ -310,7 +310,7 @@ export default {
 
       if (typeof typeStr === 'string') {
         const pattern = this._getPatternByFormat(typeStr) ?? typeStr;
-        const normalized = numberLocalization.convertDigits(dateString, true) as string;
+        const normalized = numberLocalization.convertDigits(dateString, true);
         return parseDateInCalendar(normalized, calendarType, pattern, this);
       }
     }

@@ -2,7 +2,6 @@ import type { dxElementWrapper } from '@js/core/renderer';
 import type { ItemContextMenuEvent } from '@js/ui/list';
 import type { Appointment, Properties } from '@js/ui/scheduler';
 import type { CalendarType } from '@ts/core/localization/calendar';
-import type { Component } from '@ts/core/widget/component';
 
 import type { ResourceLoader } from './utils/loader/resource_loader';
 import type { GroupLeaf, GroupValues, RawGroupValues } from './utils/resource_manager/types';
