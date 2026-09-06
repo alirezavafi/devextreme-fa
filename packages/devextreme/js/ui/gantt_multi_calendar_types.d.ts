@@ -10,5 +10,6 @@ export {
   DependencyInsertedEvent,
   DependencyDeletingEvent,
   DependencyDeletedEvent,
+  dxGanttMultiCalendarOptions,
   Properties,
 } from './gantt_multi_calendar';

@@ -183,6 +183,16 @@ declare global {
     dxGantt(options: string): any;
     dxGantt(options: string, ...params: any[]): any;
 
+    dxGanttMultiCalendar(): JQuery;
+    dxGanttMultiCalendar(
+      options: 'instance'
+    ): DevExpress.ui.dxGanttMultiCalendar;
+    dxGanttMultiCalendar(
+      options: DevExpress.ui.dxGanttMultiCalendar.Properties
+    ): JQuery;
+    dxGanttMultiCalendar(options: string): any;
+    dxGanttMultiCalendar(options: string, ...params: any[]): any;
+
     dxHtmlEditor(): JQuery;
     dxHtmlEditor(options: 'instance'): DevExpress.ui.dxHtmlEditor;
     dxHtmlEditor(options: DevExpress.ui.dxHtmlEditor.Properties): JQuery;
@@ -1229,6 +1239,35 @@ declare module DevExpress.common {
   export type ButtonStyle = 'text' | 'outlined' | 'contained';
   export type ButtonType = 'danger' | 'default' | 'normal' | 'success';
   /**
+   * [descr:CalendarDateParts]
+   */
+  export interface CalendarDateParts {
+    /** Calendar year. */
+    year: number;
+    /** Zero-based month index. */
+    month: number;
+    /** One-based day of month. */
+    day: number;
+  }
+  /**
+   * [descr:CalendarMonthNameFormat]
+   */
+  export type CalendarMonthNameFormat = 'wide' | 'abbreviated' | 'narrow';
+  /**
+   * [descr:CalendarSystem]
+   */
+  export interface CalendarSystem {
+    readonly type: DevExpress.localization.CalendarType;
+    readonly firstDayOfWeek?: number;
+    readonly defaultDateFormat?: string;
+    toParts: (date: Date) => CalendarDateParts;
+    fromParts: (parts: CalendarDateParts) => Date;
+    getDaysInMonth: (year: number, month: number) => number;
+    getMonthsInYear: (year: number) => number;
+    isLeapYear: (year: number) => boolean;
+    getMonthNames: (format?: CalendarMonthNameFormat) => string[];
+  }
+  /**
    * [descr:CompareRule]
    */
   export type CompareRule = {
@@ -1398,7 +1437,40 @@ declare module DevExpress.common {
      * [descr:Format.type]
      */
     type?: PredefinedFormat | string;
+    /**
+     * [descr:Format.calendar]
+     */
+    calendar?: 'gregorian' | 'persian' | 'hijri' | 'hijri-umalqura' | string;
   }
+  /**
+   * [descr:getCalendar(type)]
+   */
+  export function getCalendar(
+    type?: DevExpress.localization.CalendarType
+  ): CalendarSystem;
+  /**
+   * [descr:getCalendarDefaultDateFormat(type)]
+   */
+  export function getCalendarDefaultDateFormat(
+    type?: DevExpress.localization.CalendarType
+  ): string | undefined;
+  /**
+   * [descr:getCalendarFirstDayOfWeek(type)]
+   */
+  export function getCalendarFirstDayOfWeek(
+    type?: DevExpress.localization.CalendarType
+  ): number | undefined;
+  /**
+   * [descr:getCalendarMonthNamesInActiveLocale(type, format)]
+   */
+  export function getCalendarMonthNamesInActiveLocale(
+    type?: DevExpress.localization.CalendarType,
+    format?: CalendarMonthNameFormat
+  ): string[];
+  /**
+   * [descr:getRegisteredCalendarTypes()]
+   */
+  export function getRegisteredCalendarTypes(): DevExpress.localization.CalendarType[];
   /**
    * [descr:GlobalConfig]
    */
@@ -1539,6 +1611,12 @@ declare module DevExpress.common {
    * @deprecated Attention! This type is for internal purposes only. If you used it previously, please submit a ticket to our {@link https://supportcenter.devexpress.com/ticket/create Support Center}. We will check if there is an alternative solution.
    */
   export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'MERGE';
+  /**
+   * [descr:isCalendarRegistered(type)]
+   */
+  export function isCalendarRegistered(
+    type: DevExpress.localization.CalendarType
+  ): boolean;
   export type LabelMode = 'static' | 'floating' | 'hidden' | 'outside';
   /**
    * @deprecated Attention! This type is for internal purposes only. If you used it previously, please submit a ticket to our {@link https://supportcenter.devexpress.com/ticket/create Support Center}. We will check if there is an alternative solution.
@@ -1700,6 +1778,10 @@ declare module DevExpress.common {
       'component' | 'event'
     >
   >;
+  /**
+   * [descr:registerCalendar(calendar)]
+   */
+  export function registerCalendar(calendar: CalendarSystem): void;
   /**
    * [descr:RequiredRule]
    */
@@ -8937,6 +9019,12 @@ declare module DevExpress.fileManagement {
     chunkIndex: number;
   }
 }
+declare module DevExpress.localization {
+  /**
+   * [descr:CalendarType]
+   */
+  export type CalendarType = 'gregorian' | 'persian' | 'hijri' | string;
+}
 declare module DevExpress.pdfExporter {
   /**
    * @deprecated Use DataGridCell instead
@@ -8950,6 +9038,15 @@ declare module DevExpress.ui {
    * [descr:dxSchedulerAppointment]
    */
   export type Appointment = dxSchedulerAppointment;
+  /**
+   * [descr:CalendarSwitcherConfig]
+   */
+  export interface CalendarSwitcherConfig {
+    /**
+     * [descr:CalendarSwitcherConfig.items]
+     */
+    items?: Array<DevExpress.ui.dxCalendar.CalendarSystemType>;
+  }
   /**
    * [descr:ColCountResponsible]
    * @deprecated Attention! This type is for internal purposes only. If you used it previously, please submit a ticket to our {@link https://supportcenter.devexpress.com/ticket/create Support Center}. We will check if there is an alternative solution.
@@ -9245,6 +9342,14 @@ declare module DevExpress.ui {
      * [descr:DateBoxBaseOptions.calendarOptions]
      */
     calendarOptions?: dxCalendarOptions;
+    /**
+     * [descr:DateBoxBaseOptions.calendar]
+     */
+    calendar?: DevExpress.ui.dxDateBox.DateBoxCalendar;
+    /**
+     * [descr:DateBoxBaseOptions.calendarSwitcher]
+     */
+    calendarSwitcher?: DevExpress.ui.dxCalendar.CalendarSwitcher;
     /**
      * [descr:DateBoxBaseOptions.cancelButtonText]
      */
@@ -10354,6 +10459,19 @@ declare module DevExpress.ui {
   }
   module dxCalendar {
     export type CalendarSelectionMode = 'single' | 'multiple' | 'range';
+    /**
+     * [descr:CalendarSwitcher]
+     */
+    export type CalendarSwitcher = boolean | CalendarSwitcherConfig;
+    /**
+     * [descr:CalendarSystemType]
+     */
+    export type CalendarSystemType =
+      | 'gregorian'
+      | 'persian'
+      | 'hijri'
+      | 'hijri-umalqura'
+      | string;
     export type CalendarZoomLevel = 'century' | 'decade' | 'month' | 'year';
     export type CellTemplateData = {
       readonly date?: Date;
@@ -10453,6 +10571,14 @@ declare module DevExpress.ui {
      * [descr:dxCalendarOptions.max]
      */
     max?: DevExpress.common.DateLike;
+    /**
+     * [descr:dxCalendarOptions.calendar]
+     */
+    calendar?: DevExpress.ui.dxCalendar.CalendarSystemType;
+    /**
+     * [descr:dxCalendarOptions.calendarSwitcher]
+     */
+    calendarSwitcher?: DevExpress.ui.dxCalendar.CalendarSwitcher;
     /**
      * [descr:dxCalendarOptions.maxZoomLevel]
      */
@@ -11700,6 +11826,10 @@ declare module DevExpress.ui {
      * [descr:dxChatOptions.dayHeaderFormat]
      */
     dayHeaderFormat?: DevExpress.common.core.localization.Format;
+    /**
+     * [descr:dxChatOptions.calendar]
+     */
+    calendar?: 'gregorian' | 'persian' | 'hijri' | string;
     /**
      * [descr:dxChatOptions.editing]
      */
@@ -14815,6 +14945,15 @@ declare module DevExpress.ui {
       dxDateBox,
       ClipboardEvent
     >;
+    /**
+     * [descr:DateBoxCalendar]
+     */
+    export type DateBoxCalendar =
+      | 'gregorian'
+      | 'persian'
+      | 'hijri'
+      | 'hijri-umalqura'
+      | string;
     export type DatePickerType = 'calendar' | 'list' | 'native' | 'rollers';
     export type DateType = 'date' | 'datetime' | 'time';
     export type DisabledDate =
@@ -19088,6 +19227,10 @@ declare module DevExpress.ui {
      */
     format?: DevExpress.common.core.localization.Format;
     /**
+     * [descr:dxFilterBuilderField.calendar]
+     */
+    calendar?: 'gregorian' | 'persian' | 'hijri' | string;
+    /**
      * [descr:dxFilterBuilderField.lookup]
      */
     lookup?: {
@@ -21092,6 +21235,262 @@ declare module DevExpress.ui {
      * [descr:dxGanttHeaderFilterTexts.ok]
      */
     ok?: string;
+  }
+  /**
+   * [descr:dxGanttMultiCalendar]
+   */
+  export class dxGanttMultiCalendar extends Widget<dxGanttMultiCalendarOptions> {
+    /**
+     * [descr:dxGanttMultiCalendar.getTreeList()]
+     */
+    getTreeList(): dxTreeList;
+  }
+  module dxGanttMultiCalendar {
+    /**
+     * [descr:_ui_gantt_multi_calendar_ContentReadyEvent]
+     */
+    export type ContentReadyEvent =
+      DevExpress.common.core.events.EventInfo<dxGanttMultiCalendar>;
+    /**
+     * [descr:_ui_gantt_multi_calendar_DependencyDeletedEvent]
+     */
+    export type DependencyDeletedEvent =
+      DevExpress.common.core.events.EventInfo<dxGanttMultiCalendar> & {
+        readonly key: any;
+      };
+    /**
+     * [descr:_ui_gantt_multi_calendar_DependencyDeletingEvent]
+     */
+    export type DependencyDeletingEvent =
+      DevExpress.common.core.events.Cancelable &
+        DevExpress.common.core.events.EventInfo<dxGanttMultiCalendar> & {
+          readonly key: any;
+        };
+    /**
+     * [descr:_ui_gantt_multi_calendar_DependencyInsertedEvent]
+     */
+    export type DependencyInsertedEvent =
+      DevExpress.common.core.events.EventInfo<dxGanttMultiCalendar> & {
+        readonly predecessorId: any;
+        readonly successorId: any;
+        readonly type: GanttMultiCalendarDependencyType;
+      };
+    /**
+     * [descr:_ui_gantt_multi_calendar_DisposingEvent]
+     */
+    export type DisposingEvent =
+      DevExpress.common.core.events.EventInfo<dxGanttMultiCalendar>;
+    /**
+     * [descr:GanttMultiCalendarCalendarType]
+     */
+    export type GanttMultiCalendarCalendarType =
+      | 'gregorian'
+      | 'persian'
+      | 'hijri'
+      | string;
+    /**
+     * [descr:GanttMultiCalendarDependencyType]
+     */
+    export type GanttMultiCalendarDependencyType = 0 | 1 | 2 | 3;
+    /**
+     * [descr:GanttMultiCalendarScaleType]
+     */
+    export type GanttMultiCalendarScaleType =
+      | 'days'
+      | 'weeks'
+      | 'months'
+      | 'quarters'
+      | 'years';
+    /**
+     * [descr:_ui_gantt_multi_calendar_InitializedEvent]
+     */
+    export type InitializedEvent =
+      DevExpress.common.core.events.InitializedEventInfo<dxGanttMultiCalendar>;
+    /**
+     * [descr:_ui_gantt_multi_calendar_OptionChangedEvent]
+     */
+    export type OptionChangedEvent =
+      DevExpress.common.core.events.EventInfo<dxGanttMultiCalendar> &
+        DevExpress.common.core.events.ChangedOptionInfo;
+    export type Properties = dxGanttMultiCalendarOptions;
+    /**
+     * [descr:_ui_gantt_multi_calendar_TaskUpdatedEvent]
+     */
+    export type TaskUpdatedEvent =
+      DevExpress.common.core.events.EventInfo<dxGanttMultiCalendar> & {
+        readonly key: any;
+        readonly start: Date;
+        readonly end: Date;
+      };
+  }
+  /**
+   * [descr:dxGanttMultiCalendarOptions]
+   */
+  export interface dxGanttMultiCalendarOptions
+    extends WidgetOptions<dxGanttMultiCalendar> {
+    /**
+     * [descr:dxGanttMultiCalendarOptions.tasks]
+     */
+    tasks?: {
+      /**
+       * [descr:dxGanttMultiCalendarOptions.tasks.dataSource]
+       */
+      dataSource?: DevExpress.data.DataSourceLike<any> | null;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.tasks.keyExpr]
+       */
+      keyExpr?: string;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.tasks.parentIdExpr]
+       */
+      parentIdExpr?: string;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.tasks.titleExpr]
+       */
+      titleExpr?: string;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.tasks.startExpr]
+       */
+      startExpr?: string;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.tasks.endExpr]
+       */
+      endExpr?: string;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.tasks.progressExpr]
+       */
+      progressExpr?: string;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.tasks.colorExpr]
+       */
+      colorExpr?: string;
+    };
+    /**
+     * [descr:dxGanttMultiCalendarOptions.dependencies]
+     */
+    dependencies?: {
+      /**
+       * [descr:dxGanttMultiCalendarOptions.dependencies.dataSource]
+       */
+      dataSource?: DevExpress.data.DataSourceLike<any> | null;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.dependencies.keyExpr]
+       */
+      keyExpr?: string;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.dependencies.predecessorIdExpr]
+       */
+      predecessorIdExpr?: string;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.dependencies.successorIdExpr]
+       */
+      successorIdExpr?: string;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.dependencies.typeExpr]
+       */
+      typeExpr?: string;
+    };
+    /**
+     * [descr:dxGanttMultiCalendarOptions.columns]
+     */
+    columns?: Array<DevExpress.ui.dxTreeList.Column | string> | undefined;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.calendar]
+     */
+    calendar?: DevExpress.ui.dxGanttMultiCalendar.GanttMultiCalendarCalendarType;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.scaleType]
+     */
+    scaleType?: DevExpress.ui.dxGanttMultiCalendar.GanttMultiCalendarScaleType;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.taskListWidth]
+     */
+    taskListWidth?: number;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.rowHeight]
+     */
+    rowHeight?: number;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.headerRowHeight]
+     */
+    headerRowHeight?: number;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.cellWidth]
+     */
+    cellWidth?: number;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.showDependencies]
+     */
+    showDependencies?: boolean;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.selectedRowKey]
+     */
+    selectedRowKey?: any | undefined;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.startDate]
+     */
+    startDate?: Date | undefined;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.endDate]
+     */
+    endDate?: Date | undefined;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.locale]
+     */
+    locale?: string | undefined;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.editing]
+     */
+    editing?: {
+      /**
+       * [descr:dxGanttMultiCalendarOptions.editing.enabled]
+       */
+      enabled?: boolean;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.editing.allowTaskMove]
+       */
+      allowTaskMove?: boolean;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.editing.allowTaskResize]
+       */
+      allowTaskResize?: boolean;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.editing.autoUpdateSuccessors]
+       */
+      autoUpdateSuccessors?: boolean;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.editing.allowDependencyAdding]
+       */
+      allowDependencyAdding?: boolean;
+      /**
+       * [descr:dxGanttMultiCalendarOptions.editing.allowDependencyDeleting]
+       */
+      allowDependencyDeleting?: boolean;
+    };
+    /**
+     * [descr:dxGanttMultiCalendarOptions.onTaskUpdated]
+     */
+    onTaskUpdated?: (
+      e: DevExpress.ui.dxGanttMultiCalendar.TaskUpdatedEvent
+    ) => void;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.onDependencyInserted]
+     */
+    onDependencyInserted?: (
+      e: DevExpress.ui.dxGanttMultiCalendar.DependencyInsertedEvent
+    ) => void;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.onDependencyDeleting]
+     */
+    onDependencyDeleting?: (
+      e: DevExpress.ui.dxGanttMultiCalendar.DependencyDeletingEvent
+    ) => void;
+    /**
+     * [descr:dxGanttMultiCalendarOptions.onDependencyDeleted]
+     */
+    onDependencyDeleted?: (
+      e: DevExpress.ui.dxGanttMultiCalendar.DependencyDeletedEvent
+    ) => void;
   }
   /**
    * [descr:dxGanttOptions]
@@ -27126,6 +27525,10 @@ declare module DevExpress.ui {
      * [descr:dxSchedulerOptions.firstDayOfWeek]
      */
     firstDayOfWeek?: DevExpress.common.DayOfWeek | undefined;
+    /**
+     * [descr:dxSchedulerOptions.calendar]
+     */
+    calendar?: 'gregorian' | 'persian' | 'hijri' | 'hijri-umalqura' | string;
     /**
      * [descr:dxSchedulerOptions.hiddenWeekDays]
      */
@@ -37845,6 +38248,10 @@ declare module DevExpress.viz {
        * [descr:dxChartOptions.argumentAxis.label.format]
        */
       format?: DevExpress.common.core.localization.Format | undefined;
+      /**
+       * [descr:dxChartOptions.argumentAxis.label.calendar]
+       */
+      calendar?: 'gregorian' | 'persian' | 'hijri' | string;
     };
     /**
      * [descr:dxChartArgumentAxisStrips]
@@ -39033,6 +39440,10 @@ declare module DevExpress.viz {
        * [descr:dxChartOptions.valueAxis.label.format]
        */
       format?: DevExpress.common.core.localization.Format | undefined;
+      /**
+       * [descr:dxChartOptions.valueAxis.label.calendar]
+       */
+      calendar?: 'gregorian' | 'persian' | 'hijri' | string;
     };
     /**
      * [descr:dxChartValueAxisStrips]
@@ -44952,6 +45363,10 @@ declare module DevExpress.viz {
          * [descr:dxRangeSelectorOptions.scale.label.format]
          */
         format?: DevExpress.common.core.localization.Format | undefined;
+        /**
+         * [descr:dxRangeSelectorOptions.scale.label.calendar]
+         */
+        calendar?: 'gregorian' | 'persian' | 'hijri' | string;
         /**
          * [descr:dxRangeSelectorOptions.scale.label.overlappingBehavior]
          */
