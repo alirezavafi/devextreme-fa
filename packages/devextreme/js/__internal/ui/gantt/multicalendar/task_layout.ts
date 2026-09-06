@@ -90,7 +90,10 @@ const DEFAULT_ROW_HEIGHT = 34;
 const DEFAULT_BAR_HEIGHT = 22;
 const DEFAULT_MIN_BAR_WIDTH = 4;
 const CONNECTOR_THICKNESS = 1;
+/** Half-height of the CSS arrowhead triangle; mirrors its border-top/bottom. */
 const ARROW_SIZE = 5;
+/** Tip-to-base length of the arrowhead; mirrors its border-left/right. */
+const ARROW_LENGTH = 8;
 /** Horizontal stub length leaving/entering a bar edge. */
 const CONNECTOR_GUTTER = 10;
 
@@ -223,10 +226,15 @@ function verticalSegment(y1: number, y2: number, x: number): ConnectorSegment {
   };
 }
 
-/** The arrow points toward the bar: into a left edge => pointing right. */
+/**
+ * The arrow points toward the bar: into a left edge => pointing right.
+ * Both boxes are ARROW_LENGTH wide and anchored so the tip lands exactly on
+ * the bar edge -- a right-pointing tip sits at the box's right side, a
+ * left-pointing one at its left.
+ */
 function buildArrow(to: Anchor): ConnectorArrow {
   return {
-    left: to.x - (to.isRightEdge ? 0 : ARROW_SIZE),
+    left: to.x - (to.isRightEdge ? 0 : ARROW_LENGTH),
     top: to.y - ARROW_SIZE,
     direction: to.isRightEdge ? 'left' : 'right',
   };
@@ -333,6 +341,7 @@ export function layoutDependencies(
 }
 
 export {
+  ARROW_LENGTH,
   ARROW_SIZE,
   DEFAULT_BAR_HEIGHT,
   DEFAULT_ROW_HEIGHT,

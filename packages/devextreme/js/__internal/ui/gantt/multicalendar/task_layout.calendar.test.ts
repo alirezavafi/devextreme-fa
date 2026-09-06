@@ -100,8 +100,9 @@ describe('layoutDependencies', () => {
     expect(line.segments[2]).toEqual({
       left: 189.5, top: 17, width: 1, height: 34,
     });
-    // Arrow points right into the successor's left edge.
-    expect(line.arrow).toEqual({ left: 195, top: 46, direction: 'right' });
+    // Arrow points right into the successor's left edge: the 8px-long box ends
+    // at x = 200, so its tip is flush with that edge rather than inside the bar.
+    expect(line.arrow).toEqual({ left: 192, top: 46, direction: 'right' });
   });
 
   it('routes a finish-to-finish connector with a left-pointing arrow', () => {

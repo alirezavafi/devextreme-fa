@@ -15,7 +15,7 @@
 
 import type { ScaleModel, ScaleTick } from './scale_model';
 import type { DependencyLine, TaskRect } from './task_layout';
-import { ARROW_SIZE } from './task_layout';
+import { ARROW_LENGTH } from './task_layout';
 
 export interface RenderOptions {
   /** Full row height (must match the value passed to `layoutTasks`). */
@@ -34,8 +34,6 @@ export interface RenderOptions {
 
 const DEFAULT_ROW_HEIGHT = 34;
 const DEFAULT_HEADER_ROW_HEIGHT = 30;
-/** Visual width of the CSS arrowhead triangle (border-left/right), for mirroring. */
-const ARROW_VISUAL_WIDTH = 8;
 
 /* RTL mirrors: a temporal edge keeps its meaning, only the visual side flips. */
 const RESIZE_EDGE_MIRROR = { start: 'end', end: 'start' } as const;
@@ -237,14 +235,9 @@ function renderDependency(line: DependencyLine, rtl: boolean, totalWidth: number
   const direction = rtl ? ARROW_DIRECTION_MIRROR[line.arrow.direction] : line.arrow.direction;
   const arrow = el('div', `dx-gantt-arrow dx-gantt-arrow-${direction}`);
   arrow.style.position = 'absolute';
-  // The arrowhead is anchored at its tip, which sits at a different box corner
-  // per direction: a right-pointing arrow's tip is ARROW_SIZE in from box-left
-  // (how task_layout anchors it at the successor edge), while a left-pointing
-  // arrow's tip is at box-left. Mirroring must reflect the tip, so reflect the
-  // box with the width matching that anchor; otherwise start-edge arrows land
-  // (ARROW_VISUAL_WIDTH - ARROW_SIZE)px off the mirrored terminus in RTL.
-  const mirrorWidth = line.arrow.direction === 'right' ? ARROW_SIZE : ARROW_VISUAL_WIDTH;
-  arrow.style.left = px(mirrorX(line.arrow.left, mirrorWidth, rtl, totalWidth));
+  // Both arrowhead boxes are ARROW_LENGTH wide with the tip on the side facing
+  // the bar, so reflecting the box also reflects the tip onto the mirrored edge.
+  arrow.style.left = px(mirrorX(line.arrow.left, ARROW_LENGTH, rtl, totalWidth));
   arrow.style.top = px(line.arrow.top);
   group.appendChild(arrow);
 

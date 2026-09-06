@@ -337,6 +337,40 @@ describe('renderTimeline RTL dependency arrowhead (bug condition exploration)', 
   });
 });
 
+// Same flush-tip property in LTR. The start-edge (FS/SS) arrowhead used to be
+// anchored by the triangle's half-height instead of its length, so its tip
+// overshot the successor edge by (ARROW_VISUAL_WIDTH - 5)px into the bar.
+describe('renderTimeline LTR dependency arrowhead', () => {
+  function renderDependencyLtr(type: DependencyType): { tipX: number; expected: number } {
+    const scale = buildScaleModel({
+      startDate: new Date(2024, 0, 1),
+      endDate: new Date(2024, 0, 11),
+      scaleType: 'days',
+      cellWidth: 50,
+    });
+    const rects = layoutTasks(tasks, scale, { order: ['a', 'b', 'm'] });
+    const lines = layoutDependencies(
+      [{
+        id: 'd1', predecessorId: 'a', successorId: 'b', type,
+      }],
+      rects,
+    );
+    const host = document.createElement('div');
+    renderTimeline(host, scale, rects, lines, { rtl: false });
+
+    const successor = rects.find((r) => r.id === 'b')!;
+    return { tipX: readArrowTip(host).tipX, expected: terminusX(successor, type) };
+  }
+
+  it.each([0, 1, 2, 3] as DependencyType[])(
+    'type %i: the arrowhead tip is flush with the successor terminus',
+    (type) => {
+      const { tipX, expected } = renderDependencyLtr(type);
+      expect(tipX).toBeCloseTo(expected, 3);
+    },
+  );
+});
+
 // ---------------------------------------------------------------------------
 // Preservation baseline (Task 2) - Property 2 (design.md): all inputs OUTSIDE
 // the bug condition must render exactly as before.
@@ -400,11 +434,11 @@ describe('renderTimeline preservation baseline (unfixed code)', () => {
   // Requirement 3.1: LTR arrows are byte-for-byte unchanged. mirrorX is the
   // identity in LTR, so the rendered box-left/direction equal the pure layout.
   it('LTR: every arrow box-left/direction equals the laid-out line.arrow (mirrorX identity)', () => {
-    // Observed per-type baseline: FS/SS -> start edge (195, right);
-    // FF/SF -> finish edge (250, left).
+    // Observed per-type baseline: FS/SS -> start edge (192, right), the 8px-long
+    // box ending flush on the edge at 200; FF/SF -> finish edge (250, left).
     const expectedByType: Record<DependencyType, { left: number; direction: 'left' | 'right' }> = {
-      0: { left: 195, direction: 'right' },
-      1: { left: 195, direction: 'right' },
+      0: { left: 192, direction: 'right' },
+      1: { left: 192, direction: 'right' },
       2: { left: 250, direction: 'left' },
       3: { left: 250, direction: 'left' },
     };
@@ -520,7 +554,7 @@ describe('renderTimeline preservation baseline (unfixed code)', () => {
     ]);
     // The layout-side arrow anchor (pre-render) is unchanged - the fix only
     // affects the rendered `left`, never what routeConnector produces.
-    expect(lines[0].arrow).toEqual({ left: 195, top: 46, direction: 'right' });
+    expect(lines[0].arrow).toEqual({ left: 192, top: 46, direction: 'right' });
 
     // Task rects (date-derived geometry) are unchanged.
     expect(rects.map(taskGeom)).toEqual([
