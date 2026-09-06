@@ -117,6 +117,48 @@ describe('layoutDependencies', () => {
     expect(lines[0].arrow.left).toBe(250); // successor finish edge (200 + 50)
   });
 
+  it('keeps the riser clear of the predecessor when tasks are back-to-back', () => {
+    // 'a' finishes on Jan 3 exactly where 'c' starts, so `to.x - gutter` would
+    // land inside 'a' and the riser would be drawn underneath the bar.
+    const backToBack: GanttTaskInput[] = [
+      { id: 'a', start: new Date(2024, 0, 1), end: new Date(2024, 0, 3) },
+      { id: 'c', start: new Date(2024, 0, 3), end: new Date(2024, 0, 5) },
+    ];
+    const rects = layoutTasks(backToBack, daysScale(), { order: ['a', 'c'] });
+    const lines = layoutDependencies(
+      [{
+        id: 'd', predecessorId: 'a', successorId: 'c', type: 0,
+      }],
+      rects,
+    );
+
+    const a = rects.find((r) => r.id === 'a')!;
+    const riser = lines[0].segments[2];
+    // Riser stands on the shared boundary (100), grazing both bars, not at 190.
+    expect(riser.left).toBe(99.5);
+    expect(riser.left + riser.width / 2).toBe(a.left + a.width);
+  });
+
+  it('steps through the row gap when the bars overlap', () => {
+    // 'c' starts before 'a' finishes, so no riser column clears both bars.
+    const overlapping: GanttTaskInput[] = [
+      { id: 'a', start: new Date(2024, 0, 1), end: new Date(2024, 0, 3) },
+      { id: 'c', start: new Date(2024, 0, 2), end: new Date(2024, 0, 4) },
+    ];
+    const rects = layoutTasks(overlapping, daysScale(), { order: ['a', 'c'] });
+    const lines = layoutDependencies(
+      [{
+        id: 'd', predecessorId: 'a', successorId: 'c', type: 0,
+      }],
+      rects,
+    );
+
+    expect(lines[0].segments).toHaveLength(5);
+    // The crossing runs on the centreline between the two row centers (17 -> 51);
+    // `top` is that centreline less half the connector thickness.
+    expect(lines[0].segments[2].top + 0.5).toBe(34);
+  });
+
   it('skips dependencies whose endpoints are not laid out', () => {
     const rects = layoutTasks(tasks, daysScale(), { order: ['a', 'b', 'm'] });
     const lines = layoutDependencies(

@@ -223,18 +223,67 @@ function verticalSegment(y1: number, y2: number, x: number): ConnectorSegment {
   };
 }
 
+/** The arrow points toward the bar: into a left edge => pointing right. */
+function buildArrow(to: Anchor): ConnectorArrow {
+  return {
+    left: to.x - (to.isRightEdge ? 0 : ARROW_SIZE),
+    top: to.y - ARROW_SIZE,
+    direction: to.isRightEdge ? 'left' : 'right',
+  };
+}
+
 /**
- * Routes a 3-segment orthogonal connector (horizontal stub -> vertical ->
- * horizontal into the target). The elbow column sits a gutter away from the
- * target so the arrow always meets the bar edge head-on.
+ * Routes an orthogonal connector from the predecessor's exit edge to the
+ * successor's entry edge.
+ *
+ * The riser (vertical run) normally stands a gutter outside the successor's
+ * entry edge. That column is only usable while it stays clear of the
+ * predecessor's own bar: for back-to-back tasks, where the predecessor finishes
+ * exactly where the successor starts, `to.x - gutter` falls *inside* the
+ * predecessor, so the riser would be drawn underneath it and the connector
+ * would appear to break off at the bar's edge. When that happens the riser
+ * moves out to the predecessor's exit edge, which is the shared boundary
+ * between the two bars and clear of both. If the tasks overlap, no such column
+ * exists and the connector steps through the row gap instead.
  */
 function routeConnector(
   from: Anchor,
   to: Anchor,
+  fromRect: TaskRect,
+  toRect: TaskRect,
 ): { segments: ConnectorSegment[]; arrow: ConnectorArrow } {
   const fromStubX = from.x + (from.isRightEdge ? CONNECTOR_GUTTER : -CONNECTOR_GUTTER);
   const toStubX = to.x + (to.isRightEdge ? CONNECTOR_GUTTER : -CONNECTOR_GUTTER);
-  const elbowX = toStubX;
+
+  const isInside = (x: number, rect: TaskRect): boolean => (
+    x > rect.left && x < rect.left + rect.width
+  );
+
+  let elbowX = toStubX;
+  let stepsThroughRowGap = false;
+  if (isInside(elbowX, fromRect)) {
+    if (isInside(from.x, toRect)) {
+      stepsThroughRowGap = true;
+    } else {
+      elbowX = from.x;
+    }
+  }
+
+  if (stepsThroughRowGap) {
+    // The bars overlap, so no riser column clears both. Drop into the gap
+    // between the two rows, cross there, then drop into the successor.
+    const gapY = (from.y + to.y) / 2;
+    return {
+      segments: [
+        horizontalSegment(from.x, fromStubX, from.y),
+        verticalSegment(from.y, gapY, fromStubX),
+        horizontalSegment(fromStubX, toStubX, gapY),
+        verticalSegment(gapY, to.y, toStubX),
+        horizontalSegment(toStubX, to.x, to.y),
+      ],
+      arrow: buildArrow(to),
+    };
+  }
 
   const segments: ConnectorSegment[] = [
     horizontalSegment(from.x, fromStubX, from.y),
@@ -243,14 +292,7 @@ function routeConnector(
     horizontalSegment(elbowX, to.x, to.y),
   ];
 
-  // The arrow points toward the bar: into a left edge => pointing right.
-  const arrow: ConnectorArrow = {
-    left: to.x - (to.isRightEdge ? 0 : ARROW_SIZE),
-    top: to.y - ARROW_SIZE,
-    direction: to.isRightEdge ? 'left' : 'right',
-  };
-
-  return { segments, arrow };
+  return { segments, arrow: buildArrow(to) };
 }
 
 /**
@@ -275,7 +317,7 @@ export function layoutDependencies(
     const type = dependency.type ?? 0;
     const from = predecessorAnchor(predecessor, type);
     const to = successorAnchor(successor, type);
-    const { segments, arrow } = routeConnector(from, to);
+    const { segments, arrow } = routeConnector(from, to, predecessor, successor);
 
     lines.push({
       id: dependency.id,
