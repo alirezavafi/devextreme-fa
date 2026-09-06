@@ -9045,7 +9045,9 @@ declare module DevExpress.ui {
     /**
      * [descr:CalendarSwitcherConfig.items]
      */
-    items?: Array<DevExpress.ui.dxCalendar.CalendarSystemType>;
+    items?: Array<
+      'gregorian' | 'persian' | 'hijri' | 'hijri-umalqura' | string
+    >;
   }
   /**
    * [descr:ColCountResponsible]
@@ -9345,7 +9347,7 @@ declare module DevExpress.ui {
     /**
      * [descr:DateBoxBaseOptions.calendar]
      */
-    calendar?: DevExpress.ui.dxDateBox.DateBoxCalendar;
+    calendar?: 'gregorian' | 'persian' | 'hijri' | 'hijri-umalqura' | string;
     /**
      * [descr:DateBoxBaseOptions.calendarSwitcher]
      */
@@ -10574,7 +10576,7 @@ declare module DevExpress.ui {
     /**
      * [descr:dxCalendarOptions.calendar]
      */
-    calendar?: DevExpress.ui.dxCalendar.CalendarSystemType;
+    calendar?: 'gregorian' | 'persian' | 'hijri' | 'hijri-umalqura' | string;
     /**
      * [descr:dxCalendarOptions.calendarSwitcher]
      */
@@ -21397,7 +21399,7 @@ declare module DevExpress.ui {
     /**
      * [descr:dxGanttMultiCalendarOptions.calendar]
      */
-    calendar?: DevExpress.ui.dxGanttMultiCalendar.GanttMultiCalendarCalendarType;
+    calendar?: 'gregorian' | 'persian' | 'hijri' | string;
     /**
      * [descr:dxGanttMultiCalendarOptions.scaleType]
      */
