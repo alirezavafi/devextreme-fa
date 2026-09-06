@@ -154,6 +154,14 @@ export class DxoRangeSelectorLabelComponent extends NestedOption implements OnDe
     }
 
     @Input()
+    get calendar(): "gregorian" | "persian" | "hijri" {
+        return this._getOption('calendar');
+    }
+    set calendar(value: "gregorian" | "persian" | "hijri") {
+        this._setOption('calendar', value);
+    }
+
+    @Input()
     get overlappingBehavior(): LabelOverlap {
         return this._getOption('overlappingBehavior');
     }

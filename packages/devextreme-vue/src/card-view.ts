@@ -1475,6 +1475,7 @@ const DxFieldConfig = {
     "update:isActive": null,
     "update:hoveredElement": null,
     "update:calculateFilterExpression": null,
+    "update:calendar": null,
     "update:caption": null,
     "update:customizeText": null,
     "update:dataField": null,
@@ -1490,6 +1491,7 @@ const DxFieldConfig = {
   },
   props: {
     calculateFilterExpression: Function as PropType<((filterValue: any, selectedFilterOperation: string) => string | (() => any) | Array<any>)>,
+    calendar: String as PropType<"gregorian" | "persian" | "hijri">,
     caption: String,
     customizeText: Function as PropType<((fieldInfo: FieldInfo) => string)>,
     dataField: String,
@@ -1794,6 +1796,7 @@ const DxFormatConfig = {
   emits: {
     "update:isActive": null,
     "update:hoveredElement": null,
+    "update:calendar": null,
     "update:currency": null,
     "update:formatter": null,
     "update:parser": null,
@@ -1802,6 +1805,7 @@ const DxFormatConfig = {
     "update:useCurrencyAccountingStyle": null,
   },
   props: {
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
     currency: String,
     formatter: Function as PropType<((value: number | Date) => string)>,
     parser: Function as PropType<((value: string) => number | Date)>,

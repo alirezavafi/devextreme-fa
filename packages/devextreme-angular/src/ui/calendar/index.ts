@@ -22,7 +22,7 @@ import {
 } from '@angular/core';
 
 
-import type { DisabledDate, CalendarZoomLevel, DisposingEvent, InitializedEvent, OptionChangedEvent, ValueChangedEvent, CalendarSelectionMode, WeekNumberRule } from 'devextreme/ui/calendar';
+import type { CalendarSwitcher, DisabledDate, CalendarZoomLevel, DisposingEvent, InitializedEvent, OptionChangedEvent, ValueChangedEvent, CalendarSelectionMode, WeekNumberRule } from 'devextreme/ui/calendar';
 import type { DayOfWeek, ValidationMessageMode, Position, ValidationStatus } from 'devextreme/common';
 
 import DxCalendar from 'devextreme/ui/calendar';
@@ -95,6 +95,32 @@ export class DxCalendarComponent extends DxComponent implements OnDestroy, Contr
     }
     set activeStateEnabled(value: boolean) {
         this._setOption('activeStateEnabled', value);
+    }
+
+
+    /**
+     * [descr:dxCalendarOptions.calendar]
+    
+     */
+    @Input()
+    get calendar(): "gregorian" | "persian" | "hijri" | "hijri-umalqura" {
+        return this._getOption('calendar');
+    }
+    set calendar(value: "gregorian" | "persian" | "hijri" | "hijri-umalqura") {
+        this._setOption('calendar', value);
+    }
+
+
+    /**
+     * [descr:dxCalendarOptions.calendarSwitcher]
+    
+     */
+    @Input()
+    get calendarSwitcher(): CalendarSwitcher {
+        return this._getOption('calendarSwitcher');
+    }
+    set calendarSwitcher(value: CalendarSwitcher) {
+        this._setOption('calendarSwitcher', value);
     }
 
 
@@ -600,6 +626,20 @@ export class DxCalendarComponent extends DxComponent implements OnDestroy, Contr
      * This member supports the internal infrastructure and is not intended to be used directly from your code.
     
      */
+    @Output() calendarChange: EventEmitter<"gregorian" | "persian" | "hijri" | "hijri-umalqura">;
+
+    /**
+    
+     * This member supports the internal infrastructure and is not intended to be used directly from your code.
+    
+     */
+    @Output() calendarSwitcherChange: EventEmitter<CalendarSwitcher>;
+
+    /**
+    
+     * This member supports the internal infrastructure and is not intended to be used directly from your code.
+    
+     */
     @Output() cellTemplateChange: EventEmitter<any>;
 
     /**
@@ -869,6 +909,8 @@ export class DxCalendarComponent extends DxComponent implements OnDestroy, Contr
             { subscribe: 'valueChanged', emit: 'onValueChanged' },
             { emit: 'accessKeyChange' },
             { emit: 'activeStateEnabledChange' },
+            { emit: 'calendarChange' },
+            { emit: 'calendarSwitcherChange' },
             { emit: 'cellTemplateChange' },
             { emit: 'dateSerializationFormatChange' },
             { emit: 'disabledChange' },

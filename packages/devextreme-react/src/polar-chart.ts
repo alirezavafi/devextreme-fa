@@ -460,6 +460,7 @@ const ArgumentAxisTick = Object.assign<typeof _componentArgumentAxisTick, Nested
 // Label
 // Tooltip
 type IArgumentFormatProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri" | "hijri-umalqura";
   currency?: string;
   formatter?: ((value: number | Date) => string);
   parser?: ((value: string) => number | Date);
@@ -1305,6 +1306,7 @@ const Font = Object.assign<typeof _componentFont, NestedComponentMeta>(_componen
 // Label
 // Tooltip
 type IFormatProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri" | "hijri-umalqura";
   currency?: string;
   formatter?: ((value: number | Date) => string);
   parser?: ((value: string) => number | Date);

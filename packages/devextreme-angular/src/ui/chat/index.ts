@@ -158,6 +158,19 @@ export class DxChatComponent extends DxComponent implements OnDestroy, OnChanges
 
 
     /**
+     * [descr:dxChatOptions.calendar]
+    
+     */
+    @Input()
+    get calendar(): "gregorian" | "persian" | "hijri" {
+        return this._getOption('calendar');
+    }
+    set calendar(value: "gregorian" | "persian" | "hijri") {
+        this._setOption('calendar', value);
+    }
+
+
+    /**
      * [descr:dxChatOptions.dataSource]
     
      */
@@ -656,6 +669,13 @@ export class DxChatComponent extends DxComponent implements OnDestroy, OnChanges
      * This member supports the internal infrastructure and is not intended to be used directly from your code.
     
      */
+    @Output() calendarChange: EventEmitter<"gregorian" | "persian" | "hijri">;
+
+    /**
+    
+     * This member supports the internal infrastructure and is not intended to be used directly from your code.
+    
+     */
     @Output() dataSourceChange: EventEmitter<Array<Message> | DataSource | DataSourceOptions | null | Store | string>;
 
     /**
@@ -884,6 +904,7 @@ export class DxChatComponent extends DxComponent implements OnDestroy, OnChanges
             { emit: 'accessKeyChange' },
             { emit: 'activeStateEnabledChange' },
             { emit: 'alertsChange' },
+            { emit: 'calendarChange' },
             { emit: 'dataSourceChange' },
             { emit: 'dayHeaderFormatChange' },
             { emit: 'disabledChange' },

@@ -117,6 +117,7 @@ const CustomOperation = Object.assign<typeof _componentCustomOperation, NestedCo
 // FilterBuilder
 type IFieldProps = React.PropsWithChildren<{
   calculateFilterExpression?: ((filterValue: any, selectedFilterOperation: string) => string | (() => any) | Array<any>);
+  calendar?: "gregorian" | "persian" | "hijri";
   caption?: string | undefined;
   customizeText?: ((fieldInfo: FieldInfo) => string);
   dataField?: string | undefined;
@@ -193,6 +194,7 @@ const FilterOperationDescriptions = Object.assign<typeof _componentFilterOperati
 // owners:
 // Field
 type IFormatProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri" | "hijri-umalqura";
   currency?: string;
   formatter?: ((value: number | Date) => string);
   parser?: ((value: string) => number | Date);

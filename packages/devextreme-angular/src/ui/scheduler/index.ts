@@ -242,6 +242,19 @@ export class DxSchedulerComponent extends DxComponent implements OnDestroy, OnCh
 
 
     /**
+     * [descr:dxSchedulerOptions.calendar]
+    
+     */
+    @Input()
+    get calendar(): "gregorian" | "persian" | "hijri" | "hijri-umalqura" {
+        return this._getOption('calendar');
+    }
+    set calendar(value: "gregorian" | "persian" | "hijri" | "hijri-umalqura") {
+        this._setOption('calendar', value);
+    }
+
+
+    /**
      * [descr:dxSchedulerOptions.cellDuration]
     
      */
@@ -1149,6 +1162,13 @@ export class DxSchedulerComponent extends DxComponent implements OnDestroy, OnCh
      * This member supports the internal infrastructure and is not intended to be used directly from your code.
     
      */
+    @Output() calendarChange: EventEmitter<"gregorian" | "persian" | "hijri" | "hijri-umalqura">;
+
+    /**
+    
+     * This member supports the internal infrastructure and is not intended to be used directly from your code.
+    
+     */
     @Output() cellDurationChange: EventEmitter<number>;
 
     /**
@@ -1562,6 +1582,7 @@ export class DxSchedulerComponent extends DxComponent implements OnDestroy, OnCh
             { emit: 'appointmentDraggingChange' },
             { emit: 'appointmentTemplateChange' },
             { emit: 'appointmentTooltipTemplateChange' },
+            { emit: 'calendarChange' },
             { emit: 'cellDurationChange' },
             { emit: 'crossScrollingEnabledChange' },
             { emit: 'currentDateChange' },

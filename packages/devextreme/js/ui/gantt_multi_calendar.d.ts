@@ -210,7 +210,7 @@ export interface dxGanttMultiCalendarOptions extends WidgetOptions<dxGanttMultiC
      * @default "gregorian"
      * @public
      */
-    calendar?: GanttMultiCalendarCalendarType;
+    calendar?: 'gregorian' | 'persian' | 'hijri' | string;
     /**
      * @docid
      * @default "months"

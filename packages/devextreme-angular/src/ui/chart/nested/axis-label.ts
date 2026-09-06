@@ -52,6 +52,14 @@ export class DxoChartAxisLabelComponent extends NestedOption implements AfterVie
     }
 
     @Input()
+    get calendar(): "gregorian" | "persian" | "hijri" {
+        return this._getOption('calendar');
+    }
+    set calendar(value: "gregorian" | "persian" | "hijri") {
+        this._setOption('calendar', value);
+    }
+
+    @Input()
     get customizeHint(): ((argument: { value: Date | number | string, valueText: string }) => string) {
         return this._getOption('customizeHint');
     }

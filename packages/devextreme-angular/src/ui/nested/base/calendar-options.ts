@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 
 import type { DayOfWeek, Position, ValidationMessageMode, ValidationStatus } from 'devextreme/common';
-import type { CalendarSelectionMode, CalendarZoomLevel, DisposingEvent, InitializedEvent, OptionChangedEvent, ValueChangedEvent, WeekNumberRule } from 'devextreme/ui/calendar';
+import type { CalendarSelectionMode, CalendarSwitcher, CalendarZoomLevel, DisposingEvent, InitializedEvent, OptionChangedEvent, ValueChangedEvent, WeekNumberRule } from 'devextreme/ui/calendar';
 
 @Component({
     template: ''
@@ -24,6 +24,20 @@ export abstract class DxoCalendarOptions extends NestedOption {
     }
     set activeStateEnabled(value: boolean) {
         this._setOption('activeStateEnabled', value);
+    }
+
+    get calendar(): string {
+        return this._getOption('calendar');
+    }
+    set calendar(value: string) {
+        this._setOption('calendar', value);
+    }
+
+    get calendarSwitcher(): CalendarSwitcher {
+        return this._getOption('calendarSwitcher');
+    }
+    set calendarSwitcher(value: CalendarSwitcher) {
+        this._setOption('calendarSwitcher', value);
     }
 
     get cellTemplate(): any {

@@ -11,6 +11,13 @@ import type { Format } from 'devextreme/common';
     template: ''
 })
 export abstract class DxoFormat extends NestedOption {
+    get calendar(): string {
+        return this._getOption('calendar');
+    }
+    set calendar(value: string) {
+        this._setOption('calendar', value);
+    }
+
     get currency(): string {
         return this._getOption('currency');
     }

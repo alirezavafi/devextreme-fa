@@ -29,6 +29,7 @@ import { DxoFormat } from './base/format';
     imports: [ DxIntegrationModule ],
     providers: [NestedOptionHost],
     inputs: [
+        'calendar',
         'currency',
         'formatter',
         'parser',

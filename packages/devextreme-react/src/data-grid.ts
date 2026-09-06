@@ -1514,6 +1514,7 @@ const ExportTexts = Object.assign<typeof _componentExportTexts, NestedComponentM
 // FilterBuilder
 type IFieldProps = React.PropsWithChildren<{
   calculateFilterExpression?: ((filterValue: any, selectedFilterOperation: string) => string | (() => any) | Array<any>);
+  calendar?: "gregorian" | "persian" | "hijri";
   caption?: string | undefined;
   customizeText?: ((fieldInfo: FieldInfo) => string);
   dataField?: string | undefined;
@@ -1958,6 +1959,7 @@ const Form = Object.assign<typeof _componentForm, NestedComponentMeta>(_componen
 // Column
 // Field
 type IFormatProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri" | "hijri-umalqura";
   currency?: string;
   formatter?: ((value: number | Date) => string);
   parser?: ((value: string) => number | Date);
@@ -3968,6 +3970,7 @@ const ValidationRule = Object.assign<typeof _componentValidationRule, NestedComp
 // GroupItem
 // TotalItem
 type IValueFormatProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri" | "hijri-umalqura";
   currency?: string;
   formatter?: ((value: number | Date) => string);
   parser?: ((value: string) => number | Date);

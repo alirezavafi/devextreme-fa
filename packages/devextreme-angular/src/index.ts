@@ -7,6 +7,7 @@ import * as ChartsModule from './common/charts';
 import * as CoreAnimationModule from './common/core/animation';
 import * as CoreEnvironmentModule from './common/core/environment';
 import * as CoreEventsModule from './common/core/events';
+import * as CoreLocalizationCalendarModule from './common/core/localization/calendar';
 import * as CoreLocalizationModule from './common/core/localization';
 import * as DataModule from './common/data';
 import * as ExportExcelModule from './common/export/excel';
@@ -46,6 +47,7 @@ export { DxFormComponent, DxFormModule } from 'devextreme-angular/ui/form';
 export { DxFunnelComponent, DxFunnelModule } from 'devextreme-angular/ui/funnel';
 export { DxGalleryComponent, DxGalleryModule } from 'devextreme-angular/ui/gallery';
 export { DxGanttComponent, DxGanttModule } from 'devextreme-angular/ui/gantt';
+export { DxGanttMultiCalendarComponent, DxGanttMultiCalendarModule } from 'devextreme-angular/ui/gantt-multi-calendar';
 export { DxHtmlEditorComponent, DxHtmlEditorModule } from 'devextreme-angular/ui/html-editor';
 export { DxLinearGaugeComponent, DxLinearGaugeModule } from 'devextreme-angular/ui/linear-gauge';
 export { DxListComponent, DxListModule } from 'devextreme-angular/ui/list';
@@ -278,6 +280,19 @@ export namespace Common {
             export const locale = (CoreLocalizationModule as any).locale as typeof import('devextreme/common/core/localization').locale;
             export const parseDate = (CoreLocalizationModule as any).parseDate as typeof import('devextreme/common/core/localization').parseDate;
             export const parseNumber = (CoreLocalizationModule as any).parseNumber as typeof import('devextreme/common/core/localization').parseNumber;
+            export namespace Calendar {
+                export type CalendarDateParts = import('devextreme/common/core/localization/calendar').CalendarDateParts;
+                export type CalendarMonthNameFormat = import('devextreme/common/core/localization/calendar').CalendarMonthNameFormat;
+                export type CalendarSystem = import('devextreme/common/core/localization/calendar').CalendarSystem;
+                export type CalendarType = import('devextreme/common/core/localization/calendar').CalendarType;
+                export const getCalendar = (CoreLocalizationCalendarModule as any).getCalendar as typeof import('devextreme/common/core/localization/calendar').getCalendar;
+                export const getCalendarDefaultDateFormat = (CoreLocalizationCalendarModule as any).getCalendarDefaultDateFormat as typeof import('devextreme/common/core/localization/calendar').getCalendarDefaultDateFormat;
+                export const getCalendarFirstDayOfWeek = (CoreLocalizationCalendarModule as any).getCalendarFirstDayOfWeek as typeof import('devextreme/common/core/localization/calendar').getCalendarFirstDayOfWeek;
+                export const getCalendarMonthNamesInActiveLocale = (CoreLocalizationCalendarModule as any).getCalendarMonthNamesInActiveLocale as typeof import('devextreme/common/core/localization/calendar').getCalendarMonthNamesInActiveLocale;
+                export const getRegisteredCalendarTypes = (CoreLocalizationCalendarModule as any).getRegisteredCalendarTypes as typeof import('devextreme/common/core/localization/calendar').getRegisteredCalendarTypes;
+                export const isCalendarRegistered = (CoreLocalizationCalendarModule as any).isCalendarRegistered as typeof import('devextreme/common/core/localization/calendar').isCalendarRegistered;
+                export const registerCalendar = (CoreLocalizationCalendarModule as any).registerCalendar as typeof import('devextreme/common/core/localization/calendar').registerCalendar;
+            }
         }
     }
     export namespace Data {

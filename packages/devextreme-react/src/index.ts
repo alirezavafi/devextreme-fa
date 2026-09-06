@@ -30,6 +30,7 @@ export { Form } from "./form";
 export { Funnel } from "./funnel";
 export { Gallery } from "./gallery";
 export { Gantt } from "./gantt";
+export { GanttMultiCalendar } from "./gantt-multi-calendar";
 export { HtmlEditor } from "./html-editor";
 export { LinearGauge } from "./linear-gauge";
 export { List } from "./list";

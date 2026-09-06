@@ -323,7 +323,7 @@ export interface DateBoxBaseOptions<TComponent> extends Omit<
      * @default 'gregorian'
      * @public
      */
-    calendar?: DateBoxCalendar;
+    calendar?: 'gregorian' | 'persian' | 'hijri' | 'hijri-umalqura' | string;
     /**
      * @docid
      * @default false

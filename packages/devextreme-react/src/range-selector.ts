@@ -147,6 +147,7 @@ const AggregationInterval = Object.assign<typeof _componentAggregationInterval, 
 // owners:
 // Label
 type IArgumentFormatProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri" | "hijri-umalqura";
   currency?: string;
   formatter?: ((value: number | Date) => string);
   parser?: ((value: string) => number | Date);
@@ -822,6 +823,7 @@ const Font = Object.assign<typeof _componentFont, NestedComponentMeta>(_componen
 // MarkerLabel
 // SliderMarker
 type IFormatProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri" | "hijri-umalqura";
   currency?: string;
   formatter?: ((value: number | Date) => string);
   parser?: ((value: string) => number | Date);
@@ -1011,6 +1013,7 @@ type ILabelProps = React.PropsWithChildren<{
   showForZeroValues?: boolean;
   verticalOffset?: number;
   visible?: boolean;
+  calendar?: "gregorian" | "persian" | "hijri";
   overlappingBehavior?: LabelOverlap;
   topIndent?: number;
 }>
@@ -1497,6 +1500,7 @@ type IScaleProps = React.PropsWithChildren<{
   endValue?: Date | number | string | undefined;
   holidays?: Array<Date | string> | Array<number> | undefined;
   label?: Record<string, any> | {
+    calendar?: "gregorian" | "persian" | "hijri";
     customizeText?: ((scaleValue: { value: Date | number | string, valueText: string }) => string);
     font?: ChartsFont;
     format?: LocalizationFormat | undefined;
@@ -1612,6 +1616,7 @@ const Scale = Object.assign<typeof _componentScale, NestedComponentMeta>(_compon
 // owners:
 // Scale
 type IScaleLabelProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri";
   customizeText?: ((scaleValue: { value: Date | number | string, valueText: string }) => string);
   font?: ChartsFont;
   format?: LocalizationFormat | undefined;

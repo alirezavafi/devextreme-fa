@@ -34,6 +34,8 @@ import { DxoCalendarOptions } from './base/calendar-options';
     inputs: [
         'accessKey',
         'activeStateEnabled',
+        'calendar',
+        'calendarSwitcher',
         'cellTemplate',
         'dateSerializationFormat',
         'disabled',

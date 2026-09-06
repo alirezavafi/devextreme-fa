@@ -64,7 +64,7 @@ export interface CalendarSwitcherConfig {
      * @default undefined
      * @public
      */
-    items?: Array<CalendarSystemType>;
+    items?: Array<'gregorian' | 'persian' | 'hijri' | 'hijri-umalqura' | string>;
 }
 
 /** @public */
@@ -182,7 +182,7 @@ export interface dxCalendarOptions extends EditorOptions<dxCalendar> {
      * @default 'gregorian'
      * @public
      */
-    calendar?: CalendarSystemType;
+    calendar?: 'gregorian' | 'persian' | 'hijri' | 'hijri-umalqura' | string;
     /**
      * @docid
      * @default false

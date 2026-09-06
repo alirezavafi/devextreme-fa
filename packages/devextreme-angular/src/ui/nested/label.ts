@@ -142,6 +142,14 @@ export class DxoLabelComponent extends NestedOption implements AfterViewInit, On
     }
 
     @Input()
+    get calendar(): string {
+        return this._getOption('calendar');
+    }
+    set calendar(value: string) {
+        this._setOption('calendar', value);
+    }
+
+    @Input()
     get customizeHint(): Function {
         return this._getOption('customizeHint');
     }

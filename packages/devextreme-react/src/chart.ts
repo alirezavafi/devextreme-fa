@@ -417,6 +417,7 @@ type IArgumentAxisProps = React.PropsWithChildren<{
   inverted?: boolean;
   label?: Record<string, any> | {
     alignment?: HorizontalAlignment | undefined;
+    calendar?: "gregorian" | "persian" | "hijri";
     customizeHint?: ((argument: { value: Date | number | string, valueText: string }) => string);
     customizeText?: ((argument: { value: Date | number | string, valueText: string }) => string);
     displayMode?: ChartLabelDisplayMode;
@@ -585,6 +586,7 @@ const ArgumentAxis = Object.assign<typeof _componentArgumentAxis, NestedComponen
 // Label
 // Tooltip
 type IArgumentFormatProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri" | "hijri-umalqura";
   currency?: string;
   formatter?: ((value: number | Date) => string);
   parser?: ((value: string) => number | Date);
@@ -669,6 +671,7 @@ const AxisConstantLineStyleLabel = Object.assign<typeof _componentAxisConstantLi
 // ValueAxis
 type IAxisLabelProps = React.PropsWithChildren<{
   alignment?: HorizontalAlignment | undefined;
+  calendar?: "gregorian" | "persian" | "hijri";
   customizeHint?: ((argument: { value: Date | number | string, valueText: string }) => string);
   customizeText?: ((argument: { value: Date | number | string, valueText: string }) => string);
   displayMode?: ChartLabelDisplayMode;
@@ -1919,6 +1922,7 @@ const Font = Object.assign<typeof _componentFont, NestedComponentMeta>(_componen
 // Label
 // Tooltip
 type IFormatProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri" | "hijri-umalqura";
   currency?: string;
   formatter?: ((value: number | Date) => string);
   parser?: ((value: string) => number | Date);
@@ -2166,6 +2170,7 @@ type ILabelProps = React.PropsWithChildren<{
   visible?: boolean;
   text?: string | undefined;
   alignment?: HorizontalAlignment | undefined;
+  calendar?: "gregorian" | "persian" | "hijri";
   customizeHint?: ((argument: { value: Date | number | string, valueText: string }) => string);
   customizeText?: ((argument: { value: Date | number | string, valueText: string }) => string);
   displayMode?: ChartLabelDisplayMode;
@@ -3571,6 +3576,7 @@ type IValueAxisProps = React.PropsWithChildren<{
   inverted?: boolean;
   label?: Record<string, any> | {
     alignment?: HorizontalAlignment | undefined;
+    calendar?: "gregorian" | "persian" | "hijri";
     customizeHint?: ((axisValue: { value: Date | number | string, valueText: string }) => string);
     customizeText?: ((axisValue: { value: Date | number | string, valueText: string }) => string);
     displayMode?: ChartLabelDisplayMode;
