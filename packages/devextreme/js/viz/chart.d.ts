@@ -1899,6 +1899,12 @@ export type ArgumentAxisLabel = CommonAxisSettingsLabel & {
      * @public
      */
     format?: Format | undefined;
+    /**
+     * @docid dxChartOptions.argumentAxis.label.calendar
+     * @default undefined
+     * @public
+     */
+    calendar?: 'gregorian' | 'persian' | 'hijri' | string;
 };
 /**
  * @public
@@ -3027,6 +3033,12 @@ export type ValueAxisLabel = CommonAxisSettingsLabel & {
      * @public
      */
     format?: Format | undefined;
+    /**
+     * @docid dxChartOptions.valueAxis.label.calendar
+     * @default undefined
+     * @public
+     */
+    calendar?: 'gregorian' | 'persian' | 'hijri' | string;
 };
 /**
  * @public

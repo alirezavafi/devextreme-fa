@@ -138,7 +138,7 @@ const subscribes = {
 
     return {
       text: adapter.text || messageLocalization.format('dxScheduler-noSubject'),
-      formatDate: getDateText(startDate, endDate, formatType as any),
+      formatDate: getDateText(startDate, endDate, formatType as any, this.option('calendar')),
     };
   },
 

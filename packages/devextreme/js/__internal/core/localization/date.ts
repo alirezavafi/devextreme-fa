@@ -1,6 +1,7 @@
 /* eslint-disable spellcheck/spell-checker */
 import type { Format as LocalizationFormat, FormatObject } from '@js/localization';
 import { resolvePresetOverride } from '@ts/core/global_format_config';
+import { formatDateInCalendar, parseDateInCalendar } from '@ts/core/localization/calendar/date_format';
 import firstDayOfWeekData from '@ts/core/localization/cldr-data/first_day_of_week_data';
 import localizationCore from '@ts/core/localization/core';
 import defaultDateNames from '@ts/core/localization/default_date_names';
@@ -165,10 +166,14 @@ const dateLocalization = dependencyInjector({
     } else if ((format as FormatObject).formatter) {
       formatter = (format as FormatObject).formatter as DateFormatter;
     } else {
+      const calendarType = (format as FormatObject).calendar;
       // eslint-disable-next-line no-param-reassign
       format = (format as FormatObject).type ?? format;
       if (isString(format)) {
-        const resolvedFormat = this._resolveStringFormat(format as string, date);
+        const isGregorian = !calendarType || calendarType === 'gregorian';
+        const resolvedFormat = isGregorian
+          ? this._resolveStringFormat(format as string, date)
+          : undefined;
 
         if (resolvedFormat !== undefined) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -178,6 +183,14 @@ const dateLocalization = dependencyInjector({
         // eslint-disable-next-line no-param-reassign
         format = (FORMATS_TO_PATTERN_MAP[(format as string).toLowerCase()] || format) as string;
 
+        if (calendarType && calendarType !== 'gregorian') {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return numberLocalization.convertDigits(
+            formatDateInCalendar(date, calendarType, format, this),
+          );
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return numberLocalization.convertDigits(getLDMLDateFormatter(format, this)(date));
       }
     }
@@ -209,6 +222,22 @@ const dateLocalization = dependencyInjector({
 
     if (typeof format === 'object' && format.parser) {
       return (format.parser as DateParser)(text);
+    }
+
+    const calendarType = (typeof format === 'object' && format)
+      ? (format).calendar
+      : undefined;
+
+    if (calendarType && calendarType !== 'gregorian') {
+      const typeStr = (typeof format === 'object'
+        ? (format).type
+        : format);
+
+      if (typeof typeStr === 'string') {
+        const pattern = FORMATS_TO_PATTERN_MAP[typeStr.toLowerCase()] || typeStr;
+        const normalized = numberLocalization.convertDigits(text, true);
+        return parseDateInCalendar(normalized, calendarType, pattern, this);
+      }
     }
 
     if (typeof format === 'string' && !FORMATS_TO_PATTERN_MAP[format.toLowerCase()]) {

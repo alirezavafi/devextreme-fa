@@ -1,3 +1,4 @@
+import type { CalendarType } from '@ts/core/localization/calendar';
 import type { GroupLeaf } from '@ts/scheduler/utils/resource_manager/types';
 
 import type { TimeZoneCalculator } from '../../r1/timezone_calculator/calculator';
@@ -35,6 +36,7 @@ interface CommonOptions extends CountGenerationConfig {
   cellDuration: number;
   indicatorTime?: Date;
   timeZoneCalculator?: TimeZoneCalculator;
+  calendar?: CalendarType;
   selectedCells?: ViewCellData[] | null;
   focusedCell?: { cellData: ViewCellData } | null;
 }

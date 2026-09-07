@@ -1,5 +1,7 @@
 import dateLocalization from '@js/common/core/localization/date';
+import numberLocalization from '@js/common/core/localization/number';
 import dateUtils from '@js/core/utils/date';
+import { getCalendar, getCalendarMonthNamesInActiveLocale } from '@ts/core/localization/calendar';
 
 import type { CalculateCellIndex } from '../../types';
 import {
@@ -8,6 +10,8 @@ import {
   isFirstCellInMonthWithIntervalCount,
   setOptionHour,
 } from './base';
+
+const isCustomCalendar = (calendar?: string): boolean => !!calendar && calendar !== 'gregorian';
 
 export const calculateCellIndex: CalculateCellIndex = (
   rowIndex,
@@ -46,7 +50,25 @@ export const getViewStartByOptions = (
   return diff > 0 ? currentStartDate : endDate;
 };
 
-export const getCellText = (date: Date, intervalCount: number): string => {
+export const getCellText = (date: Date, intervalCount: number, calendar?: string): string => {
+  // Guard against invalid Date objects (e.g. from transient view rebuilds) so
+  // the cell renders blank instead of "NaN".
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  if (isCustomCalendar(calendar)) {
+    const parts = getCalendar(calendar as string).toParts(date);
+    const day = numberLocalization.convertDigits(String(parts.day));
+
+    if (parts.day === 1) {
+      const monthName = getCalendarMonthNamesInActiveLocale(calendar as string, 'abbreviated')[parts.month];
+      return [monthName, day].join(' ');
+    }
+
+    return numberLocalization.convertDigits(String(parts.day).padStart(2, '0'));
+  }
+
   if (isFirstCellInMonthWithIntervalCount(date, intervalCount)) {
     const monthName = dateLocalization.getMonthNames('abbreviated')[date.getMonth()];
     return [monthName, dateLocalization.format(date, 'day')].join(' ');

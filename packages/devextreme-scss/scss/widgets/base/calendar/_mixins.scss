@@ -19,6 +19,20 @@
       height: $calendar-height + $calendar-element-padding + $footer-button-height;
     }
 
+    // Reserve a row for the calendar switcher SelectBox so the views region keeps its height.
+    &.dx-calendar-with-switcher {
+      height: $calendar-height + $calendar-element-padding + $footer-button-height;
+    }
+
+    &.dx-calendar-with-footer.dx-calendar-with-switcher {
+      height: $calendar-height + 2 * ($calendar-element-padding + $footer-button-height);
+    }
+
+    .dx-calendar-switcher {
+      height: $footer-button-height;
+      flex-shrink: 0;
+    }
+
     &.dx-calendar-multiview {
       width: $calendar-width * 2;
     }

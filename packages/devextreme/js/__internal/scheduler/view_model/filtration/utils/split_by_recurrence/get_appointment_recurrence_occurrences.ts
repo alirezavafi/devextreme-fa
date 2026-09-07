@@ -8,6 +8,7 @@ interface Options {
   firstDayOfWeek?: number;
   interval: DateInterval;
   timeZone: string;
+  calendar?: string;
 }
 
 // NOTE: When DST+1, then 2 AM equal 3 AM and interval [2 AM, 3 AM) is unreachable
@@ -50,6 +51,7 @@ export const getAppointmentRecurrenceOccurrences = <T extends MinimalAppointment
     firstDayOfWeek,
     interval,
     timeZone,
+    calendar,
   }: Options,
 ): (T & UTCDates)[] => {
   const {
@@ -75,6 +77,7 @@ export const getAppointmentRecurrenceOccurrences = <T extends MinimalAppointment
     interval,
     timeZone,
     startDateTimeZone,
+    calendar,
   });
   const startDateOffsetBase = getDateOffsetMs(startDateMsBase, timeZone);
   const startDateAppointmentOffsetBase = getDateOffsetMs(startDateMsBase, startDateTimeZone);

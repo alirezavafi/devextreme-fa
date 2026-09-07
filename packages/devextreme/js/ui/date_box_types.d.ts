@@ -2,6 +2,7 @@ export {
   DateLike,
   DateType,
   DatePickerType,
+  DateBoxCalendar,
   ChangeEvent,
   ClosedEvent,
   ContentReadyEvent,

@@ -13,11 +13,14 @@ import {
 import type { DxEvent, InteractionEvent } from '@js/events';
 import type dxDateBox from '@js/ui/date_box';
 import type { DateLike } from '@js/ui/date_box';
+import type { CalendarType } from '@ts/core/localization/calendar';
+import { getCalendar } from '@ts/core/localization/calendar';
 import dateLocalization from '@ts/core/localization/date';
 import type { OptionChanged } from '@ts/core/widget/types';
 import type { KeyboardKeyDownEvent } from '@ts/events/core/keyboard_processor';
 import type { DateBoxBaseProperties } from '@ts/ui/date_box/date_box.base';
 import DateBoxBase from '@ts/ui/date_box/date_box.base';
+import { createCalendarDateParts, formatDateInCalendar, parseDateInCalendar } from '@ts/ui/date_box/date_box.mask.calendar';
 import { getDatePartIndexByPosition, renderDateParts } from '@ts/ui/date_box/date_box.mask.parts';
 import type { DxMouseWheelEvent } from '@ts/ui/scroll_view/types';
 
@@ -372,8 +375,29 @@ class DateBoxMask<
       return this._formatPattern;
     }
 
-    const { displayFormat } = this.option();
+    const displayFormat = this._getEffectiveDisplayFormatOption();
     const format = this._strategy.getDisplayFormat(displayFormat);
+
+    // Calendar-aware path: when a non-Gregorian calendar is active the
+    // displayFormat may be a format object (e.g. the grid passes
+    // `{ type: 'shortdate', calendar: 'persian' }`) or a named type string.
+    // Resolve the LDML pattern directly via the format type instead of
+    // reverse-engineering it through `getFormat()` — that helper samples dates
+    // through `dateLocalization.format(...)`, which formats in the *calendar*,
+    // so the inferred Gregorian pattern is corrupted (producing a ~100-year
+    // drift and wrong field order). Guarded so the Gregorian path is unchanged.
+    if (this._isCustomCalendar()) {
+      const typeStr = isString(format)
+        ? format
+        : (format as { type?: string } | undefined)?.type;
+
+      if (typeof typeStr === 'string') {
+        const pattern: string = dateLocalization._getPatternByFormat(typeStr) ?? typeStr;
+        this._formatPattern = pattern;
+        return pattern;
+      }
+    }
+
     const isLDMLPattern = isString(format) && !dateLocalization._getPatternByFormat(format);
 
     if (isLDMLPattern) {
@@ -477,8 +501,37 @@ class DateBoxMask<
     return this.option('useMaskBehavior') && mode === 'text';
   }
 
+  _getCalendarType(): CalendarType {
+    return (this.option('calendar') as CalendarType) ?? 'gregorian';
+  }
+
+  _isCustomCalendar(): boolean {
+    const calendar = this._getCalendarType();
+    return !!calendar && calendar !== 'gregorian';
+  }
+
+  _getDisplayedText(value?: DateLike): string {
+    const { mode = 'text' } = this.option();
+
+    if (mode === 'text' && this._isCustomCalendar() && isDate(value)) {
+      const pattern = this._getFormatPattern();
+      const text = formatDateInCalendar(
+        value,
+        this._getCalendarType(),
+        pattern,
+        dateLocalization,
+      );
+      return numberLocalization.convertDigits(text);
+    }
+
+    return super._getDisplayedText(value);
+  }
+
   _prepareRegExpInfo(): void {
-    this._regExpInfo = getRegExpInfo(this._getFormatPattern(), dateLocalization);
+    const dateParts = this._isCustomCalendar()
+      ? createCalendarDateParts(getCalendar(this._getCalendarType()), dateLocalization)
+      : dateLocalization;
+    this._regExpInfo = getRegExpInfo(this._getFormatPattern(), dateParts);
     const { regexp } = this._regExpInfo;
     const { source } = regexp;
     const { flags } = regexp;
@@ -522,7 +575,7 @@ class DateBoxMask<
     const newText = text || this._getDisplayedText(this._maskValue);
 
     if (newText) {
-      this._dateParts = renderDateParts(newText, this._regExpInfo);
+      this._dateParts = renderDateParts(newText, this._regExpInfo, this._getCalendarType());
       if (!this._input().is(':hidden')) {
         this._selectNextPart();
       }
@@ -775,7 +828,15 @@ class DateBoxMask<
     const { text } = this.option();
     // @ts-expect-error text
     const newText = this._replaceSelectedText(text, this._caret(), clipboardText(e));
-    const date = dateLocalization.parse(newText, this._getFormatPattern());
+    const date = this._isCustomCalendar()
+      ? parseDateInCalendar(
+        newText,
+        this._getCalendarType(),
+        this._getFormatPattern(),
+        dateLocalization,
+        this._maskValue ?? undefined,
+      )
+      : dateLocalization.parse(newText, this._getFormatPattern());
 
     if (date && this._isDateValid(date)) {
       this._maskValue = date;
@@ -854,6 +915,7 @@ class DateBoxMask<
         this._renderMask();
         break;
       case 'displayFormat':
+      case 'calendar':
       case 'mode':
         super._optionChanged(args);
         this._renderMask();

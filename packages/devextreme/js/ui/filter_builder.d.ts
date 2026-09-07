@@ -516,6 +516,12 @@ export interface dxFilterBuilderField {
      * @docid
      * @public
      */
+    calendar?: 'gregorian' | 'persian' | 'hijri' | string;
+    /**
+     * @docid
+     * @default undefined
+     * @public
+     */
     lookup?: {
       /**
        * @docid

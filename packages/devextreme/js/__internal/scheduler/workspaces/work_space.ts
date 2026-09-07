@@ -1056,6 +1056,7 @@ class SchedulerWorkSpace extends Widget<WorkspaceOptionsInternal> {
       cellDuration: this.getCellDuration(),
       viewType: this.type,
       intervalCount: this.option().intervalCount,
+      calendar: this.option().calendar,
       hoursInterval: this.option().hoursInterval,
       currentDate: this.option().currentDate,
       startDate: this.option().startDate ?? undefined,

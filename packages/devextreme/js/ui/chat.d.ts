@@ -424,6 +424,12 @@ export interface dxChatOptions extends WidgetOptions<dxChat> {
     dayHeaderFormat?: Format;
     /**
      * @docid
+     * @default undefined
+     * @public
+     */
+    calendar?: 'gregorian' | 'persian' | 'hijri' | string;
+    /**
+     * @docid
      * @public
      */
     editing?: {

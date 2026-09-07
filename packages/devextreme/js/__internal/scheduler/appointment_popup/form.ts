@@ -53,6 +53,7 @@ export interface AppointmentFormConfig {
   startDayHour: number;
   createComponent: CreateComponentFn;
   getCalculatedEndDate: (startDate: Date) => Date;
+  calendar?: string;
 }
 
 const CLASSES = {
@@ -251,6 +252,7 @@ export class AppointmentForm {
     this.recurrenceForm = new RecurrenceForm({
       firstDayOfWeek: this.config.firstDayOfWeek,
       createComponent: this.config.createComponent,
+      calendar: this.config.calendar,
     });
     const recurrenceGroup = this.recurrenceForm.createRecurrenceFormGroup();
 
@@ -623,7 +625,7 @@ export class AppointmentForm {
           items: [
             extend(
               true,
-              getStartDateCommonConfig(this.config.firstDayOfWeek),
+              getStartDateCommonConfig(this.config.firstDayOfWeek, this.config.calendar),
               {
                 editorOptions: {
                   onValueChanged: (e) => {

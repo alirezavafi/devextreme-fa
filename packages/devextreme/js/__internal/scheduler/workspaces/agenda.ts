@@ -10,6 +10,7 @@ import { extend } from '@js/core/utils/extend';
 import { each } from '@js/core/utils/iterator';
 import { setHeight, setOuterHeight } from '@js/core/utils/size';
 import type { ViewType } from '@js/ui/scheduler';
+import type { CalendarType } from '@ts/core/localization/calendar';
 import type { OptionChanged } from '@ts/core/widget/types';
 import { EMPTY_ACTIVE_STATE_UNIT } from '@ts/core/widget/widget';
 
@@ -398,7 +399,11 @@ class SchedulerAgenda extends WorkSpace {
         setHeight($td, this.getRowHeight(rowSize));
 
         if (date) {
-          cellDateNumber = String(dateLocalization.format(date, 'd'));
+          const calendar = this.option('calendar') as CalendarType | undefined;
+          cellDateNumber = String(dateLocalization.format(
+            date,
+            calendar && calendar !== 'gregorian' ? { type: 'd', calendar } : 'd',
+          ));
           cellDayName = String(dateLocalization.format(date, formatWeekday));
         }
 

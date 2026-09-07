@@ -70,3 +70,194 @@
     }
   }
 }
+
+/* Calendar-aware standalone timeline renderer (multi-calendar).
+ *
+ * These rules provide ONLY structure/positioning for the DevExtreme-native
+ * timeline (js/__internal/ui/gantt/multicalendar). Colors, borders and radii
+ * are inherited from the per-theme `.dx-gantt` rules because the renderer reuses
+ * the same class names. Everything is scoped under `.dx-gantt-mc` so the
+ * engine-rendered dxGantt is left completely untouched. */
+.dx-gantt-mc {
+  &.dx-gantt {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dx-gantt-view {
+    position: relative;
+    flex: 1 1 auto;
+    overflow: auto;
+  }
+
+  .dx-gantt-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    box-sizing: border-box;
+  }
+
+  .dx-gantt-tsa {
+    box-sizing: border-box;
+  }
+
+  .dx-gantt-si {
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .dx-gantt-tasks {
+    position: relative;
+  }
+
+  .dx-gantt-taskWrapper {
+    box-sizing: border-box;
+    cursor: move;
+  }
+
+  .dx-gantt-task {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .dx-gantt-tPrg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+  }
+
+  .dx-gantt-titleIn {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .dx-gantt-milestone {
+    box-sizing: border-box;
+    transform: rotate(45deg);
+    cursor: move;
+  }
+
+  /* Edge resize grips: thin full-height zones at the bar's start/end with an
+   * ew-resize cursor. Invisible by default; a faint grip shows on bar hover.
+   * `max-width` keeps them from covering the whole of a very short bar (so its
+   * middle stays a move zone). */
+  .dx-gantt-task-resize {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 8px;
+    max-width: 30%;
+    cursor: ew-resize;
+    z-index: 2;
+  }
+
+  .dx-gantt-task-resize-start {
+    left: 0;
+  }
+
+  .dx-gantt-task-resize-end {
+    right: 0;
+  }
+
+  .dx-gantt-taskWrapper:hover .dx-gantt-task-resize {
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+  }
+
+  /* Dependency-draw edge handles: small grabbable dots revealed on hover.
+   * Positioned just OUTSIDE the bar so they don't overlap the bar's edge
+   * resize zones (which would otherwise swallow resize gestures).
+   * Neutral colors so they read on both light and dark themes. */
+  .dx-gantt-dep-handle {
+    position: absolute;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    margin-top: -5px;
+    border-radius: 50%;
+    background: rgba(128, 128, 128, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    opacity: 0;
+    cursor: crosshair;
+    z-index: 3;
+  }
+
+  .dx-gantt-dep-handle-start {
+    left: -14px;
+  }
+
+  .dx-gantt-dep-handle-finish {
+    right: -14px;
+  }
+
+  .dx-gantt-taskWrapper:hover .dx-gantt-dep-handle {
+    opacity: 1;
+  }
+
+  // Transient guide line while drawing a dependency.
+  .dx-gantt-dep-draw {
+    height: 0;
+    border-top: 2px dashed rgba(128, 128, 128, 0.9);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  .dx-gantt-sel {
+    pointer-events: none;
+  }
+
+  .dx-gantt-dependencies,
+  .dx-gantt-dependency {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+  }
+
+  .dx-gantt-conn-h {
+    position: absolute;
+    border-top: 1px solid;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  .dx-gantt-conn-v {
+    position: absolute;
+    border-left: 1px solid;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  .dx-gantt-arrow {
+    width: 0;
+    height: 0;
+    border-style: solid;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  // A right-pointing arrowhead keeps the themed color on its left border only.
+  .dx-gantt-arrow.dx-gantt-arrow-right {
+    border-width: 5px 0 5px 8px;
+    border-top-color: transparent;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+  }
+
+  // A left-pointing arrowhead keeps the themed color on its right border only.
+  .dx-gantt-arrow.dx-gantt-arrow-left {
+    border-width: 5px 8px 5px 0;
+    border-top-color: transparent;
+    border-bottom-color: transparent;
+    border-left-color: transparent;
+  }
+}

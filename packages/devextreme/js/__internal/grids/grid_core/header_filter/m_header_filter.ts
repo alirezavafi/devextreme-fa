@@ -14,6 +14,7 @@ import { getDefaultAlignment } from '@js/core/utils/position';
 import { isDefined, isFunction, isObject } from '@js/core/utils/type';
 import { restoreFocus, saveFocusedElementInfo } from '@js/ui/shared/accessibility';
 import filterUtils from '@js/ui/shared/filtering';
+import { getCalendarMonthNamesInActiveLocale } from '@ts/core/localization/calendar';
 import type { ColumnHeadersView } from '@ts/grids/grid_core/column_headers/m_column_headers';
 import type { DataController } from '@ts/grids/grid_core/data_controller/data_controller';
 import type { HeaderPanel } from '@ts/grids/grid_core/header_panel/m_header_panel';
@@ -54,6 +55,29 @@ const DATE_INTERVAL_FORMATS = {
 };
 
 const getDateIntervalFormat = (intervalKey: string) => DATE_INTERVAL_FORMATS[intervalKey] ?? ((v) => String(v));
+
+// Calendar-aware level-text formatters for the header-filter date tree. Only
+// the year/month level texts differ from Gregorian (the year number and month
+// name come from the selected calendar); day/time parts are plain numbers.
+// Returns undefined for the Gregorian path so callers keep the default
+// formatters untouched.
+const getCalendarDateIntervalFormat = (
+  intervalKey: string,
+  calendarType: string,
+): ((value: number) => string) | undefined => {
+  switch (intervalKey) {
+    case 'year':
+      return (value: number): string => String(value);
+    case 'month':
+      // `value` is the 1-based calendar month from DATE_INTERVAL_SELECTORS.
+      return (value: number): string => getCalendarMonthNamesInActiveLocale(
+        calendarType,
+        'wide',
+      )[value - 1];
+    default:
+      return undefined;
+  }
+};
 
 function ungroupUTCDates(items, dateParts?, dates?) {
   dateParts = dateParts || [];
@@ -101,7 +125,10 @@ export const getFormatOptions = function (value, column, currentLevel) {
     result.groupInterval = groupInterval[currentLevel];
 
     if (gridCoreUtils.isDateType(column.dataType)) {
-      result.format = getDateIntervalFormat(groupInterval[currentLevel]);
+      const calendarType = gridCoreUtils.getColumnCalendarType(column);
+      result.format = (calendarType
+        && getCalendarDateIntervalFormat(groupInterval[currentLevel], calendarType))
+        || getDateIntervalFormat(groupInterval[currentLevel]);
     } else if (column.dataType === 'number') {
       result.getDisplayFormat = function () {
         const formatOptions = { format: column.format, target: 'headerFilter' };

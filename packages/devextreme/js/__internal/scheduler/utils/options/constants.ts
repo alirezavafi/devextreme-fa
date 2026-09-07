@@ -20,6 +20,7 @@ export const DEFAULT_SCHEDULER_OPTIONS: Properties = {
   max: undefined,
   dateSerializationFormat: undefined,
   firstDayOfWeek: undefined,
+  calendar: 'gregorian',
   groups: [],
   resources: [],
   dataSource: null,

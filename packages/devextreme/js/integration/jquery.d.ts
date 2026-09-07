@@ -23,6 +23,7 @@ import dxFilterBuilder, { Properties as FilterBuilderProperties } from '../ui/fi
 import dxForm, { Properties as FormProperties } from '../ui/form';
 import dxGallery, { Properties as GalleryProperties } from '../ui/gallery';
 import dxGantt, { Properties as GanttProperties } from '../ui/gantt';
+import dxGanttMultiCalendar, { Properties as GanttMultiCalendarProperties } from '../ui/gantt_multi_calendar';
 import dxHtmlEditor, { Properties as HtmlEditorProperties } from '../ui/html_editor';
 import dxList, { Properties as ListProperties } from '../ui/list';
 import dxLoadIndicator, { Properties as LoadIndicatorProperties } from '../ui/load_indicator';
@@ -286,6 +287,12 @@ declare global {
         dxGantt(options: GanttProperties): JQuery;
         dxGantt(options: string): any;
         dxGantt(options: string, ...params: any[]): any;
+
+        dxGanttMultiCalendar(): JQuery;
+        dxGanttMultiCalendar(options: 'instance'): dxGanttMultiCalendar;
+        dxGanttMultiCalendar(options: GanttMultiCalendarProperties): JQuery;
+        dxGanttMultiCalendar(options: string): any;
+        dxGanttMultiCalendar(options: string, ...params: any[]): any;
 
         dxHtmlEditor(): JQuery;
         dxHtmlEditor(options: 'instance'): dxHtmlEditor;

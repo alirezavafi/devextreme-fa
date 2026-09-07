@@ -1,0 +1,22 @@
+<div class="options">
+  <span>Calendar</span>
+  <dx-select-box
+    [items]="calendars"
+    [(value)]="calendar"
+    valueExpr="id"
+    displayExpr="text"
+    [inputAttr]="{ 'aria-label': 'Calendar' }"
+  >
+  </dx-select-box>
+</div>
+<dx-scheduler
+  [dataSource]="appointments"
+  [calendar]="calendar"
+  [views]="views"
+  currentView="month"
+  [currentDate]="currentDate"
+  [startDayHour]="8"
+  [endDayHour]="18"
+  [height]="600"
+>
+</dx-scheduler>

@@ -21,6 +21,7 @@ import {
   isDefined,
   isFunction,
   isNumeric,
+  isPlainObject,
   isString,
 } from '@js/core/utils/type';
 import { hasWindow } from '@js/core/utils/window';
@@ -30,22 +31,34 @@ import type {
   CalendarZoomLevel, DateLike, Properties,
 } from '@js/ui/calendar';
 import { current, isFluent } from '@js/ui/themes';
+import type { CalendarType } from '@ts/core/localization/calendar';
+import { getCalendarFirstDayOfWeek } from '@ts/core/localization/calendar';
+import localizationCore from '@ts/core/localization/core';
 import type { OptionChanged } from '@ts/core/widget/types';
 import type { SupportedKeys } from '@ts/core/widget/widget';
 import type { SwipeEndEvent, SwipeStartEvent, SwipeUpdateEvent } from '@ts/events/swipe';
 import Button from '@ts/ui/button/wrapper';
 import Editor from '@ts/ui/editor/editor';
+import SelectBox from '@ts/ui/select_box';
 
 import type { BaseViewProperties, CellEvent } from './calendar.base_view';
+import { addCalendarMonths, getCalendarMonthsOffset } from './calendar.month_view.calendar';
 import CalendarMultipleSelectionStrategy from './calendar.multiple.selection.strategy';
 import type { NavigatorOptions } from './calendar.navigator';
 import Navigator from './calendar.navigator';
 import CalendarRangeSelectionStrategy from './calendar.range.selection.strategy';
 import CalendarSingleSelectionStrategy from './calendar.single.selection.strategy';
+import type { CalendarSwitcherItem } from './calendar.switcher.calendar';
+import {
+  getCalendarDisplayNameInLocale,
+  getCalendarSwitcherItems,
+  normalizeSwitcherValue,
+} from './calendar.switcher.calendar';
 import type {
   CenturyView, DecadeView, MonthView, MonthViewProperties, YearView,
 } from './calendar.views';
 import Views from './calendar.views';
+import { addCalendarYears, calendarYear } from './calendar.views.calendar';
 
 // STYLE calendar
 
@@ -54,6 +67,9 @@ const CALENDAR_BODY_CLASS = 'dx-calendar-body';
 const CALENDAR_CELL_CLASS = 'dx-calendar-cell';
 const CALENDAR_FOOTER_CLASS = 'dx-calendar-footer';
 const CALENDAR_TODAY_BUTTON_CLASS = 'dx-calendar-today-button';
+const CALENDAR_SWITCHER_CLASS = 'dx-calendar-switcher';
+const CALENDAR_SWITCHER_SELECT_CLASS = 'dx-calendar-switcher-select';
+const CALENDAR_HAS_SWITCHER_CLASS = 'dx-calendar-with-switcher';
 const CALENDAR_HAS_FOOTER_CLASS = 'dx-calendar-with-footer';
 const CALENDAR_VIEWS_WRAPPER_CLASS = 'dx-calendar-views-wrapper';
 const CALENDAR_VIEW_CLASS = 'dx-calendar-view';
@@ -96,6 +112,8 @@ export interface CalendarProperties extends Properties {
   currentDate?: Date;
 
   todayButtonText?: string;
+
+  calendar?: CalendarType;
 
   rangeMin?: Date;
   rangeMax?: Date;
@@ -147,6 +165,12 @@ class Calendar<
 
   _$footer?: dxElementWrapper;
 
+  _$switcher?: dxElementWrapper;
+
+  _switcherSelectBox?: SelectBox;
+
+  _suppressSwitcherSync?: boolean;
+
   _viewWidthValue?: number;
 
   _preventViewChangeAnimation?: boolean;
@@ -178,6 +202,8 @@ class Calendar<
       selectWeekOnClick: true,
       showTodayButton: false,
       todayButtonText: messageLocalization.format('dxCalendar-todayButtonText'),
+      calendar: 'gregorian',
+      calendarSwitcher: false,
       showWeekNumbers: false,
       weekNumberRule: 'auto',
       cellTemplate: 'cell',
@@ -745,6 +771,9 @@ class Calendar<
     const { zoomLevel } = this.option();
 
     if (zoomLevel === ZOOM_LEVEL.MONTH) {
+      if (this._isCustomCalendar()) {
+        return getCalendarMonthsOffset(startDate, endDate, this._getCalendarType());
+      }
       return this._getMonthsOffset(startDate, endDate);
     }
 
@@ -760,6 +789,12 @@ class Calendar<
       default:
         zoomCorrection = 1;
         break;
+    }
+
+    if (this._isCustomCalendar()) {
+      const calendarType = this._getCalendarType();
+      return Math.floor(calendarYear(endDate, calendarType) / zoomCorrection)
+        - Math.floor(calendarYear(startDate, calendarType) / zoomCorrection);
     }
 
     return Math.floor(endDate.getFullYear() / zoomCorrection)
@@ -797,8 +832,22 @@ class Calendar<
   }
 
   _getDateByOffset(offset: number, initialDate?: DateLike): Date {
-    const { currentDate = new Date() } = this.option();
+    const { currentDate = new Date(), zoomLevel } = this.option();
     const date = this._getDate(initialDate ?? currentDate);
+
+    if (zoomLevel === ZOOM_LEVEL.MONTH && this._isCustomCalendar()) {
+      return addCalendarMonths(date, this._getCalendarType(), offset);
+    }
+
+    if (this._isCustomCalendar()) {
+      let multiplier = 1;
+      if (zoomLevel === ZOOM_LEVEL.CENTURY) {
+        multiplier = 100;
+      } else if (zoomLevel === ZOOM_LEVEL.DECADE) {
+        multiplier = 10;
+      }
+      return addCalendarYears(date, this._getCalendarType(), offset * multiplier);
+    }
 
     const currentDay = date.getDate();
     const difference = dateUtils.getDifferenceInMonth(this.option('zoomLevel')) * offset;
@@ -811,6 +860,15 @@ class Calendar<
     date.setDate(currentDay > lastDay ? lastDay : currentDay);
 
     return date;
+  }
+
+  _getCalendarType(): CalendarType {
+    return this.option().calendar ?? 'gregorian';
+  }
+
+  _isCustomCalendar(): boolean {
+    const calendar = this._getCalendarType();
+    return !!calendar && calendar !== 'gregorian';
   }
 
   _focusTarget(): dxElementWrapper {
@@ -843,6 +901,7 @@ class Calendar<
 
     this._renderSwipeable();
     this._renderFooter();
+    this._renderCalendarSwitcher();
 
     this._selectionStrategy.updateAriaSelected();
     this._updateAriaId();
@@ -933,7 +992,7 @@ class Calendar<
 
   _viewConfig(date: Date): MonthViewProperties | BaseViewProperties {
     const {
-      firstDayOfWeek = dateLocalization.firstDayOfWeekIndex(),
+      firstDayOfWeek: firstDayOfWeekOption,
       showWeekNumbers = false,
       selectWeekOnClick,
       weekNumberRule,
@@ -942,7 +1001,12 @@ class Calendar<
       hoverStateEnabled,
       disabledDates: disabledDatesOption,
       _todayDate: todayDate,
+      calendar,
     } = this.option();
+
+    const firstDayOfWeek = isDefined(firstDayOfWeekOption)
+      ? firstDayOfWeekOption
+      : getCalendarFirstDayOfWeek(calendar) ?? dateLocalization.firstDayOfWeekIndex();
 
     const disabledDates = isFunction(disabledDatesOption)
       ? this._injectComponent(disabledDatesOption.bind(this))
@@ -959,6 +1023,7 @@ class Calendar<
       selectWeekOnClick,
       weekNumberRule,
       zoomLevel,
+      calendar,
       tabIndex: undefined,
       focusStateEnabled,
       hoverStateEnabled,
@@ -1332,6 +1397,85 @@ class Calendar<
     this.$element().toggleClass(CALENDAR_HAS_FOOTER_CLASS, showTodayButton);
   }
 
+  _calendarSwitcherItems(): CalendarSwitcherItem[] {
+    const { calendarSwitcher } = this.option();
+    const types = isPlainObject(calendarSwitcher) ? calendarSwitcher.items : undefined;
+    const locale = localizationCore.locale() as string | undefined;
+    const resolveName = (type: string): string => getCalendarDisplayNameInLocale(type, locale);
+
+    return getCalendarSwitcherItems(types, resolveName);
+  }
+
+  _renderCalendarSwitcher(): void {
+    const { calendarSwitcher, calendar } = this.option();
+
+    if (this._$switcher) {
+      this._$switcher.remove();
+      delete this._$switcher;
+      delete this._switcherSelectBox;
+    }
+
+    if (!calendarSwitcher) {
+      this.$element().removeClass(CALENDAR_HAS_SWITCHER_CLASS);
+      return;
+    }
+
+    const items = this._calendarSwitcherItems();
+
+    if (items.length < 2) {
+      this.$element().removeClass(CALENDAR_HAS_SWITCHER_CLASS);
+      return;
+    }
+
+    const selected = normalizeSwitcherValue(calendar, items);
+
+    this._$switcher = $('<div>').addClass(CALENDAR_SWITCHER_CLASS);
+
+    const $selectBox = $('<div>').addClass(CALENDAR_SWITCHER_SELECT_CLASS);
+    this._$switcher.append($selectBox);
+
+    this._switcherSelectBox = this._createComponent($selectBox, SelectBox, {
+      items,
+      valueExpr: 'type',
+      displayExpr: 'text',
+      value: selected,
+      stylingMode: 'underlined',
+      width: '100%',
+      inputAttr: { 'aria-label': 'Calendar' },
+      // Render the dropdown into the body so it overlays correctly when the
+      // Calendar is itself inside a popup (e.g. the DateBox dropdown), and mark
+      // it as an inner overlay so clicks inside its options list don't close
+      // the parent DateBox popup via the outside-click detector.
+      dropDownOptions: { container: 'body', innerOverlay: true },
+      onValueChanged: (e: { value: string }): void => {
+        // Avoid re-entering when we sync the SelectBox value from a
+        // programmatic `calendar` option change.
+        if (this._suppressSwitcherSync) return;
+        this.option('calendar', e.value);
+      },
+      integrationOptions: {},
+    });
+
+    this.$element().append(this._$switcher);
+    this.$element().addClass(CALENDAR_HAS_SWITCHER_CLASS);
+  }
+
+  _updateCalendarSwitcherValue(): void {
+    if (!this._switcherSelectBox) {
+      return;
+    }
+
+    const { calendar } = this.option();
+    const items = this._calendarSwitcherItems();
+    const selected = normalizeSwitcherValue(calendar, items);
+
+    if (!isDefined(selected)) return;
+
+    this._suppressSwitcherSync = true;
+    this._switcherSelectBox.option('value', selected);
+    this._suppressSwitcherSync = false;
+  }
+
   _renderSubmitElement(): void {
     this._$submitElement = $('<input>')
       .attr('type', 'hidden')
@@ -1533,6 +1677,8 @@ class Calendar<
     // @ts-expect-error ts-error
     delete this._navigator;
     delete this._$footer;
+    delete this._$switcher;
+    delete this._switcherSelectBox;
   }
 
   _clearViewWidthCache(): void {
@@ -1795,6 +1941,14 @@ class Calendar<
       case 'showWeekNumbers':
       case 'weekNumberRule':
         this._refreshViews();
+        break;
+      case 'calendar':
+        this._refreshViews();
+        this._renderNavigator();
+        this._updateCalendarSwitcherValue();
+        break;
+      case 'calendarSwitcher':
+        this._renderCalendarSwitcher();
         break;
       default:
         super._optionChanged(args);

@@ -73,6 +73,7 @@ interface CreateAppointmentPopupOptions {
   readOnly?: boolean;
   addAppointment?: jest.Mock;
   updateAppointment?: jest.Mock;
+  calendar?: string;
 }
 
 interface CreateAppointmentPopupResult {
@@ -139,6 +140,7 @@ export const createAppointmentPopup = async (
       endDate.setHours(endDate.getHours() + 1);
       return endDate;
     },
+    calendar: options.calendar,
   };
 
   const form = new AppointmentForm(formConfig);

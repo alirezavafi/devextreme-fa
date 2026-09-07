@@ -252,7 +252,7 @@ class DxLicense extends SafeHTMLElement {
   }
 
   public connectedCallback(): void {
-    this._reassignComponent();
+    // this._reassignComponent();
     if (!this._observer) {
       this._observer = new MutationObserver(() => {
         if (DxLicense.closed) {

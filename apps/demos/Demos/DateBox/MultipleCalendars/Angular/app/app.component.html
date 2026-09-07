@@ -1,0 +1,53 @@
+<div class="dx-fieldset">
+  <div class="dx-field">
+    <div class="dx-field-label">Calendar</div>
+    <div class="dx-field-value">
+      <dx-select-box
+        [items]="calendars"
+        [(value)]="calendar"
+        valueExpr="id"
+        displayExpr="text"
+        [inputAttr]="{ 'aria-label': 'Calendar' }"
+      >
+      </dx-select-box>
+    </div>
+  </div>
+  <div class="dx-field">
+    <div class="dx-field-label">Rollers picker</div>
+    <div class="dx-field-value">
+      <dx-date-box
+        [value]="date"
+        [calendar]="calendar"
+        pickerType="rollers"
+        [inputAttr]="{ 'aria-label': 'Date' }"
+      >
+      </dx-date-box>
+    </div>
+  </div>
+  <div class="dx-field">
+    <div class="dx-field-label">Calendar grid picker</div>
+    <div class="dx-field-value">
+      <dx-date-box
+        [value]="date"
+        [calendar]="calendar"
+        pickerType="calendar"
+        [inputAttr]="{ 'aria-label': 'Date' }"
+      >
+      </dx-date-box>
+    </div>
+  </div>
+  <div class="dx-field">
+    <div class="dx-field-label">Typed input (mask)</div>
+    <div class="dx-field-value">
+      <dx-date-box
+        [value]="date"
+        [calendar]="calendar"
+        pickerType="calendar"
+        [useMaskBehavior]="true"
+        displayFormat="yyyy/MM/dd"
+        [inputAttr]="{ 'aria-label': 'Date' }"
+      >
+      </dx-date-box>
+    </div>
+  </div>
+</div>

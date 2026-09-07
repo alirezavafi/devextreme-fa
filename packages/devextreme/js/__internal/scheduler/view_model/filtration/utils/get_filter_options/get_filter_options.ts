@@ -25,6 +25,7 @@ export const getFilterOptions = (
     timeZone: schedulerStore.getTimeZone(),
     dataAccessor: schedulerStore._dataAccessors,
     firstDayOfWeek: schedulerStore.option('firstDayOfWeek'),
+    calendar: schedulerStore.option('calendar'),
     allDayIntervals: shiftIntervals(
       getVisibleDateTimeIntervals(compareOptions, true),
       viewOffset,

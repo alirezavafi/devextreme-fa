@@ -1,8 +1,10 @@
 /* eslint-disable spellcheck/spell-checker */
 import type { Format as LocalizationFormat, FormatObject } from '@js/localization';
 import { resolvePresetOverride } from '@ts/core/global_format_config';
+import { formatDateInCalendar, parseDateInCalendar } from '@ts/core/localization/calendar/date_format';
 import localizationCoreUtils from '@ts/core/localization/core';
 import type { DateFormatter, Format } from '@ts/core/localization/date';
+import numberLocalization from '@ts/core/localization/number';
 import { extend } from '@ts/core/utils/m_extend';
 
 interface DateArgs {
@@ -20,9 +22,21 @@ const NARROW_NO_BREAK_SPACE_REGEX = /[\u202F]/g;
 
 const formattersCache: Record<string, DateFormatter> = {};
 const getFormatter = (format: Intl.DateTimeFormatOptions): DateFormatter => {
-  const key = `${localizationCoreUtils.locale()}/${JSON.stringify(format)}`;
+  // Force Gregorian calendar regardless of the active locale's default. DevExtreme
+  // stores all values as Gregorian Dates and exposes a separate `calendar` format
+  // option for explicit non-Gregorian rendering, so without this override locales
+  // like 'fa' (which Intl defaults to Persian calendar) would silently render
+  // Persian-calendar dates from Gregorian Date inputs and round-trip parses would
+  // fail.
+  const effectiveFormat: Intl.DateTimeFormatOptions = format.calendar
+    ? format
+    : { ...format, calendar: 'gregory' };
+  const key = `${localizationCoreUtils.locale()}/${JSON.stringify(effectiveFormat)}`;
   if (!formattersCache[key]) {
-    formattersCache[key] = new Intl.DateTimeFormat(localizationCoreUtils.locale(), format).format;
+    formattersCache[key] = new Intl.DateTimeFormat(
+      localizationCoreUtils.locale(),
+      effectiveFormat,
+    ).format;
   }
 
   return formattersCache[key];
@@ -133,7 +147,9 @@ const intlFormats = {
 
 Object.defineProperty(intlFormats, 'shortdateshorttime', {
   get() {
-    const defaultOptions = Intl.DateTimeFormat(localizationCoreUtils.locale()).resolvedOptions();
+    // Force Gregorian (`gregory`) so the resolved Y/M/D options match the
+    // Gregorian Date inputs DevExtreme uses, regardless of the locale's default.
+    const defaultOptions = Intl.DateTimeFormat(localizationCoreUtils.locale(), { calendar: 'gregory' }).resolvedOptions();
 
     return {
       year: defaultOptions.year, month: defaultOptions.month, day: defaultOptions.day, hour: 'numeric', minute: 'numeric',
@@ -231,6 +247,22 @@ export default {
       return date;
     }
 
+    const calendarType = (typeof format === 'object' && format)
+      ? (format as FormatObject).calendar
+      : undefined;
+
+    if (calendarType && calendarType !== 'gregorian') {
+      const typeStr = (format as FormatObject).type;
+
+      if (typeof typeStr === 'string') {
+        const pattern = this._getPatternByFormat(typeStr) ?? typeStr;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return numberLocalization.convertDigits(
+          formatDateInCalendar(date, calendarType, pattern, this),
+        );
+      }
+    }
+
     // TODO: refactor (extract code form base)
     if (typeof format !== 'function' && !(format as FormatObject).formatter) {
       // eslint-disable-next-line no-param-reassign
@@ -268,6 +300,20 @@ export default {
   parse(dateString: string, format?: FormatObject | string): Date | null | undefined {
     // eslint-disable-next-line @typescript-eslint/init-declarations
     let formatter: DateFormatter | undefined;
+
+    const calendarType = (typeof format === 'object' && format)
+      ? (format).calendar
+      : undefined;
+
+    if (calendarType && calendarType !== 'gregorian') {
+      const typeStr = (format as FormatObject).type;
+
+      if (typeof typeStr === 'string') {
+        const pattern = this._getPatternByFormat(typeStr) ?? typeStr;
+        const normalized = numberLocalization.convertDigits(dateString, true);
+        return parseDateInCalendar(normalized, calendarType, pattern, this);
+      }
+    }
 
     if (format && !(format as FormatObject).parser && typeof dateString === 'string') {
       // eslint-disable-next-line no-param-reassign

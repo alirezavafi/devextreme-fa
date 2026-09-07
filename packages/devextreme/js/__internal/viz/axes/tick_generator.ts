@@ -20,6 +20,7 @@ import dateUtils from '@js/core/utils/date';
 import { extend } from '@js/core/utils/extend';
 import { adjust, sign } from '@js/core/utils/math';
 import { isDefined, isString } from '@js/core/utils/type';
+import { getCalendar } from '@ts/core/localization/calendar';
 import {
   getCategoriesInfo,
   getLog as mathLog,
@@ -745,10 +746,90 @@ function logarithmicGenerator(options) {
   );
 }
 
+const MONTHS_PER_YEAR = 12;
+
+function isCustomCalendar(calendar) {
+  return !!calendar && calendar !== 'gregorian';
+}
+
+function normalizeDateInterval(interval) {
+  return isString(interval) ? dateUtils.getDateIntervalByString(interval.toLowerCase()) : interval;
+}
+
+// Only year/quarter/month boundaries differ between calendars; day/week/time
+// units are calendar-independent and keep the Gregorian arithmetic.
+function isCalendarUnitInterval(intervalObject) {
+  return 'years' in intervalObject || 'quarters' in intervalObject || 'months' in intervalObject;
+}
+
+function intervalToMonths(intervalObject) {
+  if ('years' in intervalObject) {
+    return intervalObject.years * MONTHS_PER_YEAR;
+  }
+  if ('quarters' in intervalObject) {
+    return intervalObject.quarters * 3;
+  }
+  return intervalObject.months;
+}
+
+// Snap a date down to the start of its calendar year/quarter/month.
+function calendarFloorDate(calendar, value, intervalObject) {
+  const cal = getCalendar(calendar);
+  const parts = cal.toParts(value);
+
+  if ('years' in intervalObject) {
+    const year = mathFloor(parts.year / intervalObject.years) * intervalObject.years;
+    return cal.fromParts({ year, month: 0, day: 1 });
+  }
+
+  const months = intervalToMonths(intervalObject);
+  const total = parts.year * MONTHS_PER_YEAR + parts.month;
+  const floored = mathFloor(total / months) * months;
+  const year = mathFloor(floored / MONTHS_PER_YEAR);
+
+  return cal.fromParts({ year, month: floored - year * MONTHS_PER_YEAR, day: 1 });
+}
+
+// Advance a date by whole calendar years/quarters/months.
+function calendarAddDate(calendar, value, intervalObject, isNegative) {
+  const cal = getCalendar(calendar);
+  const parts = cal.toParts(value);
+  const direction = isNegative ? -1 : 1;
+
+  if ('years' in intervalObject) {
+    return cal.fromParts({
+      year: parts.year + direction * intervalObject.years,
+      month: parts.month,
+      day: parts.day,
+    });
+  }
+
+  const total = parts.year * MONTHS_PER_YEAR + parts.month
+    + direction * intervalToMonths(intervalObject);
+  const year = mathFloor(total / MONTHS_PER_YEAR);
+
+  return cal.fromParts({ year, month: total - year * MONTHS_PER_YEAR, day: parts.day });
+}
+
 function dateGenerator(options) {
+  const useCalendar = isCustomCalendar(options.calendar);
+
+  function addIntervalDateFn(value, interval, isNegative?) {
+    const intervalObject = normalizeDateInterval(interval);
+    if (useCalendar && isCalendarUnitInterval(intervalObject)) {
+      return calendarAddDate(options.calendar, value, intervalObject, isNegative);
+    }
+    return addIntervalDate(value, interval, isNegative);
+  }
+
   function floor(value, interval) {
-    const floorNumber = correctValueByInterval(getValue, mathFloor, getValue);
     let intervalObject = isString(interval) ? dateUtils.getDateIntervalByString(interval.toLowerCase()) : interval;
+
+    if (useCalendar && isCalendarUnitInterval(intervalObject)) {
+      return calendarFloorDate(options.calendar, value, intervalObject);
+    }
+
+    const floorNumber = correctValueByInterval(getValue, mathFloor, getValue);
     const divider = dateToMilliseconds(interval);
 
     if (intervalObject.days % 7 === 0 || interval.quarters) {
@@ -785,7 +866,7 @@ function dateGenerator(options) {
     let newValue = floor(value, interval);
 
     while (value - newValue > 0) {
-      newValue = addIntervalDate(newValue, interval);
+      newValue = addIntervalDateFn(newValue, interval);
     }
     return newValue;
   }
@@ -800,8 +881,8 @@ function dateGenerator(options) {
     calculateTickIntervalByCustomTicks,
     calculateTickIntervalByCustomTicks,
     dateToMilliseconds,
-    calculateTicks(addIntervalDate, correctMinValueByEndOnTick(floor, ceil, resolveEndOnTickDate, options.endOnTick), adjustIntervalDateTime, resolveEndOnTickDate),
-    calculateMinorTicks(getValue, addIntervalDate, floor, addIntervalDate, getValue),
+    calculateTicks(addIntervalDateFn, correctMinValueByEndOnTick(floor, ceil, resolveEndOnTickDate, options.endOnTick), adjustIntervalDateTime, resolveEndOnTickDate),
+    calculateMinorTicks(getValue, addIntervalDateFn, floor, addIntervalDateFn, getValue),
     getScaleBreaksProcessor(dateToMilliseconds, getValue, (value, correction) => new Date(value.getTime() + correction)),
   );
 }

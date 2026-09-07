@@ -47,6 +47,7 @@ export interface FilterOptions {
   timeZone: string;
   dataAccessor: AppointmentDataAccessor;
   firstDayOfWeek?: number;
+  calendar?: string;
   allDayIntervals: DateInterval[];
   regularIntervals: DateInterval[];
 }

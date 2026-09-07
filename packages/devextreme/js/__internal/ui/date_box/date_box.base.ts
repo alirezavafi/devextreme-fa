@@ -1,4 +1,3 @@
-import dateLocalization from '@js/common/core/localization/date';
 import messageLocalization from '@js/common/core/localization/message';
 import config from '@js/core/config';
 import devices from '@js/core/devices';
@@ -10,9 +9,13 @@ import type { DeferredObj } from '@js/core/utils/deferred';
 import { createTextElementHiddenCopy } from '@js/core/utils/dom';
 import { extend } from '@js/core/utils/extend';
 import { inputType } from '@js/core/utils/support';
-import { isDate as isDateType, isNumeric, isString } from '@js/core/utils/type';
+import {
+  isDate as isDateType, isDefined, isNumeric, isString,
+} from '@js/core/utils/type';
 import { getWindow, hasWindow } from '@js/core/utils/window';
 import type { DxEvent, InteractionEvent } from '@js/events';
+import type { Format } from '@js/localization';
+import type { CalendarSwitcher } from '@js/ui/calendar';
 import type dxDateBox from '@js/ui/date_box';
 import type {
   DateBoxBaseOptions,
@@ -22,6 +25,9 @@ import type {
   Properties as dxDateBoxOptions,
 } from '@js/ui/date_box';
 import type { ToolbarItem } from '@js/ui/popup';
+import type { CalendarType } from '@ts/core/localization/calendar';
+import { getCalendarDefaultDateFormat } from '@ts/core/localization/calendar';
+import dateLocalization from '@ts/core/localization/date';
 import type { OptionChanged, OwnLeafOptions } from '@ts/core/widget/types';
 import Calendar from '@ts/ui/date_box/date_box.strategy.calendar';
 import CalendarWithTime from '@ts/ui/date_box/date_box.strategy.calendar_with_time';
@@ -85,6 +91,8 @@ export interface DateBoxBaseInternalProperties extends DropDownEditorInternalPro
   emptyDateValue?: Date;
 
   _showValidationIcon?: boolean;
+  calendar?: CalendarType;
+  calendarSwitcher?: CalendarSwitcher;
 
   // NOTE: the drop down is an internal Popup or Popover, which accept more options
   // than the public types the member is declared with.
@@ -141,6 +149,7 @@ class DateBox<
       interval: 30,
       disabledDates: null,
       pickerType: PICKER_TYPE.calendar,
+      calendar: 'gregorian',
       invalidDateMessage: messageLocalization.format('dxDateBox-validation-datetime'),
       dateOutOfRangeMessage: messageLocalization.format('validation-range'),
       applyButtonText: messageLocalization.format('OK'),
@@ -562,11 +571,55 @@ class DateBox<
     this._getSubmitElement().val(submitValue);
   }
 
+  _getEffectiveDisplayFormatOption(): Format | undefined {
+    const { displayFormat, calendar } = this.option();
+
+    if (!isDefined(displayFormat) && calendar && calendar !== 'gregorian') {
+      const calendarDateFormat = getCalendarDefaultDateFormat(calendar);
+
+      if (!isDefined(calendarDateFormat)) {
+        return displayFormat;
+      }
+
+      const formatType = this._getFormatType();
+
+      // Time-only editors never render a calendar date, so keep the strategy's
+      // own time format (e.g. 'shorttime') instead of forcing a date pattern.
+      if (formatType === TYPE.time) {
+        return displayFormat;
+      }
+
+      // Date & time editors must keep the time portion: append the locale short
+      // time to the calendar's preferred date format (e.g. 'yyyy/MM/dd, h:mm a').
+      // The calendar-aware formatter/parser handle the time tokens directly.
+      if (formatType === TYPE.datetime) {
+        const shortTimePattern = dateLocalization._getPatternByFormat('shorttime') ?? 'h:mm a';
+        return `${calendarDateFormat}, ${shortTimePattern}`;
+      }
+
+      return calendarDateFormat;
+    }
+
+    return displayFormat;
+  }
+
   _getDisplayedText(value?: DateLike): string {
-    const { mode = 'text', displayFormat: displayFormatOption } = this.option();
+    const { mode = 'text', calendar } = this.option();
+    const displayFormatOption = this._getEffectiveDisplayFormatOption();
 
     if (mode === 'text') {
       const displayFormat = this._strategy.getDisplayFormat(displayFormatOption);
+
+      if (calendar && calendar !== 'gregorian') {
+        const formatType = typeof displayFormat === 'string'
+          ? displayFormat
+          : (displayFormat as { type?: string })?.type;
+
+        if (typeof formatType === 'string') {
+          return dateLocalization.format(value, { type: formatType, calendar }) as string;
+        }
+      }
+
       return dateLocalization.format(value, displayFormat) as string;
     }
     const format = this._getFormatByMode(mode);
@@ -629,9 +682,19 @@ class DateBox<
   }
 
   _getParsedDate(text?: string): Date | undefined {
-    const { displayFormat } = this.option();
+    const displayFormat = this._getEffectiveDisplayFormatOption();
     const strategyDisplayFormat = this._strategy.getDisplayFormat(displayFormat);
-    const parsedText = this._strategy.getParsedText(text, strategyDisplayFormat as string);
+    const { calendar } = this.option();
+
+    // Thread the active calendar through dateLocalization.parse so the user's
+    // typed text is interpreted in the selected calendar (1403/01/01 -> 2024-03-20
+    // for Persian, not as a Gregorian year 1403).
+    const parseFormat = calendar && calendar !== 'gregorian' && typeof strategyDisplayFormat === 'string'
+      ? { type: strategyDisplayFormat, calendar }
+      : strategyDisplayFormat;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const parsedText = this._strategy.getParsedText(text, parseFormat as any);
 
     return parsedText ?? undefined;
   }
@@ -801,9 +864,23 @@ class DateBox<
       case 'interval':
       case 'disabledDates':
       case 'calendarOptions':
+      case 'calendarSwitcher':
       case 'todayButtonText':
         this._invalidate();
         break;
+      case 'calendar': {
+        // Update the inner picker widget so an open dropdown reflects the new
+        // calendar without being torn down (which `_invalidate()` would do —
+        // closing the popup mid-interaction when the in-picker switcher fires).
+        type OptionWidget = { option?: (n: string, v: unknown) => void } | null;
+        const widget = this._strategy?.getWidget?.() as OptionWidget;
+        if (widget?.option && typeof widget.option === 'function') {
+          widget.option('calendar', args.value);
+        }
+        this.option('text', this._getDisplayedText(this.getDateOption('value')));
+        this._renderInputValue();
+        break;
+      }
       case 'displayFormat':
         this.option('text', this._getDisplayedText(this.getDateOption('value')));
         this._renderInputValue();

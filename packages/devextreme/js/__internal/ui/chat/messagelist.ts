@@ -19,6 +19,8 @@ import type {
 import type { Item as ContextMenuItem } from '@js/ui/context_menu';
 import type dxContextMenu from '@js/ui/context_menu';
 import type { WidgetOptions } from '@js/ui/widget/ui.widget';
+import type { CalendarType } from '@ts/core/localization/calendar';
+import { applyCalendarToFormat } from '@ts/core/localization/calendar/format_calendar';
 import { getPublicElement } from '@ts/core/m_element';
 import type { OptionChanged } from '@ts/core/widget/types';
 import Widget from '@ts/core/widget/widget';
@@ -98,6 +100,8 @@ export interface Properties extends WidgetOptions<MessageList> {
   messageTemplate?: MessageTemplate;
   emptyViewTemplate?: EmptyViewTemplate;
   dayHeaderFormat?: Format;
+
+  calendar?: CalendarType;
   messageTimestampFormat?: Format;
   typingUsers: User[];
   isLoading?: boolean;
@@ -135,6 +139,7 @@ class MessageList extends Widget<Properties> {
       currentUserId: '',
       showDayHeaders: true,
       dayHeaderFormat: 'shortdate',
+      calendar: undefined,
       messageTimestampFormat: 'shorttime',
       typingUsers: [],
       isLoading: false,
@@ -433,10 +438,11 @@ class MessageList extends Widget<Properties> {
     const deserializedDate = dateSerialization.deserializeDate(timestamp);
     const today = new Date();
     const yesterday = new Date(new Date().setDate(today.getDate() - 1));
-    const { dayHeaderFormat } = this.option();
+    const { dayHeaderFormat, calendar } = this.option();
     this._lastMessageDate = deserializedDate;
 
-    let headerDate = dateLocalization.format(deserializedDate, dayHeaderFormat);
+    const headerFormat = applyCalendarToFormat(dayHeaderFormat, calendar);
+    let headerDate = dateLocalization.format(deserializedDate, headerFormat);
 
     if (dateUtils.sameDate(deserializedDate, today)) {
       headerDate = `${messageLocalization.format('Today')} ${headerDate}`;
@@ -843,6 +849,7 @@ class MessageList extends Widget<Properties> {
       case 'messageTemplate':
       case 'emptyViewTemplate':
       case 'dayHeaderFormat':
+      case 'calendar':
       case 'messageTimestampFormat':
       case 'onAttachmentDownloadClick':
         this._invalidate();

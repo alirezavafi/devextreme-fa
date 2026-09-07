@@ -1,6 +1,7 @@
 import type { dxElementWrapper } from '@js/core/renderer';
 import type { ItemContextMenuEvent } from '@js/ui/list';
 import type { Appointment, Properties } from '@js/ui/scheduler';
+import type { CalendarType } from '@ts/core/localization/calendar';
 
 import type { ResourceLoader } from './utils/loader/resource_loader';
 import type { ResourceId } from './utils/loader/types';
@@ -190,6 +191,7 @@ export interface ViewDataProviderOptions {
   skippedDays: number[];
   isGenerateTimePanelData?: boolean;
   isGenerateWeekDaysHeaderData?: boolean;
+  calendar?: CalendarType;
 }
 
 export interface CellInfo {

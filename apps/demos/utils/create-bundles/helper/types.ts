@@ -16,7 +16,10 @@ export interface Demo {
 export interface Group {
   Name: string;
   Equivalents: string;
-  Demos: Demo[];
+  Demos?: Demo[];
+  // Widgets with many demos (Scheduler, DataGrid, the charts) nest a second
+  // level of groups instead of listing demos directly.
+  Groups?: Group[];
 }
 
 export interface Item {

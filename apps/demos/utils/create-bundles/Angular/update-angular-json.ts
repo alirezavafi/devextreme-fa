@@ -1,7 +1,7 @@
 import { writeFileSync, existsSync } from 'fs-extra';
 import { relative, join } from 'path';
 import { Demo, Item } from '../helper/types';
-import { getSourcePathByDemo, getDestinationPathByDemo, isSkipDemo } from '../helper';
+import { collectDemos, getSourcePathByDemo, getDestinationPathByDemo } from '../helper';
 import * as menuMeta from '../../../menuMeta.json';
 import { getProjectNameByDemo, getIndexHtmlPath } from './utils';
 
@@ -75,18 +75,13 @@ const createAngularJson = () => {
   const menu: Item[] = (menuMeta as any).default;
 
   for (const meta of menu) {
-    for (const group of meta.Groups) {
-      const demos = group.Demos || [];
-      for (const demo of demos) {
-        if (!isSkipDemo(demo)) {
-          if (existsSync(getSourcePathByDemo(demo, 'Angular'))) {
-            console.log(`Angular Config created: ${demo.Widget} - ${demo.Name}`);
+    for (const demo of collectDemos(meta.Groups)) {
+      if (existsSync(getSourcePathByDemo(demo, 'Angular'))) {
+        console.log(`Angular Config created: ${demo.Widget} - ${demo.Name}`);
 
-            angularJsonObject.projects[getProjectNameByDemo(demo)] = createConfigForDemo(demo);
-          } else {
-            console.log(`No angular project for: ${demo.Widget} - ${demo.Name}`);
-          }
-        }
+        angularJsonObject.projects[getProjectNameByDemo(demo)] = createConfigForDemo(demo);
+      } else {
+        console.log(`No angular project for: ${demo.Widget} - ${demo.Name}`);
       }
     }
   }

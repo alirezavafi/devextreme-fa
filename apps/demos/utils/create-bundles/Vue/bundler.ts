@@ -1,7 +1,7 @@
 import { BuildOptions } from 'esbuild';
 
 import vuePlugin from 'esbuild-plugin-vue3';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import {
   getDestinationPathByDemo, getSourcePathByDemo,
 } from '../helper';
@@ -30,6 +30,11 @@ export default class VueBundler extends ESBundler {
       entryNames: '[dir]/bundle.[hash]',
       outdir: destinationDemoPath,
       entryPoints: this.#getEntryPoints(sourceDemoPath),
+      alias: {
+        // Bare specifier that only the SystemJS demo configs map (see
+        // configs/Vue/config.js); esbuild needs the same mapping.
+        'anti-forgery': resolve(__dirname, '../../../shared/anti-forgery/fetch-override.js'),
+      },
       plugins: [vuePlugin() as any],
       define: {
         __VUE_OPTIONS_API__: 'true',

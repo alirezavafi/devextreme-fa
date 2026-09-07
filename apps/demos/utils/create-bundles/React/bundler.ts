@@ -29,6 +29,9 @@ export default class ReactBundler extends ESBundler {
       alias: {
         react: resolve(__dirname, '../../../node_modules/react'),
         'react-dom': resolve(__dirname, '../../../node_modules/react-dom'),
+        // Bare specifier that only the SystemJS demo configs map (see
+        // configs/React/config.js); esbuild needs the same mapping.
+        'anti-forgery': resolve(__dirname, '../../../shared/anti-forgery/fetch-override.js'),
       },
       entryPoints: this.#getEntryPoints(sourceDemoPath),
       plugins: [ignoreMissingCss],

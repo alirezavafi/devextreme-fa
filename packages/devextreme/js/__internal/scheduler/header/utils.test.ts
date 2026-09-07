@@ -1,6 +1,62 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { getCaptionInterval, getNextIntervalDate } from './utils';
+import { getCaption, getCaptionInterval, getNextIntervalDate } from './utils';
+
+describe('calendar-aware navigator caption', () => {
+  it('renders a day-view caption in the persian calendar', () => {
+    // 2024-03-20 == 1 Farvardin 1403
+    const result = getCaption({
+      date: new Date(2024, 2, 20),
+      step: 'day',
+      intervalCount: 1,
+      skippedDays: [],
+      calendar: 'persian',
+    }, false);
+
+    expect(result.text).toBe('1 Farvardin 1403');
+  });
+
+  it('leaves the gregorian caption unchanged', () => {
+    const optionsBase = {
+      date: new Date(2024, 2, 20),
+      step: 'day' as const,
+      intervalCount: 1,
+      skippedDays: [],
+    };
+
+    const gregorian = getCaption({ ...optionsBase, calendar: 'gregorian' }, false);
+    const noCalendar = getCaption(optionsBase, false);
+
+    expect(gregorian.text).toBe(noCalendar.text);
+  });
+
+  it('renders a hijri day-view caption', () => {
+    // 2024-07-07 tabular hijri == 30 Dhu al-Hijjah 1445
+    const result = getCaption({
+      date: new Date(2024, 6, 7),
+      step: 'day',
+      intervalCount: 1,
+      skippedDays: [],
+      calendar: 'hijri',
+    }, false);
+
+    expect(result.text).toBe('30 Dhu al-Hijjah 1445');
+  });
+
+  it('renders a month-view caption as a single persian month', () => {
+    // currentDate 2024-04-10 is in Farvardin 1403; the month interval aligns to
+    // the calendar month, so the caption is a single "Farvardin 1403".
+    const result = getCaption({
+      date: new Date(2024, 3, 10),
+      step: 'month',
+      intervalCount: 1,
+      skippedDays: [],
+      calendar: 'persian',
+    }, false);
+
+    expect(result.text).toBe('Farvardin 1403');
+  });
+});
 
 describe('agenda hiddenWeekDays support in header utils', () => {
   const skippedDays: number[] = [0, 6];

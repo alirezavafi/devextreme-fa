@@ -3,7 +3,7 @@ import yargs from 'yargs';
 import {
   Framework, Args, Item, Demo,
 } from './helper/types';
-import { copyMetadata, isSkipDemo } from './helper';
+import { collectDemos, copyMetadata } from './helper';
 
 import { ESBundler } from './helper/bundler';
 import ReactBundler from './React/bundler';
@@ -36,14 +36,7 @@ const menu: Item[] = (menuMeta as any).default;
 const allDemos: Demo[] = [];
 
 for (const meta of menu) {
-  for (const group of meta.Groups) {
-    const demos = group.Demos || [];
-    for (const demo of demos) {
-      if (!isSkipDemo(demo)) {
-        allDemos.push(demo);
-      }
-    }
-  }
+  allDemos.push(...collectDemos(meta.Groups));
 }
 
 async function processDemosInBatches(bundler: ESBundler, demoList: Demo[], batchSize: number) {

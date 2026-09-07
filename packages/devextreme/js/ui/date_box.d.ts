@@ -11,6 +11,7 @@ import {
 } from '../events';
 
 import {
+    CalendarSwitcher,
     ComponentDisabledDate,
     dxCalendarOptions,
 } from './calendar';
@@ -41,6 +42,12 @@ export {
 export type DateType = 'date' | 'datetime' | 'time';
 /** @public */
 export type DatePickerType = 'calendar' | 'list' | 'native' | 'rollers';
+
+/**
+ * @docid
+ * @public
+ */
+export type DateBoxCalendar = 'gregorian' | 'persian' | 'hijri' | 'hijri-umalqura' | string;
 
 /**
  * @docid _ui_date_box_ChangeEvent
@@ -311,6 +318,18 @@ export interface DateBoxBaseOptions<TComponent> extends Omit<
      * @public
      */
     calendarOptions?: dxCalendarOptions;
+    /**
+     * @docid
+     * @default 'gregorian'
+     * @public
+     */
+    calendar?: 'gregorian' | 'persian' | 'hijri' | 'hijri-umalqura' | string;
+    /**
+     * @docid
+     * @default false
+     * @public
+     */
+    calendarSwitcher?: CalendarSwitcher;
     /**
      * @docid
      * @default "Cancel"

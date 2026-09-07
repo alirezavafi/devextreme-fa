@@ -1,5 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import dateLocalization from '@js/common/core/localization/date';
+import numberLocalization from '@js/common/core/localization/number';
 import domAdapter from '@js/core/dom_adapter';
 import type { dxElementWrapper } from '@js/core/renderer';
 import $ from '@js/core/renderer';
@@ -8,9 +9,42 @@ import dateSerialization from '@js/core/utils/date_serialization';
 import type {
   CalendarSelectionMode, DayOfWeek, WeekNumberRule,
 } from '@js/ui/calendar';
+import type { CalendarType } from '@ts/core/localization/calendar';
 
 import type { BaseViewProperties } from './calendar.base_view';
 import BaseView from './calendar.base_view';
+import {
+  getCalendarCellText,
+  getCalendarMonthCaption,
+  getFirstCalendarMonthDate,
+  getLastCalendarMonthDate,
+  getMonthViewFirstCellData,
+  isOtherCalendarMonth,
+  isSameCalendarMonth,
+} from './calendar.month_view.calendar';
+import {
+  getCenturyViewCaption,
+  getCenturyViewCellText,
+  getCenturyViewFirstCellData,
+  getCenturyViewNextCellData,
+  getDecadeViewCaption,
+  getDecadeViewCellText,
+  getDecadeViewFirstCellData,
+  getDecadeViewNextCellData,
+  getYearViewCaption,
+  getYearViewCellText,
+  getYearViewFirstCellData,
+  getYearViewNextCellData,
+  isOtherCalendarCentury,
+  isOtherCalendarDecade,
+  isSameCalendarCentury,
+  isSameCalendarDecade,
+  isSameCalendarMonthAndYear,
+  isSameCalendarYear,
+} from './calendar.views.calendar';
+
+const formatCalendarNumber = (value: number): string => numberLocalization
+  .convertDigits(String(value));
 
 const CALENDAR_OTHER_MONTH_CLASS = 'dx-calendar-other-month';
 const CALENDAR_OTHER_VIEW_CLASS = 'dx-calendar-other-view';
@@ -32,6 +66,8 @@ export interface MonthViewProperties extends BaseViewProperties {
   selectionMode?: CalendarSelectionMode;
 
   selectWeekOnClick?: boolean;
+
+  calendar?: CalendarType;
 }
 
 export class MonthView extends BaseView<MonthViewProperties> {
@@ -172,6 +208,10 @@ export class MonthView extends BaseView<MonthViewProperties> {
   getNavigatorCaption(): string {
     const { date } = this.option();
 
+    if (this._isCustomCalendar()) {
+      return getCalendarMonthCaption(date, this._getCalendarType(), formatCalendarNumber);
+    }
+
     return `${dateLocalization.format(date, 'monthandyear')}`;
   }
 
@@ -191,18 +231,44 @@ export class MonthView extends BaseView<MonthViewProperties> {
   _isOtherView(cellDate: Date): boolean {
     const { date } = this.option();
 
+    if (this._isCustomCalendar()) {
+      return isOtherCalendarMonth(cellDate, date, this._getCalendarType());
+    }
+
     return cellDate.getMonth() !== date.getMonth();
   }
 
   _isStartDayOfMonth(cellDate: Date): boolean {
-    return dateUtils.sameDate(cellDate, dateUtils.getFirstMonthDate(this.option('date')));
+    const { date } = this.option();
+
+    if (this._isCustomCalendar()) {
+      return dateUtils.sameDate(
+        cellDate,
+        getFirstCalendarMonthDate(date, this._getCalendarType()),
+      );
+    }
+
+    return dateUtils.sameDate(cellDate, dateUtils.getFirstMonthDate(date));
   }
 
   _isEndDayOfMonth(cellDate: Date): boolean {
-    return dateUtils.sameDate(cellDate, dateUtils.getLastMonthDate(this.option('date')));
+    const { date } = this.option();
+
+    if (this._isCustomCalendar()) {
+      return dateUtils.sameDate(
+        cellDate,
+        getLastCalendarMonthDate(date, this._getCalendarType()),
+      );
+    }
+
+    return dateUtils.sameDate(cellDate, dateUtils.getLastMonthDate(date));
   }
 
   _getCellText(cellDate: Date): string {
+    if (this._isCustomCalendar()) {
+      return getCalendarCellText(cellDate, this._getCalendarType(), formatCalendarNumber);
+    }
+
     return `${dateLocalization.format(cellDate, 'd')}`;
   }
 
@@ -218,6 +284,11 @@ export class MonthView extends BaseView<MonthViewProperties> {
 
   _getFirstCellData(): Date {
     const { firstDayOfWeek = 0, date } = this.option();
+
+    if (this._isCustomCalendar()) {
+      return getMonthViewFirstCellData(date, this._getCalendarType(), firstDayOfWeek);
+    }
+
     const firstDay = dateUtils.getFirstMonthDate(date) as Date;
     let firstMonthDayOffset = firstDayOfWeek - firstDay.getDay();
     const { colCount: daysInWeek } = this.option();
@@ -242,7 +313,15 @@ export class MonthView extends BaseView<MonthViewProperties> {
   }
 
   isBoundary(date: Date): boolean {
-    return dateUtils.sameMonthAndYear(date, this.option('min')) || dateUtils.sameMonthAndYear(date, this.option('max'));
+    const { min, max } = this.option();
+
+    if (this._isCustomCalendar()) {
+      const calendarType = this._getCalendarType();
+      return (!!min && isSameCalendarMonth(date, min, calendarType))
+        || (!!max && isSameCalendarMonth(date, max, calendarType));
+    }
+
+    return dateUtils.sameMonthAndYear(date, min) || dateUtils.sameMonthAndYear(date, max);
   }
 
   _getDefaultDisabledDatesHandler(
@@ -264,6 +343,10 @@ export class YearView extends BaseView {
   _isTodayCell(cellDate: Date): boolean {
     const { _todayDate: today } = this.option();
 
+    if (this._isCustomCalendar()) {
+      return isSameCalendarMonthAndYear(cellDate, today(), this._getCalendarType());
+    }
+
     return dateUtils.sameMonthAndYear(cellDate, today());
   }
 
@@ -284,11 +367,20 @@ export class YearView extends BaseView {
   }
 
   _getCellText(cellDate: Date): string {
+    if (this._isCustomCalendar()) {
+      return getYearViewCellText(cellDate, this._getCalendarType());
+    }
+
     return dateLocalization.getMonthNames('abbreviated')[cellDate.getMonth()];
   }
 
   _getFirstCellData(): Date {
     const { date: currentDate } = this.option();
+
+    if (this._isCustomCalendar()) {
+      return getYearViewFirstCellData(currentDate, this._getCalendarType());
+    }
+
     const data = new Date(currentDate);
 
     data.setDate(1);
@@ -298,6 +390,10 @@ export class YearView extends BaseView {
   }
 
   _getNextCellData(date: Date): Date {
+    if (this._isCustomCalendar()) {
+      return getYearViewNextCellData(date, this._getCalendarType());
+    }
+
     const newDate = new Date(date);
     newDate.setMonth(newDate.getMonth() + 1);
 
@@ -314,11 +410,23 @@ export class YearView extends BaseView {
   getNavigatorCaption(): string {
     const { date } = this.option();
 
+    if (this._isCustomCalendar()) {
+      return getYearViewCaption(date, this._getCalendarType(), formatCalendarNumber);
+    }
+
     return `${dateLocalization.format(date, 'yyyy')}`;
   }
 
   isBoundary(date: Date): boolean {
-    return dateUtils.sameYear(date, this.option('min')) || dateUtils.sameYear(date, this.option('max'));
+    const { min, max } = this.option();
+
+    if (this._isCustomCalendar()) {
+      const calendarType = this._getCalendarType();
+      return (!!min && isSameCalendarYear(date, min, calendarType))
+        || (!!max && isSameCalendarYear(date, max, calendarType));
+    }
+
+    return dateUtils.sameYear(date, min) || dateUtils.sameYear(date, max);
   }
 
   _renderWeekNumberCell(): void {}
@@ -332,6 +440,10 @@ export class DecadeView extends BaseView {
   _isTodayCell(cellDate: Date): boolean {
     const { _todayDate: today } = this.option();
 
+    if (this._isCustomCalendar()) {
+      return isSameCalendarYear(cellDate, today(), this._getCalendarType());
+    }
+
     return dateUtils.sameYear(cellDate, today());
   }
 
@@ -342,10 +454,16 @@ export class DecadeView extends BaseView {
   }
 
   _isOtherView(cellDate: Date): boolean {
+    const viewDate = this.option().date;
+
+    if (this._isCustomCalendar()) {
+      return isOtherCalendarDecade(cellDate, viewDate, this._getCalendarType());
+    }
+
     const date = new Date(cellDate);
     date.setMonth(1);
 
-    return !dateUtils.sameDecade(date, this.option('date'));
+    return !dateUtils.sameDecade(date, viewDate);
   }
 
   _isStartDayOfMonth(): boolean {
@@ -357,15 +475,29 @@ export class DecadeView extends BaseView {
   }
 
   _getCellText(cellDate: Date): string {
+    if (this._isCustomCalendar()) {
+      return getDecadeViewCellText(cellDate, this._getCalendarType(), formatCalendarNumber);
+    }
+
     return `${dateLocalization.format(cellDate, 'yyyy')}`;
   }
 
   _getFirstCellData(): Date {
-    const year = dateUtils.getFirstYearInDecade(this.option('date')) - 1;
+    const { date } = this.option();
+
+    if (this._isCustomCalendar()) {
+      return getDecadeViewFirstCellData(date, this._getCalendarType());
+    }
+
+    const year = dateUtils.getFirstYearInDecade(date) - 1;
     return dateUtils.createDateWithFullYear(year, 0, 1);
   }
 
   _getNextCellData(date: Date): Date {
+    if (this._isCustomCalendar()) {
+      return getDecadeViewNextCellData(date, this._getCalendarType());
+    }
+
     const newDate = new Date(date);
     newDate.setFullYear(newDate.getFullYear() + 1);
 
@@ -374,6 +506,11 @@ export class DecadeView extends BaseView {
 
   getNavigatorCaption(): string {
     const { date: currentDate } = this.option();
+
+    if (this._isCustomCalendar()) {
+      return getDecadeViewCaption(currentDate, this._getCalendarType(), formatCalendarNumber);
+    }
+
     const firstYearInDecade = dateUtils.getFirstYearInDecade(currentDate);
     const startDate = new Date(currentDate);
     const endDate = new Date(currentDate);
@@ -385,6 +522,10 @@ export class DecadeView extends BaseView {
   }
 
   _isValueOnCurrentView(currentDate: Date, value: Date): boolean {
+    if (this._isCustomCalendar()) {
+      return isSameCalendarDecade(currentDate, value, this._getCalendarType());
+    }
+
     return dateUtils.sameDecade(currentDate, value);
   }
 
@@ -397,7 +538,15 @@ export class DecadeView extends BaseView {
   }
 
   isBoundary(date: Date): boolean {
-    return dateUtils.sameDecade(date, this.option('min')) || dateUtils.sameDecade(date, this.option('max'));
+    const { min, max } = this.option();
+
+    if (this._isCustomCalendar()) {
+      const calendarType = this._getCalendarType();
+      return (!!min && isSameCalendarDecade(date, min, calendarType))
+        || (!!max && isSameCalendarDecade(date, max, calendarType));
+    }
+
+    return dateUtils.sameDecade(date, min) || dateUtils.sameDecade(date, max);
   }
 
   _renderWeekNumberCell(): void {}
@@ -411,6 +560,10 @@ export class CenturyView extends BaseView {
   _isTodayCell(cellDate: Date): boolean {
     const { _todayDate: today } = this.option();
 
+    if (this._isCustomCalendar()) {
+      return isSameCalendarDecade(cellDate, today(), this._getCalendarType());
+    }
+
     return dateUtils.sameDecade(cellDate, today());
   }
 
@@ -423,6 +576,10 @@ export class CenturyView extends BaseView {
   }
 
   _isOtherView(cellDate: Date): boolean {
+    if (this._isCustomCalendar()) {
+      return isOtherCalendarCentury(cellDate, this.option().date, this._getCalendarType());
+    }
+
     const date = new Date(cellDate);
     date.setMonth(1);
 
@@ -438,6 +595,10 @@ export class CenturyView extends BaseView {
   }
 
   _getCellText(cellDate: Date): string {
+    if (this._isCustomCalendar()) {
+      return getCenturyViewCellText(cellDate, this._getCalendarType(), formatCalendarNumber);
+    }
+
     const startDate = dateLocalization.format(cellDate, 'yyyy');
     const endDate = new Date(cellDate);
 
@@ -447,11 +608,21 @@ export class CenturyView extends BaseView {
   }
 
   _getFirstCellData(): Date {
-    const decade = dateUtils.getFirstDecadeInCentury(this.option('date')) - 10;
+    const { date } = this.option();
+
+    if (this._isCustomCalendar()) {
+      return getCenturyViewFirstCellData(date, this._getCalendarType());
+    }
+
+    const decade = dateUtils.getFirstDecadeInCentury(date) - 10;
     return dateUtils.createDateWithFullYear(decade, 0, 1);
   }
 
   _getNextCellData(date: Date): Date {
+    if (this._isCustomCalendar()) {
+      return getCenturyViewNextCellData(date, this._getCalendarType());
+    }
+
     const newDate = new Date(date);
     newDate.setFullYear(newDate.getFullYear() + 10);
 
@@ -469,6 +640,11 @@ export class CenturyView extends BaseView {
 
   getNavigatorCaption(): string {
     const { date: currentDate } = this.option();
+
+    if (this._isCustomCalendar()) {
+      return getCenturyViewCaption(currentDate, this._getCalendarType(), formatCalendarNumber);
+    }
+
     const firstDecadeInCentury = dateUtils.getFirstDecadeInCentury(currentDate);
     const startDate = new Date(currentDate);
     const endDate = new Date(currentDate);
@@ -480,7 +656,15 @@ export class CenturyView extends BaseView {
   }
 
   isBoundary(date: Date): boolean {
-    return dateUtils.sameCentury(date, this.option('min')) || dateUtils.sameCentury(date, this.option('max'));
+    const { min, max } = this.option();
+
+    if (this._isCustomCalendar()) {
+      const calendarType = this._getCalendarType();
+      return (!!min && isSameCalendarCentury(date, min, calendarType))
+        || (!!max && isSameCalendarCentury(date, max, calendarType));
+    }
+
+    return dateUtils.sameCentury(date, min) || dateUtils.sameCentury(date, max);
   }
 
   _renderWeekNumberCell(): void {}

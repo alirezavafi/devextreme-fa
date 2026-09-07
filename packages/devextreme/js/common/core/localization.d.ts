@@ -130,4 +130,10 @@ export interface FormatObject {
     * @type Enums.Format|string
     */
    type?: PredefinedFormat | string;
+   /**
+    * @docid Format.calendar
+    * @public
+    * @default 'gregorian'
+    */
+   calendar?: 'gregorian' | 'persian' | 'hijri' | 'hijri-umalqura' | string;
 }

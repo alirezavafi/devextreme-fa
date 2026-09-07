@@ -1,3 +1,5 @@
+import $ from 'jquery';
+
 const themeKey = 'currentThemeId';
 
 const themeLoaders = import.meta.glob('../artifacts/css/dx.*.css', { query: '?url', import: 'default' });
@@ -42,31 +44,46 @@ function loadThemeCss(themeId: string): Promise<void> {
 }
 
 export function setupThemeSelector(containerId: string): Promise<void> {
-  const select = document.querySelector<HTMLSelectElement>(`#${containerId}`);
-  if (!select) return Promise.resolve();
+  const container = document.querySelector<HTMLElement>(`#${containerId}`);
+  if (!container) return Promise.resolve();
 
+  if (!themeList.length) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      'No theme CSS found in ../artifacts/css. Widgets will render unstyled.\n'
+      + 'Build the themes once with:\n'
+      + '  cd packages/devextreme-scss && pnpm exec gulp compile-themes-dev\n'
+      + '(outputs to packages/devextreme/artifacts/css/dx.*.css), then reload.',
+    );
+    return Promise.resolve();
+  }
+
+  // Shape the themes into dxSelectBox grouped data ({ key, items: [...] }) so the
+  // theme picker matches the calendar/language dxSelectBoxes instead of a native
+  // <select>.
   const grouped = groupThemes(themeList);
-  Object.entries(grouped).forEach(([group, themes]) => {
-    const optgroup = document.createElement('optgroup');
-    optgroup.label = group;
-    themes.forEach((theme) => {
-      const option = document.createElement('option');
-      option.value = theme;
-      option.textContent = theme.replaceAll('.', ' ');
-      optgroup.appendChild(option);
-    });
-    select.appendChild(optgroup);
-  });
+  const groupedItems = Object.entries(grouped).map(([key, themes]) => ({
+    key,
+    items: themes.map((theme) => ({ id: theme, text: theme.replaceAll('.', ' ') })),
+  }));
 
   const defaultTheme = themeList.includes('fluent.blue.light') ? 'fluent.blue.light' : themeList[0];
   const savedTheme = window.localStorage.getItem(themeKey) || defaultTheme;
-  select.value = savedTheme;
 
-  select.addEventListener('change', () => {
-    const newTheme = select.value;
-    window.localStorage.setItem(themeKey, newTheme);
-    loadThemeCss(newTheme).catch((err) => console.error(err));
+  // Load the saved theme CSS first so the dxSelectBox (and every other widget the
+  // caller mounts afterwards) renders styled.
+  return loadThemeCss(savedTheme).then(() => {
+    $(container).dxSelectBox({
+      dataSource: groupedItems,
+      grouped: true,
+      valueExpr: 'id',
+      displayExpr: 'text',
+      value: savedTheme,
+      width: 220,
+      onValueChanged: (e: { value: string }): void => {
+        window.localStorage.setItem(themeKey, e.value);
+        loadThemeCss(e.value).catch((err) => console.error(err));
+      },
+    });
   });
-
-  return loadThemeCss(savedTheme);
 }

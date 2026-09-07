@@ -11,6 +11,28 @@ export const enums = {
       'swing',
     ],
   },
+  CalendarType: {
+    Items: ['gregorian', 'hijri', 'persian'],
+    Options: [
+      'dxChart.argumentAxis.label.calendar',
+      'dxChart.valueAxis.label.calendar',
+      'dxChat.calendar',
+      'dxFilterBuilderField.calendar',
+      'dxGanttMultiCalendar.calendar',
+      'dxRangeSelector.scale.label.calendar',
+    ],
+  },
+  CalendarSystemType: {
+    Items: ['gregorian', 'hijri', 'hijri-umalqura', 'persian'],
+    Options: [
+      'CalendarSwitcherConfig.items',
+      'Format.calendar',
+      'dxCalendar.calendar',
+      'dxDateBox.calendar',
+      'dxDateRangeBox.calendar',
+      'dxScheduler.calendar',
+    ],
+  },
   EdmType: {
     Items: ['Guid', 'Int32', 'Int64', 'String', 'Boolean', 'Single', 'Decimal'],
   },

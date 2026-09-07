@@ -22,6 +22,7 @@ import type { Format } from '@js/localization';
 import LoadPanel from '@js/ui/load_panel';
 import sharedFiltering from '@js/ui/shared/filtering';
 import { getGlobalFormatByDataType } from '@ts/core/global_format_config';
+import { getCalendar, isCalendarRegistered } from '@ts/core/localization/calendar';
 import { isNumeric } from '@ts/core/utils/m_type';
 import type { Column } from '@ts/grids/grid_core/columns_controller/types';
 import type { DataFilter } from '@ts/grids/grid_core/data_controller/types';
@@ -44,14 +45,23 @@ const LEGACY_SCROLLING_MODE = 'scrolling.legacyMode';
 const SCROLLING_MODE_OPTION = 'scrolling.mode';
 const ROW_RENDERING_MODE_OPTION = 'scrolling.rowRenderingMode';
 const DATE_INTERVAL_SELECTORS = {
-  year(value) {
-    return value && value.getFullYear();
+  year(value, calendarType?) {
+    if (!value) return value;
+    return calendarType
+      ? getCalendar(calendarType).toParts(value).year
+      : value.getFullYear();
   },
-  month(value) {
-    return value && (value.getMonth() + 1);
+  month(value, calendarType?) {
+    if (!value) return value;
+    return calendarType
+      ? getCalendar(calendarType).toParts(value).month + 1
+      : value.getMonth() + 1;
   },
-  day(value) {
-    return value && value.getDate();
+  day(value, calendarType?) {
+    if (!value) return value;
+    return calendarType
+      ? getCalendar(calendarType).toParts(value).day
+      : value.getDate();
   },
   quarter(value) {
     return value && (Math.floor(value.getMonth() / 3) + 1);
@@ -65,6 +75,20 @@ const DATE_INTERVAL_SELECTORS = {
   second(value) {
     return value && value.getSeconds();
   },
+};
+
+// Reads the calendar type from a column's date `format` object (e.g.
+// `{ type: 'shortdate', calendar: 'persian' }`). Returns undefined for the
+// default Gregorian path so the existing behavior is untouched.
+export const getColumnCalendarType = (column): string | undefined => {
+  const format = column?.format;
+  const calendar = format && typeof format === 'object'
+
+    ? format.calendar
+    : undefined;
+  return calendar && calendar !== 'gregorian' && isCalendarRegistered(calendar)
+    ? calendar
+    : undefined;
 };
 
 const DEFAULT_COLUMN_WIDTH = 50;
@@ -81,7 +105,8 @@ const getIntervalSelector = function () {
     return null;
   } if (isDateType(this.dataType)) {
     const nameIntervalSelector = arguments[0];
-    return DATE_INTERVAL_SELECTORS[nameIntervalSelector](value);
+    const calendarType = getColumnCalendarType(this);
+    return DATE_INTERVAL_SELECTORS[nameIntervalSelector](value, calendarType);
   } if (this.dataType === 'number') {
     const groupInterval = arguments[0];
     return Math.floor(Number(value) / groupInterval) * groupInterval;
@@ -567,6 +592,8 @@ export default {
   setEmptyText,
 
   isDateType,
+
+  getColumnCalendarType,
 
   getSelectionRange(focusedElement) {
     try {

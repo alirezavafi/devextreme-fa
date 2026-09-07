@@ -1,0 +1,27 @@
+<div class="options">
+  <span>Calendar</span>
+  <dx-select-box
+    [items]="calendars"
+    [value]="calendar"
+    valueExpr="id"
+    displayExpr="text"
+    [inputAttr]="{ 'aria-label': 'Calendar' }"
+    (onValueChanged)="onCalendarChanged($event)"
+  >
+  </dx-select-box>
+</div>
+<dx-data-grid
+  [dataSource]="orders"
+  keyExpr="ID"
+  [showBorders]="true"
+>
+  <dxo-editing mode="cell" [allowUpdating]="true"></dxo-editing>
+  <dxi-column dataField="ProductName" caption="Product"></dxi-column>
+  <dxi-column
+    dataField="OrderDate"
+    dataType="date"
+    [format]="dateFormat"
+    [editorOptions]="editorOptions"
+  ></dxi-column>
+  <dxi-column dataField="Amount" format="currency"></dxi-column>
+</dx-data-grid>

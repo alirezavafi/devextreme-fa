@@ -113,6 +113,16 @@
   justify-content: center;
 }
 
+.dx-calendar-switcher {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.dx-calendar-switcher-select {
+  width: 100%;
+}
+
 .dx-calendar-multiview {
   .dx-calendar-caption-button {
     .dx-button-content {

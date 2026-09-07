@@ -133,10 +133,11 @@ class DateViewStrategy extends DateBoxStrategy {
   }
 
   _getWidgetOptions(): Record<string, unknown> {
-    const { type = 'date' } = this.dateBox.option();
+    const { type = 'date', calendar } = this.dateBox.option();
     return {
       value: this.dateBoxValue() ?? new Date(),
       type,
+      calendar,
       minDate: this.dateBox.getDateOption('min') ?? new Date(1900, 0, 1),
       maxDate: this.dateBox.getDateOption('max') ?? new Date(Date.now() + 50 * dateUtils.ONE_YEAR),
       onDisposing: (): void => {

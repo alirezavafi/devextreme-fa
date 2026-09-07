@@ -183,12 +183,17 @@ class TimeView extends Editor<TimeViewProperties> {
     }
 
     return this._createComponent(
-      $('<div>').addClass(TIMEVIEW_FIELD_CLASS),
+      // The time field must always read left-to-right (hh : mm AM/PM), even
+      // under RTL. The theme's `.dx-rtl` rule sets `direction: rtl` (which beats
+      // a `dir` attribute), so force LTR with an inline style and keep this
+      // inner Box out of RTL so its row items are not reversed.
+      $('<div>').addClass(TIMEVIEW_FIELD_CLASS).attr('dir', 'ltr').css('direction', 'ltr'),
       Box,
       {
         direction: 'row',
         align: 'center',
         crossAlign: 'center',
+        rtlEnabled: false,
         items: this._getBoxItems(is12HourFormat),
       },
     ).$element();

@@ -3,6 +3,7 @@ import type { DateHeaderCellData, DateHeaderData, ViewCellData } from '@ts/sched
 
 import {
   formatWeekdayAndDay,
+  getCalendarHeaderFormatter,
   getDisplayedCellCount,
   getHeaderCellText,
   getHorizontalGroupCount,
@@ -67,6 +68,7 @@ export class DateHeaderDataGenerator {
       isHorizontalGrouping,
       intervalCount,
       viewOffset,
+      calendar,
     } = options;
 
     const resourceManager = getResourceManager();
@@ -85,6 +87,7 @@ export class DateHeaderDataGenerator {
     const daysInView = daysInGroup * datesRepeatCount;
 
     const weekDaysRow: DateHeaderCellData[] = [];
+    const formatWeekDay = getCalendarHeaderFormatter(calendar) ?? formatWeekdayAndDay;
 
     for (let dayIndex = 0; dayIndex < daysInView; dayIndex += 1) {
       const { startDate, endDate, ...restProps } = completeViewDataMap[index][dayIndex * colSpan];
@@ -94,7 +97,7 @@ export class DateHeaderDataGenerator {
         ...restProps,
         startDate,
         colSpan,
-        text: formatWeekdayAndDay(shiftedStartDate),
+        text: formatWeekDay(shiftedStartDate),
         isFirstGroupCell: false,
         isLastGroupCell: false,
       });

@@ -487,6 +487,14 @@ class Scheduler extends SchedulerOptionsBaseWidget {
         this.updateOption('header', 'startViewDate', this.getStartViewDate());
         this.createAppointmentPopupForm();
         break;
+      case 'calendar':
+        this.updateOption('workSpace', name, value);
+        this.updateOption('header', name, value);
+        // Rebuild the appointment popup form so its date editors pick up the
+        // new calendar (display + parse via dxDateBox calendar option).
+        this.createAppointmentPopupForm();
+        this.repaint();
+        break;
       case 'currentDate': {
         const dateValue = this.getViewOption('currentDate');
         this.option('selectedCellData', []);
@@ -1331,6 +1339,7 @@ class Scheduler extends SchedulerOptionsBaseWidget {
       getCalculatedEndDate: (startDateWithStartHour: Date): Date => (
         this._workSpace.calculateEndDate(startDateWithStartHour)
       ),
+      calendar: this.option('calendar'),
     };
 
     return new AppointmentForm(appointmentFormConfig);
@@ -1559,6 +1568,7 @@ class Scheduler extends SchedulerOptionsBaseWidget {
       focusStateEnabled: this.option('focusStateEnabled'),
       useDropDownViewSwitcher: this.option('useDropDownViewSwitcher'),
       firstDayOfWeek: this.getFirstDayOfWeek(),
+      calendar: this.option('calendar'),
       toolbar: this.option('toolbar'),
       customizeDateNavigatorText: this.option('customizeDateNavigatorText'),
       onCurrentViewChange: (name): void => {
@@ -1704,6 +1714,7 @@ class Scheduler extends SchedulerOptionsBaseWidget {
 
       noDataText: this.option('noDataText') || messageLocalization.format('dxCollectionWidget-noDataText'),
       firstDayOfWeek: this.option('firstDayOfWeek'),
+      calendar: this.option('calendar'),
       startDayHour: this.option('startDayHour'),
       endDayHour: this.option('endDayHour'),
       viewOffset: this.getViewOffsetMs(),

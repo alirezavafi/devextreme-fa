@@ -1,0 +1,15 @@
+export {
+  GanttMultiCalendarScaleType,
+  GanttMultiCalendarCalendarType,
+  GanttMultiCalendarDependencyType,
+  ContentReadyEvent,
+  DisposingEvent,
+  InitializedEvent,
+  OptionChangedEvent,
+  TaskUpdatedEvent,
+  DependencyInsertedEvent,
+  DependencyDeletingEvent,
+  DependencyDeletedEvent,
+  dxGanttMultiCalendarOptions,
+  Properties,
+} from './gantt_multi_calendar';
