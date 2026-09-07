@@ -44,6 +44,7 @@ import type {
 import type { ScrollEvent } from '@js/ui/scroll_view';
 import errors from '@js/ui/widget/ui.errors';
 import type { TranslateVector } from '@ts/common/core/animation/translator';
+import type { CalendarType } from '@ts/core/localization/calendar';
 import { getMemoizeScrollTo, type ScrollToFunc } from '@ts/core/utils/scroll';
 import type { ActionConfig } from '@ts/core/widget/component';
 import type { OptionChanged } from '@ts/core/widget/types';
@@ -334,6 +335,7 @@ export interface WorkspaceOptionsInternal extends WidgetProperties<SchedulerWork
 
   agendaDuration: number;
   intervalCount: number;
+  calendar?: CalendarType;
   rowHeight: number;
   startDate?: Date | null;
   type?: ViewType;

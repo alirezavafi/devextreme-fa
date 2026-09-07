@@ -418,8 +418,8 @@ class DateBox<
     const longestValue = dateLocalization.format(
       uiDateUtils.getLongestDate(
         format,
-        dateLocalization.getMonthNames(),
-        dateLocalization.getDayNames(),
+        dateLocalization.getMonthNames('wide'),
+        dateLocalization.getDayNames('wide'),
       ),
       format,
     );
@@ -578,7 +578,7 @@ class DateBox<
       const calendarDateFormat = getCalendarDefaultDateFormat(calendar);
 
       if (!isDefined(calendarDateFormat)) {
-        return displayFormat;
+        return undefined;
       }
 
       const formatType = this._getFormatType();
@@ -586,7 +586,7 @@ class DateBox<
       // Time-only editors never render a calendar date, so keep the strategy's
       // own time format (e.g. 'shorttime') instead of forcing a date pattern.
       if (formatType === TYPE.time) {
-        return displayFormat;
+        return undefined;
       }
 
       // Date & time editors must keep the time portion: append the locale short
@@ -600,12 +600,15 @@ class DateBox<
       return calendarDateFormat;
     }
 
-    return displayFormat;
+    return displayFormat ?? undefined;
   }
 
   _getDisplayedText(value?: DateLike): string {
     const { mode = 'text', calendar } = this.option();
     const displayFormatOption = this._getEffectiveDisplayFormatOption();
+    // The formatter returns undefined for a nullish date, but its signature
+    // only accepts Date.
+    const date = value as Date;
 
     if (mode === 'text') {
       const displayFormat = this._strategy.getDisplayFormat(displayFormatOption);
@@ -616,16 +619,16 @@ class DateBox<
           : (displayFormat as { type?: string })?.type;
 
         if (typeof formatType === 'string') {
-          return dateLocalization.format(value, { type: formatType, calendar }) as string;
+          return dateLocalization.format(date, { type: formatType, calendar }) as string;
         }
       }
 
-      return dateLocalization.format(value, displayFormat) as string;
+      return dateLocalization.format(date, displayFormat) as string;
     }
     const format = this._getFormatByMode(mode);
 
     if (format) {
-      return dateLocalization.format(value, format) as string;
+      return dateLocalization.format(date, format) as string;
     }
     return uiDateUtils.toStandardDateFormat(value, mode);
   }

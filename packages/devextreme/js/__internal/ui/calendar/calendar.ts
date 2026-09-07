@@ -1447,10 +1447,10 @@ class Calendar<
       // it as an inner overlay so clicks inside its options list don't close
       // the parent DateBox popup via the outside-click detector.
       dropDownOptions: { container: 'body', innerOverlay: true },
-      onValueChanged: (e: { value: string }): void => {
+      onValueChanged: (e: { value?: CalendarType }): void => {
         // Avoid re-entering when we sync the SelectBox value from a
         // programmatic `calendar` option change.
-        if (this._suppressSwitcherSync) return;
+        if (this._suppressSwitcherSync || e.value === undefined) return;
         this.option('calendar', e.value);
       },
       integrationOptions: {},
