@@ -32,6 +32,14 @@ import { NestedOption } from 'devextreme-angular/core';
 })
 export class DxoBulletFormatComponent extends NestedOption implements OnDestroy, OnInit  {
     @Input()
+    get calendar(): "gregorian" | "persian" | "hijri" | "hijri-umalqura" {
+        return this._getOption('calendar');
+    }
+    set calendar(value: "gregorian" | "persian" | "hijri" | "hijri-umalqura") {
+        this._setOption('calendar', value);
+    }
+
+    @Input()
     get currency(): string {
         return this._getOption('currency');
     }

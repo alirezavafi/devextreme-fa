@@ -29,6 +29,7 @@ export { DxForm } from "./form";
 export { DxFunnel } from "./funnel";
 export { DxGallery } from "./gallery";
 export { DxGantt } from "./gantt";
+export { DxGanttMultiCalendar } from "./gantt-multi-calendar";
 export { DxHtmlEditor } from "./html-editor";
 export { DxLinearGauge } from "./linear-gauge";
 export { DxList } from "./list";

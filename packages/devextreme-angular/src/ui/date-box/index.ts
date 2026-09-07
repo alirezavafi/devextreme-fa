@@ -26,7 +26,7 @@ import {
 
 import type { ApplyValueMode, TextEditorButton, LabelMode, EditorStyle, ValidationMessageMode, Mode, Position, ValidationStatus } from 'devextreme/common';
 import type { DropDownPredefinedButton } from 'devextreme/ui/drop_down_editor/ui.drop_down_editor';
-import type { dxCalendarOptions } from 'devextreme/ui/calendar';
+import type { dxCalendarOptions, CalendarSwitcher } from 'devextreme/ui/calendar';
 import type { Format } from 'devextreme/common/core/localization';
 import type { dxPopupOptions } from 'devextreme/ui/popup';
 import type { default as dxDateBox, ChangeEvent, ClosedEvent, ContentReadyEvent, CopyEvent, CutEvent, DisposingEvent, EnterKeyEvent, FocusInEvent, FocusOutEvent, InitializedEvent, InputEvent, KeyDownEvent, KeyUpEvent, OpenedEvent, OptionChangedEvent, PasteEvent, ValueChangedEvent, DatePickerType, DateType } from 'devextreme/ui/date_box';
@@ -218,6 +218,19 @@ export class DxDateBoxComponent extends DxComponent implements OnDestroy, Contro
 
 
     /**
+     * [descr:DateBoxBaseOptions.calendar]
+    
+     */
+    @Input()
+    get calendar(): "gregorian" | "persian" | "hijri" | "hijri-umalqura" {
+        return this._getOption('calendar');
+    }
+    set calendar(value: "gregorian" | "persian" | "hijri" | "hijri-umalqura") {
+        this._setOption('calendar', value);
+    }
+
+
+    /**
      * [descr:DateBoxBaseOptions.calendarOptions]
     
      */
@@ -227,6 +240,19 @@ export class DxDateBoxComponent extends DxComponent implements OnDestroy, Contro
     }
     set calendarOptions(value: dxCalendarOptions) {
         this._setOption('calendarOptions', value);
+    }
+
+
+    /**
+     * [descr:DateBoxBaseOptions.calendarSwitcher]
+    
+     */
+    @Input()
+    get calendarSwitcher(): CalendarSwitcher {
+        return this._getOption('calendarSwitcher');
+    }
+    set calendarSwitcher(value: CalendarSwitcher) {
+        this._setOption('calendarSwitcher', value);
     }
 
 
@@ -1069,7 +1095,21 @@ export class DxDateBoxComponent extends DxComponent implements OnDestroy, Contro
      * This member supports the internal infrastructure and is not intended to be used directly from your code.
     
      */
+    @Output() calendarChange: EventEmitter<"gregorian" | "persian" | "hijri" | "hijri-umalqura">;
+
+    /**
+    
+     * This member supports the internal infrastructure and is not intended to be used directly from your code.
+    
+     */
     @Output() calendarOptionsChange: EventEmitter<dxCalendarOptions>;
+
+    /**
+    
+     * This member supports the internal infrastructure and is not intended to be used directly from your code.
+    
+     */
+    @Output() calendarSwitcherChange: EventEmitter<CalendarSwitcher>;
 
     /**
     
@@ -1468,7 +1508,9 @@ export class DxDateBoxComponent extends DxComponent implements OnDestroy, Contro
             { emit: 'applyButtonTextChange' },
             { emit: 'applyValueModeChange' },
             { emit: 'buttonsChange' },
+            { emit: 'calendarChange' },
             { emit: 'calendarOptionsChange' },
+            { emit: 'calendarSwitcherChange' },
             { emit: 'cancelButtonTextChange' },
             { emit: 'dateOutOfRangeMessageChange' },
             { emit: 'dateSerializationFormatChange' },

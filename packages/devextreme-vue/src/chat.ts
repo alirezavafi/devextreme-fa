@@ -94,6 +94,7 @@ type AccessibleOptions = Pick<Properties,
   "accessKey" |
   "activeStateEnabled" |
   "alerts" |
+  "calendar" |
   "dataSource" |
   "dayHeaderFormat" |
   "disabled" |
@@ -148,6 +149,7 @@ const componentConfig = {
     accessKey: String,
     activeStateEnabled: Boolean,
     alerts: Array as PropType<Array<Alert>>,
+    calendar: String as PropType<"gregorian" | "persian" | "hijri">,
     dataSource: [Array, Object, String] as PropType<Array<Message> | DataSource | DataSourceOptions | null | Store | string | Record<string, any>>,
     dayHeaderFormat: [Object, String, Function] as PropType<Format | CommonFormat | (((value: number | Date) => string)) | Record<string, any> | string>,
     disabled: Boolean,
@@ -198,6 +200,7 @@ const componentConfig = {
     "update:accessKey": null,
     "update:activeStateEnabled": null,
     "update:alerts": null,
+    "update:calendar": null,
     "update:dataSource": null,
     "update:dayHeaderFormat": null,
     "update:disabled": null,
@@ -398,6 +401,7 @@ const DxDayHeaderFormatConfig = {
   emits: {
     "update:isActive": null,
     "update:hoveredElement": null,
+    "update:calendar": null,
     "update:currency": null,
     "update:formatter": null,
     "update:parser": null,
@@ -406,6 +410,7 @@ const DxDayHeaderFormatConfig = {
     "update:useCurrencyAccountingStyle": null,
   },
   props: {
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
     currency: String,
     formatter: Function as PropType<((value: number | Date) => string)>,
     parser: Function as PropType<((value: string) => number | Date)>,
@@ -639,6 +644,7 @@ const DxMessageTimestampFormatConfig = {
   emits: {
     "update:isActive": null,
     "update:hoveredElement": null,
+    "update:calendar": null,
     "update:currency": null,
     "update:formatter": null,
     "update:parser": null,
@@ -647,6 +653,7 @@ const DxMessageTimestampFormatConfig = {
     "update:useCurrencyAccountingStyle": null,
   },
   props: {
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
     currency: String,
     formatter: Function as PropType<((value: number | Date) => string)>,
     parser: Function as PropType<((value: string) => number | Date)>,

@@ -3,6 +3,8 @@ import { defineComponent } from "vue";
 import { prepareComponentConfig } from "./core/index";
 import Calendar, { Properties } from "devextreme/ui/calendar";
 import {
+ CalendarSwitcher,
+ CalendarSwitcherConfig,
  DisabledDate,
  CalendarZoomLevel,
  DisposingEvent,
@@ -22,6 +24,8 @@ import {
 type AccessibleOptions = Pick<Properties,
   "accessKey" |
   "activeStateEnabled" |
+  "calendar" |
+  "calendarSwitcher" |
   "cellTemplate" |
   "dateSerializationFormat" |
   "disabled" |
@@ -71,6 +75,8 @@ const componentConfig = {
   props: {
     accessKey: String,
     activeStateEnabled: Boolean,
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
+    calendarSwitcher: [Object, Boolean] as PropType<CalendarSwitcher | boolean | CalendarSwitcherConfig>,
     cellTemplate: {},
     dateSerializationFormat: String,
     disabled: Boolean,
@@ -116,6 +122,8 @@ const componentConfig = {
     "update:hoveredElement": null,
     "update:accessKey": null,
     "update:activeStateEnabled": null,
+    "update:calendar": null,
+    "update:calendarSwitcher": null,
     "update:cellTemplate": null,
     "update:dateSerializationFormat": null,
     "update:disabled": null,

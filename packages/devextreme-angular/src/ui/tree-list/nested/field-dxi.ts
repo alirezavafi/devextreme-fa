@@ -49,6 +49,14 @@ export class DxiTreeListFieldComponent extends CollectionNestedOption {
     }
 
     @Input()
+    get calendar(): "gregorian" | "persian" | "hijri" {
+        return this._getOption('calendar');
+    }
+    set calendar(value: "gregorian" | "persian" | "hijri") {
+        this._setOption('calendar', value);
+    }
+
+    @Input()
     get caption(): string | undefined {
         return this._getOption('caption');
     }

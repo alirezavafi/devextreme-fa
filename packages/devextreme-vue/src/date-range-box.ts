@@ -31,6 +31,8 @@ import {
 } from "devextreme/ui/drop_down_editor/ui.drop_down_editor";
 import {
  dxCalendarOptions,
+ CalendarSwitcher,
+ CalendarSwitcherConfig,
  DisabledDate,
  CalendarZoomLevel,
  DisposingEvent as CalendarDisposingEvent,
@@ -105,7 +107,9 @@ type AccessibleOptions = Pick<Properties,
   "applyButtonText" |
   "applyValueMode" |
   "buttons" |
+  "calendar" |
   "calendarOptions" |
+  "calendarSwitcher" |
   "cancelButtonText" |
   "dateSerializationFormat" |
   "deferRendering" |
@@ -192,7 +196,9 @@ const componentConfig = {
     applyButtonText: String,
     applyValueMode: String as PropType<ApplyValueMode>,
     buttons: Array as PropType<Array<DropDownPredefinedButton | TextEditorButton>>,
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
     calendarOptions: Object as PropType<dxCalendarOptions | Record<string, any>>,
+    calendarSwitcher: [Object, Boolean] as PropType<CalendarSwitcher | boolean | CalendarSwitcherConfig>,
     cancelButtonText: String,
     dateSerializationFormat: String,
     deferRendering: Boolean,
@@ -275,7 +281,9 @@ const componentConfig = {
     "update:applyButtonText": null,
     "update:applyValueMode": null,
     "update:buttons": null,
+    "update:calendar": null,
     "update:calendarOptions": null,
+    "update:calendarSwitcher": null,
     "update:cancelButtonText": null,
     "update:dateSerializationFormat": null,
     "update:deferRendering": null,
@@ -464,6 +472,8 @@ const DxCalendarOptionsConfig = {
     "update:hoveredElement": null,
     "update:accessKey": null,
     "update:activeStateEnabled": null,
+    "update:calendar": null,
+    "update:calendarSwitcher": null,
     "update:cellTemplate": null,
     "update:dateSerializationFormat": null,
     "update:disabled": null,
@@ -507,6 +517,8 @@ const DxCalendarOptionsConfig = {
   props: {
     accessKey: String,
     activeStateEnabled: Boolean,
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
+    calendarSwitcher: [Object, Boolean] as PropType<CalendarSwitcher | boolean | CalendarSwitcherConfig>,
     cellTemplate: {},
     dateSerializationFormat: String,
     disabled: Boolean,
@@ -578,6 +590,7 @@ const DxDisplayFormatConfig = {
   emits: {
     "update:isActive": null,
     "update:hoveredElement": null,
+    "update:calendar": null,
     "update:currency": null,
     "update:formatter": null,
     "update:parser": null,
@@ -586,6 +599,7 @@ const DxDisplayFormatConfig = {
     "update:useCurrencyAccountingStyle": null,
   },
   props: {
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
     currency: String,
     formatter: Function as PropType<((value: number | Date) => string)>,
     parser: Function as PropType<((value: string) => number | Date)>,

@@ -749,6 +749,7 @@ const DxArgumentFormatConfig = {
   emits: {
     "update:isActive": null,
     "update:hoveredElement": null,
+    "update:calendar": null,
     "update:currency": null,
     "update:formatter": null,
     "update:parser": null,
@@ -757,6 +758,7 @@ const DxArgumentFormatConfig = {
     "update:useCurrencyAccountingStyle": null,
   },
   props: {
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
     currency: String,
     formatter: Function as PropType<((value: number | Date) => string)>,
     parser: Function as PropType<((value: string) => number | Date)>,
@@ -835,6 +837,7 @@ const DxAxisLabelConfig = {
     "update:isActive": null,
     "update:hoveredElement": null,
     "update:alignment": null,
+    "update:calendar": null,
     "update:customizeHint": null,
     "update:customizeText": null,
     "update:displayMode": null,
@@ -852,6 +855,7 @@ const DxAxisLabelConfig = {
   },
   props: {
     alignment: String as PropType<HorizontalAlignment>,
+    calendar: String as PropType<"gregorian" | "persian" | "hijri">,
     customizeHint: Function as PropType<((argument: { value: Date | number | string, valueText: string }) => string)>,
     customizeText: Function as PropType<((argument: { value: Date | number | string, valueText: string }) => string)>,
     displayMode: String as PropType<ChartLabelDisplayMode>,
@@ -1922,6 +1926,7 @@ const DxFormatConfig = {
   emits: {
     "update:isActive": null,
     "update:hoveredElement": null,
+    "update:calendar": null,
     "update:currency": null,
     "update:formatter": null,
     "update:parser": null,
@@ -1930,6 +1935,7 @@ const DxFormatConfig = {
     "update:useCurrencyAccountingStyle": null,
   },
   props: {
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
     currency: String,
     formatter: Function as PropType<((value: number | Date) => string)>,
     parser: Function as PropType<((value: string) => number | Date)>,
@@ -2140,6 +2146,7 @@ const DxLabelConfig = {
     "update:argumentFormat": null,
     "update:backgroundColor": null,
     "update:border": null,
+    "update:calendar": null,
     "update:connector": null,
     "update:customizeHint": null,
     "update:customizeText": null,
@@ -2168,6 +2175,7 @@ const DxLabelConfig = {
     argumentFormat: [Object, String, Function] as PropType<LocalizationFormat | Format | (((value: number | Date) => string)) | Record<string, any> | string>,
     backgroundColor: String,
     border: Object as PropType<Record<string, any>>,
+    calendar: String as PropType<"gregorian" | "persian" | "hijri">,
     connector: Object as PropType<Record<string, any>>,
     customizeHint: Function as PropType<((argument: { value: Date | number | string, valueText: string }) => string)>,
     customizeText: Function as PropType<((argument: { value: Date | number | string, valueText: string }) => string)>,

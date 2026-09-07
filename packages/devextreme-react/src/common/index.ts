@@ -3,6 +3,7 @@ import * as ChartsModule from "devextreme/common/charts";
 import * as CoreAnimationModule from "devextreme/common/core/animation";
 import * as CoreEnvironmentModule from "devextreme/common/core/environment";
 import * as CoreEventsModule from "devextreme/common/core/events";
+import * as CoreLocalizationCalendarModule from "devextreme/common/core/localization/calendar";
 import * as CoreLocalizationModule from "devextreme/common/core/localization";
 import * as DataModule from "devextreme/common/data";
 import * as ExportExcelModule from "devextreme/common/export/excel";
@@ -195,6 +196,19 @@ export namespace Core {
         export const locale = CoreLocalizationModule.locale;
         export const parseDate = CoreLocalizationModule.parseDate;
         export const parseNumber = CoreLocalizationModule.parseNumber;
+        export namespace Calendar {
+            export type CalendarDateParts = CoreLocalizationCalendarModule.CalendarDateParts;
+            export type CalendarMonthNameFormat = CoreLocalizationCalendarModule.CalendarMonthNameFormat;
+            export type CalendarSystem = CoreLocalizationCalendarModule.CalendarSystem;
+            export type CalendarType = CoreLocalizationCalendarModule.CalendarType;
+            export const getCalendar = CoreLocalizationCalendarModule.getCalendar;
+            export const getCalendarDefaultDateFormat = CoreLocalizationCalendarModule.getCalendarDefaultDateFormat;
+            export const getCalendarFirstDayOfWeek = CoreLocalizationCalendarModule.getCalendarFirstDayOfWeek;
+            export const getCalendarMonthNamesInActiveLocale = CoreLocalizationCalendarModule.getCalendarMonthNamesInActiveLocale;
+            export const getRegisteredCalendarTypes = CoreLocalizationCalendarModule.getRegisteredCalendarTypes;
+            export const isCalendarRegistered = CoreLocalizationCalendarModule.isCalendarRegistered;
+            export const registerCalendar = CoreLocalizationCalendarModule.registerCalendar;
+        }
     }
 }
 

@@ -327,6 +327,30 @@ export class DxoEditingComponent extends NestedOption implements OnDestroy, OnIn
     }
 
     @Input()
+    get allowTaskMove(): boolean {
+        return this._getOption('allowTaskMove');
+    }
+    set allowTaskMove(value: boolean) {
+        this._setOption('allowTaskMove', value);
+    }
+
+    @Input()
+    get allowTaskResize(): boolean {
+        return this._getOption('allowTaskResize');
+    }
+    set allowTaskResize(value: boolean) {
+        this._setOption('allowTaskResize', value);
+    }
+
+    @Input()
+    get autoUpdateSuccessors(): boolean {
+        return this._getOption('autoUpdateSuccessors');
+    }
+    set autoUpdateSuccessors(value: boolean) {
+        this._setOption('autoUpdateSuccessors', value);
+    }
+
+    @Input()
     get allowDragging(): boolean {
         return this._getOption('allowDragging');
     }

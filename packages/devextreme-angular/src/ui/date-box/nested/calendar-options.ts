@@ -16,7 +16,7 @@ import {
 
 
 
-import type { DisabledDate, CalendarZoomLevel, DisposingEvent, InitializedEvent, OptionChangedEvent, ValueChangedEvent, CalendarSelectionMode, WeekNumberRule } from 'devextreme/ui/calendar';
+import type { CalendarSwitcher, DisabledDate, CalendarZoomLevel, DisposingEvent, InitializedEvent, OptionChangedEvent, ValueChangedEvent, CalendarSelectionMode, WeekNumberRule } from 'devextreme/ui/calendar';
 import type { DayOfWeek, ValidationMessageMode, Position, ValidationStatus } from 'devextreme/common';
 
 import {
@@ -48,6 +48,22 @@ export class DxoDateBoxCalendarOptionsComponent extends NestedOption implements 
     }
     set activeStateEnabled(value: boolean) {
         this._setOption('activeStateEnabled', value);
+    }
+
+    @Input()
+    get calendar(): "gregorian" | "persian" | "hijri" | "hijri-umalqura" {
+        return this._getOption('calendar');
+    }
+    set calendar(value: "gregorian" | "persian" | "hijri" | "hijri-umalqura") {
+        this._setOption('calendar', value);
+    }
+
+    @Input()
+    get calendarSwitcher(): CalendarSwitcher {
+        return this._getOption('calendarSwitcher');
+    }
+    set calendarSwitcher(value: CalendarSwitcher) {
+        this._setOption('calendarSwitcher', value);
     }
 
     @Input()

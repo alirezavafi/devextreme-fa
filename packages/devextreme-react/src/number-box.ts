@@ -110,6 +110,7 @@ const Button = Object.assign<typeof _componentButton, NestedComponentMeta>(_comp
 // owners:
 // NumberBox
 type IFormatProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri" | "hijri-umalqura";
   currency?: string;
   formatter?: ((value: number | Date) => string);
   parser?: ((value: string) => number | Date);

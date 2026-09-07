@@ -1090,6 +1090,7 @@ const EmptyItem = Object.assign<typeof _componentEmptyItem, NestedComponentMeta>
 // FilterBuilder
 type IFieldProps = React.PropsWithChildren<{
   calculateFilterExpression?: ((filterValue: any, selectedFilterOperation: string) => string | (() => any) | Array<any>);
+  calendar?: "gregorian" | "persian" | "hijri";
   caption?: string | undefined;
   customizeText?: ((fieldInfo: FieldInfo) => string);
   dataField?: string | undefined;
@@ -1370,6 +1371,7 @@ const Form = Object.assign<typeof _componentForm, NestedComponentMeta>(_componen
 // Column
 // Field
 type IFormatProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri" | "hijri-umalqura";
   currency?: string;
   formatter?: ((value: number | Date) => string);
   parser?: ((value: string) => number | Date);

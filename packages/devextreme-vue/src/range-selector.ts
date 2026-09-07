@@ -281,6 +281,7 @@ const DxArgumentFormatConfig = {
   emits: {
     "update:isActive": null,
     "update:hoveredElement": null,
+    "update:calendar": null,
     "update:currency": null,
     "update:formatter": null,
     "update:parser": null,
@@ -289,6 +290,7 @@ const DxArgumentFormatConfig = {
     "update:useCurrencyAccountingStyle": null,
   },
   props: {
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
     currency: String,
     formatter: Function as PropType<((value: number | Date) => string)>,
     parser: Function as PropType<((value: string) => number | Date)>,
@@ -879,6 +881,7 @@ const DxFormatConfig = {
   emits: {
     "update:isActive": null,
     "update:hoveredElement": null,
+    "update:calendar": null,
     "update:currency": null,
     "update:formatter": null,
     "update:parser": null,
@@ -887,6 +890,7 @@ const DxFormatConfig = {
     "update:useCurrencyAccountingStyle": null,
   },
   props: {
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
     currency: String,
     formatter: Function as PropType<((value: number | Date) => string)>,
     parser: Function as PropType<((value: string) => number | Date)>,
@@ -1035,6 +1039,7 @@ const DxLabelConfig = {
     "update:argumentFormat": null,
     "update:backgroundColor": null,
     "update:border": null,
+    "update:calendar": null,
     "update:connector": null,
     "update:customizeText": null,
     "update:displayFormat": null,
@@ -1054,6 +1059,7 @@ const DxLabelConfig = {
     argumentFormat: [Object, String, Function] as PropType<LocalizationFormat | Format | (((value: number | Date) => string)) | Record<string, any> | string>,
     backgroundColor: String,
     border: Object as PropType<Record<string, any>>,
+    calendar: String as PropType<"gregorian" | "persian" | "hijri">,
     connector: Object as PropType<Record<string, any>>,
     customizeText: Function as PropType<((pointInfo: any) => string)>,
     displayFormat: String,
@@ -1594,6 +1600,7 @@ const DxScaleLabelConfig = {
   emits: {
     "update:isActive": null,
     "update:hoveredElement": null,
+    "update:calendar": null,
     "update:customizeText": null,
     "update:font": null,
     "update:format": null,
@@ -1602,6 +1609,7 @@ const DxScaleLabelConfig = {
     "update:visible": null,
   },
   props: {
+    calendar: String as PropType<"gregorian" | "persian" | "hijri">,
     customizeText: Function as PropType<((scaleValue: { value: Date | number | string, valueText: string }) => string)>,
     font: Object as PropType<Font | Record<string, any>>,
     format: [Object, String, Function] as PropType<LocalizationFormat | Format | (((value: number | Date) => string)) | Record<string, any> | string>,

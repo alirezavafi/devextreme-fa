@@ -229,6 +229,7 @@ const CustomSpeechRecognizer = Object.assign<typeof _componentCustomSpeechRecogn
 // owners:
 // Chat
 type IDayHeaderFormatProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri" | "hijri-umalqura";
   currency?: string;
   formatter?: ((value: number | Date) => string);
   parser?: ((value: string) => number | Date);
@@ -403,6 +404,7 @@ const Item = Object.assign<typeof _componentItem, NestedComponentMeta>(_componen
 // owners:
 // Chat
 type IMessageTimestampFormatProps = React.PropsWithChildren<{
+  calendar?: "gregorian" | "persian" | "hijri" | "hijri-umalqura";
   currency?: string;
   formatter?: ((value: number | Date) => string);
   parser?: ((value: string) => number | Date);

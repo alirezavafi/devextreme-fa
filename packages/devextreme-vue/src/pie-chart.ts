@@ -432,6 +432,7 @@ const DxArgumentFormatConfig = {
   emits: {
     "update:isActive": null,
     "update:hoveredElement": null,
+    "update:calendar": null,
     "update:currency": null,
     "update:formatter": null,
     "update:parser": null,
@@ -440,6 +441,7 @@ const DxArgumentFormatConfig = {
     "update:useCurrencyAccountingStyle": null,
   },
   props: {
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
     currency: String,
     formatter: Function as PropType<((value: number | Date) => string)>,
     parser: Function as PropType<((value: string) => number | Date)>,
@@ -714,6 +716,7 @@ const DxFormatConfig = {
   emits: {
     "update:isActive": null,
     "update:hoveredElement": null,
+    "update:calendar": null,
     "update:currency": null,
     "update:formatter": null,
     "update:parser": null,
@@ -722,6 +725,7 @@ const DxFormatConfig = {
     "update:useCurrencyAccountingStyle": null,
   },
   props: {
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
     currency: String,
     formatter: Function as PropType<((value: number | Date) => string)>,
     parser: Function as PropType<((value: string) => number | Date)>,

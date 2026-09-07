@@ -125,10 +125,10 @@ export class DxoRangeSelectorScaleComponent extends NestedOption implements OnDe
     }
 
     @Input()
-    get label(): { customizeText?: ((scaleValue: { value: Date | number | string, valueText: string }) => string), font?: Font, format?: Format | undefined, overlappingBehavior?: LabelOverlap, topIndent?: number, visible?: boolean } {
+    get label(): { calendar?: "gregorian" | "persian" | "hijri", customizeText?: ((scaleValue: { value: Date | number | string, valueText: string }) => string), font?: Font, format?: Format | undefined, overlappingBehavior?: LabelOverlap, topIndent?: number, visible?: boolean } {
         return this._getOption('label');
     }
-    set label(value: { customizeText?: ((scaleValue: { value: Date | number | string, valueText: string }) => string), font?: Font, format?: Format | undefined, overlappingBehavior?: LabelOverlap, topIndent?: number, visible?: boolean }) {
+    set label(value: { calendar?: "gregorian" | "persian" | "hijri", customizeText?: ((scaleValue: { value: Date | number | string, valueText: string }) => string), font?: Font, format?: Format | undefined, overlappingBehavior?: LabelOverlap, topIndent?: number, visible?: boolean }) {
         this._setOption('label', value);
     }
 

@@ -35,6 +35,7 @@ import { PROPERTY_TOKEN_fields } from 'devextreme-angular/core/tokens';
     ],
     inputs: [
         'calculateFilterExpression',
+        'calendar',
         'caption',
         'customizeText',
         'dataField',

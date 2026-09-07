@@ -140,6 +140,7 @@ type AccessibleOptions = Pick<Properties,
   "appointmentDragging" |
   "appointmentTemplate" |
   "appointmentTooltipTemplate" |
+  "calendar" |
   "cellDuration" |
   "crossScrollingEnabled" |
   "currentDate" |
@@ -229,6 +230,7 @@ const componentConfig = {
     appointmentDragging: Object as PropType<Record<string, any>>,
     appointmentTemplate: {},
     appointmentTooltipTemplate: {},
+    calendar: String as PropType<"gregorian" | "persian" | "hijri" | "hijri-umalqura">,
     cellDuration: Number,
     crossScrollingEnabled: Boolean,
     currentDate: [Date, Number, String],
@@ -314,6 +316,7 @@ const componentConfig = {
     "update:appointmentDragging": null,
     "update:appointmentTemplate": null,
     "update:appointmentTooltipTemplate": null,
+    "update:calendar": null,
     "update:cellDuration": null,
     "update:crossScrollingEnabled": null,
     "update:currentDate": null,

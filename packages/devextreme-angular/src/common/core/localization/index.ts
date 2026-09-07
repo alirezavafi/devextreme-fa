@@ -10,3 +10,5 @@ export {
 export type {
     Format,
 } from 'devextreme/common/core/localization';
+export * as Calendar from './calendar';
+

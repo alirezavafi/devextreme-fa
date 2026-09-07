@@ -30,6 +30,7 @@ import { DxFormModule } from 'devextreme-angular/ui/form';
 import { DxFunnelModule } from 'devextreme-angular/ui/funnel';
 import { DxGalleryModule } from 'devextreme-angular/ui/gallery';
 import { DxGanttModule } from 'devextreme-angular/ui/gantt';
+import { DxGanttMultiCalendarModule } from 'devextreme-angular/ui/gantt-multi-calendar';
 import { DxHtmlEditorModule } from 'devextreme-angular/ui/html-editor';
 import { DxLinearGaugeModule } from 'devextreme-angular/ui/linear-gauge';
 import { DxListModule } from 'devextreme-angular/ui/list';
@@ -116,6 +117,7 @@ import { DxTemplateModule } from 'devextreme-angular/core';
     DxFunnelModule,
     DxGalleryModule,
     DxGanttModule,
+    DxGanttMultiCalendarModule,
     DxHtmlEditorModule,
     DxLinearGaugeModule,
     DxListModule,
@@ -201,6 +203,7 @@ import { DxTemplateModule } from 'devextreme-angular/core';
     DxFunnelModule,
     DxGalleryModule,
     DxGanttModule,
+    DxGanttMultiCalendarModule,
     DxHtmlEditorModule,
     DxLinearGaugeModule,
     DxListModule,

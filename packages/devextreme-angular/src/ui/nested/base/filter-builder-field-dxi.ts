@@ -22,6 +22,13 @@ export abstract class DxiFilterBuilderField extends CollectionNestedOption {
         this._setOption('calculateFilterExpression', value);
     }
 
+    get calendar(): string {
+        return this._getOption('calendar');
+    }
+    set calendar(value: string) {
+        this._setOption('calendar', value);
+    }
+
     get caption(): string | undefined {
         return this._getOption('caption');
     }
