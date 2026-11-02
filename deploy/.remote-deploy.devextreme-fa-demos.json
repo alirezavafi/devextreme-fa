@@ -3,6 +3,7 @@
   "ProjectName": "devextreme-fa-demos",
   "Context": "remote-server",
   "Sites": [
+    "devextreme.dev-box.ir=8094",
     "demos.dev-box.ir=8094"
   ],
   "Email": "",
@@ -12,7 +13,7 @@
   "OidcFile": "",
   "Projects": null,
   "Fingerprints": {
-    "build:demos": "7c07c95a6abc19ad04bb4478660cf6271eb1376c5aa9517b7ef2129e07e5729c"
+    "build:demos": "6eb6b2dfbf351d3a33ed35be6a048fdd58520ec96c7181cc507ac9d29d56534d"
   },
-  "LastDeployed": "2026-09-05T00:15:52.5967241+03:30"
+  "LastDeployed": "2026-10-31T06:12:21.5792467+03:30"
 }

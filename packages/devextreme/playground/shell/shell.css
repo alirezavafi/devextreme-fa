@@ -1,0 +1,582 @@
+/* DevBox UI Kit (_dev-box/tools/design/DevBox UI Kit.html) for the demo site.
+   Tokens are copied verbatim; dark is the default, light is data-theme="light".
+   Chrome uses .db-* classes and no h1-h6, so DevExtreme's typography rules
+   cannot restyle it. Logical properties mirror the layout under dir="rtl". */
+:root,
+[data-theme="dark"] {
+  --bg: #101113;
+  --surface: #17181b;
+  --surface-2: #1d1f23;
+  --raise: #1d1f23;
+  --border: #292b30;
+  --border-strong: #34373d;
+  --ink: #edecea;
+  --ink-2: #a2a29d;
+  --ink-3: #74757a;
+  --accent: #6f9bff;
+  --accent-bg: #1a2438;
+  --accent-border: #2c3c60;
+  --accent-ink: #0d1117;
+  --ok: #63c08b;
+  --ok-bg: #16261d;
+  --warn: #e0b45c;
+  --warn-bg: #2a2213;
+  --err: #f08a72;
+  --err-bg: #2d1a17;
+  --stripe-a: #191a1d;
+  --stripe-b: #202226;
+  --track: #33363c;
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f6f6f3;
+  --surface: #ffffff;
+  --surface-2: #f0efeb;
+  --raise: #fcfcfa;
+  --border: #e4e3de;
+  --border-strong: #dedcd6;
+  --ink: #17181a;
+  --ink-2: #75746e;
+  --ink-3: #a3a29b;
+  --accent: #2f5fe0;
+  --accent-bg: #eef2fd;
+  --accent-border: #dbe4fb;
+  --accent-ink: #ffffff;
+  --ok: #1f7a4d;
+  --ok-bg: #e8f5ee;
+  --warn: #8a6212;
+  --warn-bg: #fdf3dd;
+  --err: #b4402c;
+  --err-bg: #fdeae5;
+  --stripe-a: #fbfbf9;
+  --stripe-b: #f2f1ec;
+  --track: #e4e2db;
+  --shadow: 0 12px 32px rgba(23, 24, 26, 0.12);
+
+  color-scheme: light;
+}
+
+:root {
+  --font-sans: "Helvetica Neue", helvetica, "Segoe UI", system-ui, sans-serif;
+  /* Vazirmatn second: JetBrains Mono has no Arabic script, and Vazirmatn's
+     unicode-range limits it to the Persian characters inside mono text. */
+  --font-mono: "JetBrains Mono", vazirmatn, ui-monospace, consolas, monospace;
+  --font-fa: vazirmatn, tahoma, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--bg); }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+html[lang="fa"] body,
+html[lang="fa"] .dx-widget,
+html[lang="fa"] .dx-widget input,
+html[lang="fa"] .dx-widget textarea,
+html[lang="fa"] .db-btn,
+html[lang="fa"] .db-seg__item { font-family: var(--font-fa); }
+
+/* The kit's mono uppercase labels: JetBrains Mono has no Arabic glyphs and
+   letter-spacing pulls Persian letters apart, so Persian labels use Vazirmatn. */
+html[lang="fa"] .db-mini-label,
+html[lang="fa"] .db-kv__key,
+html[lang="fa"] .db-section-label {
+  font-family: var(--font-fa);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+body a { color: var(--accent); text-decoration: none; }
+body a:hover { opacity: 0.8; }
+
+button, input, select, textarea { font-family: inherit; }
+
+.db-container {
+  width: 100%;
+  max-width: 1180px;
+  margin-inline: auto;
+  padding-inline: 28px;
+}
+
+.db-spacer { flex: 1; }
+
+/* ---- header ---------------------------------------------------------- */
+.db-header {
+  position: sticky;
+  top: 0;
+  z-index: 30; /* below DevExtreme overlays (1500+) so pickers open over it */
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.db-header__bar {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* .db-header prefix: DevExtreme's typography styles `a` at the same specificity. */
+.db-header a.db-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  direction: ltr;
+}
+
+.db-brand__name { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
+[data-theme="light"] .db-brand__name { color: #000; }
+.db-brand__slash { font-size: 16px; color: var(--accent); }
+.db-brand__tool { font-size: 14px; color: var(--ink-2); }
+
+.db-header__controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.db-icon-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.db-icon-btn:hover { border-color: var(--accent-border); }
+
+.db-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 44px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/* Nav links are accent-coloured, as in the kit's header. */
+.db-header a.db-nav__link {
+  flex: none;
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--accent);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.db-header a.db-nav__link[aria-current="page"] {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+/* ---- segmented control ----------------------------------------------- */
+.db-seg {
+  display: inline-flex;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  overflow: hidden;
+  width: fit-content;
+  flex: none;
+}
+
+.db-seg__item {
+  padding: 7px 14px;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: normal;
+  cursor: pointer;
+}
+
+.db-seg__item + .db-seg__item { border-inline-start: 1px solid var(--border-strong); }
+.db-seg__item:hover { color: var(--ink); }
+
+.db-seg__item[aria-pressed="true"] {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.db-header .db-seg__item { padding: 6px 11px; font-size: 12px; }
+
+/* ---- page ------------------------------------------------------------ */
+.db-main {
+  flex: 1;
+  padding-block: 40px 72px;
+}
+
+.db-hero { margin-bottom: 36px; }
+
+.db-hero__title {
+  margin: 0 0 10px;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.db-hero__lede {
+  max-width: 680px;
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.db-hero__chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+.db-section-label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 36px 0 14px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.db-section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.db-mini-label {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---- cards ----------------------------------------------------------- */
+.db-card {
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.db-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.db-card__title { font-size: 15px; font-weight: 600; }
+.db-card__hint { color: var(--ink-3); font-size: 12px; }
+.db-card__body { padding: 18px; }
+.db-card__body--flush { padding: 0; }
+
+.db-live {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 14px;
+  align-items: start;
+}
+
+.db-stack { display: grid; gap: 14px; min-width: 0; }
+
+.db-widget-stage {
+  display: flex;
+  justify-content: center;
+  padding: 24px 18px;
+}
+
+.db-widget-stage--fill { display: block; }
+
+.db-wide { margin-top: 14px; }
+
+.db-two {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+
+@media (max-width: 980px) {
+  .db-live,
+  .db-two { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .db-container { padding-inline: 16px; }
+  .db-header__bar { height: auto; min-height: 60px; flex-wrap: wrap; padding-block: 10px; }
+  .db-hero__title { font-size: 24px; }
+}
+
+/* ---- buttons --------------------------------------------------------- */
+.db-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: normal;
+  cursor: pointer;
+}
+
+.db-btn:hover { border-color: var(--accent-border); }
+
+.db-btn--primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.db-btn--primary:hover { opacity: 0.9; border-color: var(--accent); }
+
+.db-btn--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink-2);
+}
+
+.db-btn--sm {
+  padding: 5px 10px;
+  border-radius: 7px;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.db-actions { display: grid; gap: 10px; }
+.db-actions__row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.db-actions__row + .db-mini-label { margin-top: 8px; }
+.db-actions__row--column { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+/* ---- chips & status -------------------------------------------------- */
+.db-chip {
+  display: inline-flex;
+  align-items: center;
+  min-width: 40px;
+  justify-content: center;
+  padding: 4px 7px;
+  border: 1px solid var(--accent-border);
+  border-radius: 6px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  direction: ltr;
+}
+
+.db-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--ok-bg);
+  color: var(--ok);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.db-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentcolor;
+}
+
+/* ---- switch ---------------------------------------------------------- */
+.db-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.db-switch__input { position: absolute; opacity: 0; pointer-events: none; }
+
+.db-switch__track {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--track);
+  transition: background 0.15s;
+}
+
+.db-switch__track::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  inset-inline-start: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: inset-inline-start 0.15s;
+}
+
+.db-switch__input:checked + .db-switch__track { background: var(--accent); }
+.db-switch__input:checked + .db-switch__track::after { inset-inline-start: 17px; }
+.db-switch__input:focus-visible + .db-switch__track { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- inspector (key/value) ------------------------------------------- */
+.db-kv {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) minmax(0, 1fr);
+  margin: 0;
+}
+
+.db-kv__key,
+.db-kv__value {
+  margin: 0;
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.db-kv__key {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding-inline-end: 8px;
+}
+
+.db-kv__value {
+  color: var(--ink);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.db-kv__value[dir="ltr"] { font-family: var(--font-mono); font-size: 12px; text-align: end; }
+html[dir="ltr"] .db-kv__value[dir="ltr"] { text-align: start; }
+.db-kv__value--accent { color: var(--accent); }
+.db-kv__value--ok { color: var(--ok); }
+.db-kv__value--muted { color: var(--ink-2); }
+.db-kv > :nth-last-child(-n + 2) { border-bottom: none; }
+
+/* ---- output log & code ----------------------------------------------- */
+.db-log {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.db-log__line {
+  display: grid;
+  grid-template-columns: 64px minmax(110px, auto) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.db-log__time { color: var(--ink-3); }
+.db-log__name { color: var(--ok); }
+.db-log__detail { color: var(--ink); overflow-wrap: anywhere; unicode-bidi: plaintext; }
+html[lang="fa"] .db-log__detail { font-family: var(--font-fa); }
+.db-log__empty { color: var(--ink-3); font-family: var(--font-sans); }
+
+.db-code {
+  margin: 0;
+  max-height: 320px;
+  overflow: auto;
+  padding: 14px 16px;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: left;
+}
+
+/* ---- landing cards --------------------------------------------------- */
+.db-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.db-main a.db-link-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--ink);
+}
+
+.db-main a.db-link-card:hover { border-color: var(--accent-border); opacity: 1; }
+.db-link-card__title { font-size: 15px; font-weight: 600; }
+.db-link-card__text { color: var(--ink-2); font-size: 13px; line-height: 1.6; }
+
+/* ---- landing: today in every calendar -------------------------------- */
+.db-today {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.db-today__tile { display: grid; gap: 8px; padding: 18px; }
+.db-today__tile--active { border-color: var(--accent-border); }
+.db-today__date { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+.db-today__iso { color: var(--ink-3); font-family: var(--font-mono); font-size: 12px; text-align: start; }
+
+/* ---- footer ---------------------------------------------------------- */
+.db-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 20px 28px;
+  border-top: 1px solid var(--border);
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.db-footer a { color: var(--accent); font-family: var(--font-mono); }
+
+/* ---- DevExtreme inside cards ----------------------------------------- */
+.db-card .dx-calendar { background: transparent; }
+
+/* Chat messages are user text in either script: order each by its own content. */
+.dx-chat-messagebubble-content { unicode-bidi: plaintext; }

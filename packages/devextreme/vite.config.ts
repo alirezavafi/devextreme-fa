@@ -28,6 +28,12 @@ export default defineConfig({
     rollupOptions: {
       input: {
         showcase: page('showcase'),
+        calendar: page('calendar'),
+        'date-box': page('date-box'),
+        'date-range-box': page('date-range-box'),
+        'data-grid': page('data-grid'),
+        'pivot-grid': page('pivot-grid'),
+        scheduler: page('scheduler'),
         'calendar-multi': page('calendar-multi'),
         'viz-chat-multi': page('viz-chat-multi'),
         'gantt-multi-calendar': page('gantt-multi-calendar'),

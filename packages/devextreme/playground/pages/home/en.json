@@ -1,0 +1,10 @@
+{
+  "home.title": "DevExtreme multi-calendar",
+  "home.heading": "DevExtreme in three calendars",
+  "home.lede": "A fork of DevExtreme whose date components display, accept and group dates in the Gregorian, Persian (Jalali) and Arabic (Hijri) calendars. Pick a calendar and a language at the top; every demo follows them.",
+  "home.section.today": "Today",
+  "home.section.demos": "Demos",
+  "home.section.api": "Usage",
+  "home.api.title": "One option per widget",
+  "home.api.hint": "The stored value is the same Date in every calendar"
+}

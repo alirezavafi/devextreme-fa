@@ -1,0 +1,29 @@
+// Fluent Blue Dark recoloured with the DevBox UI Kit's dark tokens
+// (_dev-box/tools/design/DevBox UI Kit.html). Compiled by build-themes.mjs.
+@use "widgets/fluent/colors" with (
+  $color: "blue",
+  $mode: "dark",
+  $base-accent: #6f9bff,
+  $base-bg: #17181b,
+  $base-typography-bg: #101113,
+  $base-text-color: #edecea,
+  $base-label-color: #a2a29d,
+  $base-icon-color: #a2a29d,
+  $base-border-color: #34373d,
+  $base-success: #63c08b,
+  $base-warning: #e0b45c,
+  $base-danger: #f08a72,
+  $base-inverted-text-color: #0d1117,
+  $base-font-family: ("Helvetica Neue", helvetica, "Segoe UI", system-ui, sans-serif),
+);
+@use "widgets/fluent/sizes" with ($size: "default");
+@use "widgets/fluent/typography";
+@use "widgets/fluent/icons";
+@use "widgets/fluent/widget";
+@use "widgets/fluent/card";
+@use "widgets/fluent/fieldset";
+@use "widgets/fluent/common";
+@use "widgets/base/resizable";
+@use "widgets/base/draggable";
+@use "widgets/base/ui";
+@use "widgets/fluent";

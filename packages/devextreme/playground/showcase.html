@@ -1,194 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevExtreme Multi-Calendar — Visual Tests</title>
-    <style>
-        :root {
-            color-scheme: light dark;
-            --bg: #f7f7f8;
-            --fg: #1b1b1f;
-            --muted: #5b5b66;
-            --card: #ffffff;
-            --line: #e3e3e8;
-            --accent: #7a3cff;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg: #16161a;
-                --fg: #ececf1;
-                --muted: #a0a0ad;
-                --card: #1f1f25;
-                --line: #2e2e37;
-                --accent: #a887ff;
-            }
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            padding: 48px 24px 72px;
-            background: var(--bg);
-            color: var(--fg);
-            font: 16px/1.6 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        main { max-width: 880px; margin: 0 auto; }
-
-        h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: -0.02em; }
-
-        .lede { color: var(--muted); margin: 0 0 8px; }
-
-        .note {
-            margin: 24px 0 32px;
-            padding: 12px 16px;
-            border-left: 3px solid var(--accent);
-            background: var(--card);
-            color: var(--muted);
-            font-size: 14px;
-        }
-
-        .note code {
-            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-            color: var(--fg);
-        }
-
-        h2 {
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--muted);
-            margin: 32px 0 12px;
-        }
-
-        .cards { display: grid; gap: 16px; }
-
-        a.card {
-            display: block;
-            padding: 20px 22px;
-            background: var(--card);
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            text-decoration: none;
-            color: inherit;
-        }
-
-        a.card:hover { border-color: var(--accent); }
-
-        a.card h3 { margin: 0 0 6px; font-size: 18px; }
-
-        a.card p { margin: 0; color: var(--muted); font-size: 14px; }
-
-        ul.widgets {
-            margin: 10px 0 0;
-            padding: 0;
-            list-style: none;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        ul.widgets li {
-            font-size: 12px;
-            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-            padding: 2px 8px;
-            border: 1px solid var(--line);
-            border-radius: 20px;
-            color: var(--muted);
-        }
-
-        footer {
-            margin-top: 48px;
-            padding-top: 20px;
-            border-top: 1px solid var(--line);
-            color: var(--muted);
-            font-size: 14px;
-        }
-
-        footer a { color: var(--accent); }
-    </style>
+    <title data-i18n="home.title">DevExtreme multi-calendar</title>
+    <meta name="description" content="DevExtreme components that display, accept and group dates in the Gregorian, Persian (Jalali) and Arabic (Hijri) calendars.">
+    <script type="module" src="./pages/home/index.ts"></script>
 </head>
-<body>
-<main>
-    <h1>DevExtreme Multi-Calendar</h1>
-    <p class="lede">
-        Live visual tests for the fork that teaches DevExtreme to display, accept and group
-        dates in Persian (Jalali), Hijri (tabular), Hijri (Umm al-Qura) and custom calendars.
-    </p>
-
-    <p class="note">
-        Every page has a <strong>calendar</strong>, <strong>language</strong> and
-        <strong>theme</strong> picker at the top. Switching the calendar changes only what you
-        see — the stored values stay native proleptic-Gregorian <code>Date</code> objects.
-    </p>
-
-    <h2>Visual tests</h2>
-    <div class="cards">
-        <a class="card" href="./calendar-multi.html">
-            <h3>Editors, grids &amp; scheduler</h3>
-            <p>
-                Date input in every picker mode, plus display, editing, filtering and grouping
-                across the data components.
-            </p>
-            <ul class="widgets">
-                <li>dxDateBox</li>
-                <li>dxDateRangeBox</li>
-                <li>dxCalendar</li>
-                <li>dxDataGrid</li>
-                <li>dxScheduler</li>
-                <li>dxPivotGrid</li>
-            </ul>
-        </a>
-
-        <a class="card" href="./viz-chat-multi.html">
-            <h3>Charts &amp; chat</h3>
-            <p>
-                Datetime axis labels and tick placement that land on calendar boundaries, and
-                calendar-aware chat day headers.
-            </p>
-            <ul class="widgets">
-                <li>dxChart</li>
-                <li>dxChat</li>
-            </ul>
-        </a>
-
-        <a class="card" href="./gantt-multi-calendar.html">
-            <h3>Gantt</h3>
-            <p>
-                A calendar-aware Gantt with a two-tier timeline scale, dependencies, drag and
-                resize, and dependency-aware auto-scheduling.
-            </p>
-            <ul class="widgets">
-                <li>dxGanttMultiCalendar</li>
-            </ul>
-        </a>
+<body class="dx-viewport">
+<main class="db-main db-container">
+    <div class="db-hero">
+        <div class="db-hero__title" data-i18n="home.heading"></div>
+        <p class="db-hero__lede" data-i18n="home.lede"></p>
+        <div class="db-hero__chips"><span class="db-chip">gregorian</span><span class="db-chip">persian</span><span class="db-chip">hijri</span></div>
     </div>
 
-    <h2>Demo gallery</h2>
-    <div class="cards">
-        <a class="card" href="./demos/">
-            <h3>DevExtreme demos</h3>
-            <p>
-                The five multi-calendar demos from the DevExtreme demo suite, built from this
-                fork in React and Vue.
-            </p>
-            <ul class="widgets">
-                <li>DataGrid</li>
-                <li>Scheduler</li>
-                <li>Calendar</li>
-                <li>DateBox</li>
-                <li>DateRangeBox</li>
-            </ul>
-        </a>
-    </div>
+    <div class="db-section-label" data-i18n="home.section.today"></div>
+    <div class="db-today" id="today"></div>
 
-    <footer>
-        Source and documentation:
-        <a href="https://github.com/alirezavafi/devextreme-fa">github.com/alirezavafi/devextreme-fa</a>
-    </footer>
+    <div class="db-section-label" data-i18n="home.section.demos"></div>
+    <div class="db-grid-cards" id="pages"></div>
+
+    <div class="db-section-label" data-i18n="home.section.api"></div>
+    <section class="db-card">
+        <div class="db-card__head"><span class="db-card__title" data-i18n="home.api.title"></span><span class="db-card__hint" data-i18n="home.api.hint"></span></div>
+        <pre class="db-code" dir="ltr">$('#date').dxDateBox({ value: new Date(), calendar: 'persian' });
+$('#calendar').dxCalendar({ calendar: 'hijri' });
+$('#scheduler').dxScheduler({ calendar: 'persian', currentView: 'month' });
+$('#grid').dxDataGrid({
+  columns: [{
+    dataField: 'start',
+    dataType: 'date',
+    format: { type: 'shortdate', calendar: 'persian' },
+    editorOptions: { calendar: 'persian' },
+  }],
+});</pre>
+    </section>
 </main>
 </body>
 </html>

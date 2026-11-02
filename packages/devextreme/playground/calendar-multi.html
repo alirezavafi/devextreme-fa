@@ -1,128 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevExtreme Multi-Calendar Playground</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
-    >
-    <style>
-        body { font-family: sans-serif; margin: 24px; }
-        body.lang-fa,
-        body.lang-fa .dx-widget,
-        body.lang-fa input,
-        body.lang-fa select,
-        body.lang-fa table {
-          font-family: 'Vazirmatn', 'Tahoma', sans-serif;
-        }
-        .toolbar {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 16px;
-          align-items: center;
-          margin-bottom: 24px;
-          padding: 14px 16px;
-          border: 1px solid #e3e3e3;
-          border-radius: 8px;
-          background: #fafafa;
-        }
-        .toolbar > .field { display: flex; align-items: center; gap: 8px; min-width: 220px; }
-        .toolbar label { font-weight: 600; }
-        /* Reserve space for the dxSelectBox so the layout doesn't collapse before
-           the widget renders / theme CSS loads. */
-        #theme-selector, #calendar-selector, #lang-selector, #grid-edit-selector { min-width: 220px; min-height: 32px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px; }
-        .case { border: 1px solid #ddd; border-radius: 6px; padding: 16px; }
-        .case h3 { margin: 0 0 12px; font-size: 14px; color: #555; }
-        .readout {
-          margin-top: 10px;
-          padding: 8px 10px;
-          border-top: 1px dashed #ddd;
-          font-size: 12px;
-          line-height: 1.6;
-        }
-        .readout .greg { color: #1565c0; }
-        .readout .cal { color: #2e7d32; }
-        .readout .label { color: #777; margin-right: 6px; }
-        body.lang-fa .readout .label { margin-right: 0; margin-left: 6px; }
-    </style>
+    <title data-i18n="all.title">All widgets · DevExtreme multi-calendar</title>
+    <script type="module" src="./calendar-multi.ts"></script>
 </head>
 <body class="dx-viewport">
-    <div id="app">
-        <div class="toolbar">
-            <div class="field">
-                <label for="theme-selector">Theme:</label>
-                <div id="theme-selector"></div>
-            </div>
-            <div class="field">
-                <label>Calendar:</label>
-                <div id="calendar-selector"></div>
-            </div>
-            <div class="field">
-                <label>Language:</label>
-                <div id="lang-selector"></div>
-            </div>
-            <div class="field">
-                <label>Grid edit:</label>
-                <div id="grid-edit-selector"></div>
-            </div>
-        </div>
+<main class="db-main db-container">
+    <div class="db-hero">
+        <div class="db-hero__title" data-i18n="nav.all"></div>
+        <p class="db-hero__lede" data-i18n="all.lede"></p>
+        <div class="db-hero__chips"><span class="db-chip">dxDateBox</span><span class="db-chip">dxDateRangeBox</span><span class="db-chip">dxCalendar</span><span class="db-chip">dxDataGrid</span><span class="db-chip">dxScheduler</span><span class="db-chip">dxPivotGrid</span></div>
+    </div>
 
-        <div class="grid">
-            <div class="case">
-                <h3>DateBox — rollers picker</h3>
-                <div id="datebox-rollers"></div>
-                <div class="readout" data-readout-for="#datebox-rollers"></div>
+    <div class="db-section-label" data-i18n="section.live"></div>
+    <div class="db-live">
+        <div class="db-stack">
+            <div class="db-two" style="margin-top: 0">
+                <section class="db-card">
+                    <div class="db-card__head"><span class="db-card__title" data-i18n="all.card.dateBoxRollers"></span></div>
+                    <div class="db-widget-stage"><div id="datebox-rollers"></div></div>
+                    <div class="db-card__body--flush" data-readout-for="#datebox-rollers"></div>
+                </section>
+                <section class="db-card">
+                    <div class="db-card__head"><span class="db-card__title" data-i18n="all.card.dateBoxCalendar"></span></div>
+                    <div class="db-widget-stage"><div id="datebox-calendar"></div></div>
+                    <div class="db-card__body--flush" data-readout-for="#datebox-calendar"></div>
+                </section>
+                <section class="db-card">
+                    <div class="db-card__head"><span class="db-card__title" data-i18n="all.card.dateBoxMask"></span></div>
+                    <div class="db-widget-stage"><div id="datebox-mask"></div></div>
+                    <div class="db-card__body--flush" data-readout-for="#datebox-mask"></div>
+                </section>
+                <section class="db-card">
+                    <div class="db-card__head"><span class="db-card__title" data-i18n="all.card.dateBoxDatetime"></span></div>
+                    <div class="db-widget-stage"><div id="datebox-datetime"></div></div>
+                    <div class="db-card__body--flush" data-readout-for="#datebox-datetime"></div>
+                </section>
+                <section class="db-card">
+                    <div class="db-card__head"><span class="db-card__title" data-i18n="all.card.dateBoxDatetimeMask"></span></div>
+                    <div class="db-widget-stage"><div id="datebox-datetime-mask"></div></div>
+                    <div class="db-card__body--flush" data-readout-for="#datebox-datetime-mask"></div>
+                </section>
+                <section class="db-card">
+                    <div class="db-card__head"><span class="db-card__title" data-i18n="all.card.dateRangeBox"></span></div>
+                    <div class="db-widget-stage"><div id="daterangebox"></div></div>
+                    <div class="db-card__body--flush" data-readout-for="#daterangebox"></div>
+                </section>
             </div>
-            <div class="case">
-                <h3>DateBox — calendar grid picker</h3>
-                <div id="datebox-calendar"></div>
-                <div class="readout" data-readout-for="#datebox-calendar"></div>
-            </div>
-            <div class="case">
-                <h3>DateBox — typed input (mask)</h3>
-                <div id="datebox-mask"></div>
-                <div class="readout" data-readout-for="#datebox-mask"></div>
-            </div>
-            <div class="case">
-                <h3>DateBox — date &amp; time picker</h3>
-                <div id="datebox-datetime"></div>
-                <div class="readout" data-readout-for="#datebox-datetime"></div>
-            </div>
-            <div class="case">
-                <h3>DateBox — date &amp; time typed input (mask)</h3>
-                <div id="datebox-datetime-mask"></div>
-                <div class="readout" data-readout-for="#datebox-datetime-mask"></div>
-            </div>
-            <div class="case">
-                <h3>DateRangeBox</h3>
-                <div id="daterangebox"></div>
-                <div class="readout" data-readout-for="#daterangebox"></div>
-            </div>
-            <div class="case">
-                <h3>Calendar widget</h3>
-                <div id="calendar"></div>
-                <div class="readout" data-readout-for="#calendar"></div>
-            </div>
+            <section class="db-card">
+                <div class="db-card__head"><span class="db-card__title" data-i18n="all.card.calendar"></span></div>
+                <div class="db-widget-stage"><div id="calendar"></div></div>
+                <div class="db-card__body--flush" data-readout-for="#calendar"></div>
+            </section>
         </div>
-
-        <div class="case" style="margin-top:24px;">
-            <h3>DataGrid — date column (display format + popup edit form)</h3>
-            <div id="datagrid"></div>
-        </div>
-
-        <div class="case" style="margin-top:24px;">
-            <h3>Scheduler — day/week header day numbers (calendar-aware)</h3>
-            <div id="scheduler"></div>
-        </div>
-
-        <div class="case" style="margin-top:24px;">
-            <h3>PivotGrid — date grouped by calendar year / month (stored Gregorian)</h3>
-            <div id="pivotgrid"></div>
+        <div class="db-stack">
+            <section class="db-card">
+                <div class="db-card__head"><span class="db-card__title" data-i18n="card.actions"></span></div>
+                <div class="db-card__body db-actions" id="actions"></div>
+            </section>
+            <section data-db-log></section>
         </div>
     </div>
-    <script type="module" src="./calendar-multi.ts"></script>
+
+    <div class="db-wide">
+        <section class="db-card">
+            <div class="db-card__head"><span class="db-card__title" data-i18n="all.card.dataGrid"></span></div>
+            <div class="db-card__body"><div id="datagrid"></div></div>
+        </section>
+    </div>
+    <div class="db-wide">
+        <section class="db-card">
+            <div class="db-card__head"><span class="db-card__title" data-i18n="all.card.scheduler"></span></div>
+            <div class="db-card__body"><div id="scheduler"></div></div>
+        </section>
+    </div>
+    <div class="db-wide">
+        <section class="db-card">
+            <div class="db-card__head"><span class="db-card__title" data-i18n="all.card.pivotGrid"></span></div>
+            <div class="db-card__body"><div id="pivotgrid"></div></div>
+        </section>
+    </div>
+</main>
 </body>
 </html>

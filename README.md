@@ -1,9 +1,10 @@
 # DevExtreme — Multi-Calendar Fork
 
 A fork of [DevExtreme](https://github.com/DevExpress/DevExtreme) that teaches the
-components to **display, accept and group dates in non-Gregorian calendars** —
-Persian (Jalali), Hijri (tabular), Hijri (Umm al-Qura), and any calendar you register
-yourself.
+components to **display, accept and group dates in three calendars: Gregorian,
+Persian (Jalali) and Arabic (Hijri)**.
+
+**Live demos: [devextreme.dev-box.ir](https://devextreme.dev-box.ir/)**
 
 > **Core invariant:** stored values stay native (proleptic Gregorian) `Date` objects.
 > A calendar only affects **display, placement, input and grouping**. Sorting, filtering
@@ -56,16 +57,14 @@ dependencies, drag/resize and dependency-aware auto-scheduling:
 
 ## Supported calendars
 
-| Type string      | Calendar                  | Notes |
-|------------------|---------------------------|-------|
-| `gregorian`      | Gregorian (default)       | Unchanged code path; the default for every widget. |
-| `persian`        | Persian / Jalali          | Borkowski/jalaali arithmetic, years −61…3177. |
-| `hijri`          | Hijri / Islamic (tabular) | Julian-Day formulas. |
-| `hijri-umalqura` | Hijri / Umm al-Qura       | Day-accurate via `Intl` ICU data; registered only when the runtime's `Intl` supports it. |
-| *(custom)*       | Anything you register     | Implement the `CalendarSystem` contract and call `registerCalendar(...)`. |
+| Calendar            | `calendar` value | Notes |
+|---------------------|------------------|-------|
+| Gregorian (default) | `gregorian`      | Unchanged code path; the default for every widget. |
+| Persian (Jalali)    | `persian`        | Iranian solar calendar, years −61…3177. |
+| Arabic (Hijri)      | `hijri`          | Islamic lunar calendar. |
 
-A calendar can also advertise a preferred first day of week (Persian/Hijri = Saturday)
-and a default date format (`yyyy/MM/dd`), used when the app has not set its own.
+Persian and Arabic start the week on Saturday and default to the `yyyy/MM/dd` date
+format, unless the app sets its own `firstDayOfWeek` or format.
 
 ## What's calendar-aware
 
@@ -119,8 +118,8 @@ $('#grid').dxDataGrid({
   columns: [{
     dataField: 'd',
     dataType: 'date',
-    format: { type: 'shortdate', calendar: 'hijri-umalqura' },
-    editorOptions: { calendar: 'hijri-umalqura' },
+    format: { type: 'shortdate', calendar: 'hijri' },
+    editorOptions: { calendar: 'hijri' },
   }],
 });
 
@@ -146,28 +145,49 @@ The registry also exports `getCalendar`, `isCalendarRegistered`,
 
 ## Try it
 
-Three Vite playground pages import the TypeScript source directly, so they reflect
-local changes with no bundle build:
+Open the demos at **[devextreme.dev-box.ir](https://devextreme.dev-box.ir/)**. The
+header switches the calendar (Gregorian, Persian, Arabic), the language (English or
+Persian, RTL) and the theme (dark or light) for every page, and keeps the choice in
+the URL so a view can be shared. Each widget page shows the stored Gregorian value
+next to what the user sees, logs the widget's events, and has actions that change
+its options.
+
+| Page | Widgets |
+|------|---------|
+| [Calendar](https://devextreme.dev-box.ir/calendar.html) | dxCalendar |
+| [DateBox](https://devextreme.dev-box.ir/date-box.html) | dxDateBox |
+| [DateRangeBox](https://devextreme.dev-box.ir/date-range-box.html) | dxDateRangeBox |
+| [DataGrid](https://devextreme.dev-box.ir/data-grid.html) | dxDataGrid |
+| [PivotGrid](https://devextreme.dev-box.ir/pivot-grid.html) | dxPivotGrid |
+| [Scheduler](https://devextreme.dev-box.ir/scheduler.html) | dxScheduler |
+| [Charts & chat](https://devextreme.dev-box.ir/viz-chat-multi.html) | dxChart, dxChat |
+| [Gantt](https://devextreme.dev-box.ir/gantt-multi-calendar.html) | dxGanttMultiCalendar |
+| [All on one page](https://devextreme.dev-box.ir/calendar-multi.html) | all of the above |
+
+### Run locally
+
+The pages are Vite playground pages (`packages/devextreme/playground`) that import
+the TypeScript source directly, so they reflect local changes with no bundle build.
+They use a DevBox-styled Fluent theme compiled from `playground/themes`:
 
 ```bash
 pnpm install
 pnpm nx build:localization:generate devextreme     # generates CLDR data (required)
 cd packages/devextreme-scss && pnpm exec gulp style-compiler-themes-ci
-cd ../devextreme && pnpm dev:playground            # http://localhost:3000
+cd ../devextreme && node playground/themes/build-themes.mjs
+pnpm dev:playground                                # http://localhost:3000/calendar.html
 ```
-
-| Page | Widgets |
-|------|---------|
-| `/calendar-multi.html` | DateBox, DateRangeBox, Calendar, DataGrid, PivotGrid, Scheduler |
-| `/viz-chat-multi.html` | dxChart, dxChat |
-| `/gantt-multi-calendar.html` | dxGanttMultiCalendar |
 
 Unit tests (jsdom, no browser):
 
 ```bash
 cd packages/devextreme
-pnpm test-jest -- --testPathPattern calendar
+pnpm test-jest --testPathPatterns calendar
+pnpm exec jest --config playground/jest.config.js   # the demo site's date helpers
 ```
+
+`deploy/` builds and publishes the demo site (`deploy\build.ps1`, then the compose
+stack in `deploy/docker-compose.yml`).
 
 ## Documentation
 

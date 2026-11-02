@@ -1,10 +1,12 @@
-# Publishes the multi-calendar showcase at https://demos.dev-box.ir/devextreme-fa/.
+# Publishes the multi-calendar showcase at https://devextreme.dev-box.ir/.
+# The old https://demos.dev-box.ir/devextreme-fa/ address 301-redirects there.
 #
 # Build the site first — the image copies it, it does not produce it:
 #
 #   deploy\build.ps1
 #   scripts\deploy-compose.ps1 -ProjectName devextreme-fa-demos `
-#       -File deploy\docker-compose.yml -Sites "demos.dev-box.ir=8094"
+#       -File deploy\docker-compose.yml `
+#       -Sites "devextreme.dev-box.ir=8094","demos.dev-box.ir=8094"
 #
 # Port 8094 is bound to loopback so the container is reachable only through
 # nginx/HTTPS on the server, never directly.

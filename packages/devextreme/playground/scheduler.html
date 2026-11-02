@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="scheduler.title">Scheduler · DevExtreme multi-calendar</title>
+    <script type="module" src="./pages/scheduler/index.ts"></script>
+</head>
+<body class="dx-viewport">
+<main class="db-main db-container">
+    <div class="db-hero">
+        <div class="db-hero__title" data-i18n="nav.scheduler"></div>
+        <p class="db-hero__lede" data-i18n="scheduler.lede"></p>
+        <div class="db-hero__chips"><span class="db-chip">dxScheduler</span><span class="db-chip">calendar</span><span class="db-chip">recurrenceRule</span></div>
+    </div>
+
+    <div class="db-section-label" data-i18n="section.live"></div>
+    <section class="db-card">
+        <div class="db-card__head"><span class="db-card__title" data-i18n="card.widget"></span></div>
+        <div class="db-widget-stage db-widget-stage--fill"><div id="scheduler"></div></div>
+    </section>
+    <div class="db-live db-wide">
+        <div class="db-stack">
+            <section data-db-log></section>
+            <section class="db-card">
+                <div class="db-card__head"><span class="db-card__title" data-i18n="card.options"></span><span class="db-card__hint" data-i18n="card.optionsHint"></span></div>
+                <div id="options"></div>
+            </section>
+        </div>
+        <div class="db-stack">
+            <section class="db-card">
+                <div class="db-card__head"><span class="db-card__title" data-i18n="card.inspector"></span></div>
+                <div class="db-card__body--flush" id="inspector"></div>
+            </section>
+            <section class="db-card">
+                <div class="db-card__head"><span class="db-card__title" data-i18n="card.actions"></span></div>
+                <div class="db-card__body db-actions" id="actions"></div>
+            </section>
+        </div>
+    </div>
+</main>
+</body>
+</html>

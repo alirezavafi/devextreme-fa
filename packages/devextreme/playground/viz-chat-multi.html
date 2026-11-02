@@ -1,61 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Calendar: Chart &amp; Chat</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
-    >
+    <title data-i18n="vizChat.title">Charts &amp; chat · DevExtreme multi-calendar</title>
+    <script type="module" src="./viz-chat-multi.ts"></script>
     <style>
-        body { font-family: sans-serif; margin: 24px; }
-        body.lang-fa,
-        body.lang-fa .dx-widget,
-        body.lang-fa text {
-          font-family: 'Vazirmatn', 'Tahoma', sans-serif;
-        }
-        .toolbar {
-          display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
-          margin-bottom: 20px; padding: 14px 16px;
-          border: 1px solid #e3e3e3; border-radius: 8px; background: #fafafa;
-        }
-        .toolbar > .field { display: flex; align-items: center; gap: 8px; }
-        .toolbar label { font-weight: 600; }
-        #theme-selector, #calendar-selector, #lang-selector { min-width: 220px; min-height: 32px; }
-        .grid { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
-        .case { border: 1px solid #ddd; border-radius: 6px; padding: 16px; }
-        .case h3 { margin: 0 0 12px; font-size: 14px; color: #555; }
-        #chart { height: 360px; }
-        #chat { height: 420px; }
-        .hint { color: #777; font-size: 12px; margin: 8px 0 16px; }
+        /* The widget theme leaves the sender's bubble white in light mode. */
+        .dx-chat .dx-chat-messagegroup-alignment-end .dx-chat-messagebubble.dx-widget { background-color: var(--accent-bg); }
     </style>
 </head>
 <body class="dx-viewport">
-    <div id="app">
-        <div class="toolbar">
-            <div class="field"><label for="theme-selector">Theme:</label><div id="theme-selector"></div></div>
-            <div class="field"><label>Calendar:</label><div id="calendar-selector"></div></div>
-            <div class="field"><label>Language:</label><div id="lang-selector"></div></div>
-        </div>
+<main class="db-main db-container">
+    <div class="db-hero">
+        <div class="db-hero__title" data-i18n="nav.vizChat"></div>
+        <p class="db-hero__lede" data-i18n="vizChat.lede"></p>
+        <div class="db-hero__chips"><span class="db-chip">dxChart</span><span class="db-chip">dxChat</span><span class="db-chip">tickInterval</span><span class="db-chip">dayHeaderFormat</span></div>
+    </div>
 
-        <div class="hint">
-            The chart's datetime argument axis (tick <em>placement</em> and labels) and the
-            chat's day headers render in the selected calendar, while the underlying values
-            stay Gregorian.
+    <div class="db-section-label" data-i18n="section.live"></div>
+    <div class="db-two">
+        <section class="db-card">
+            <div class="db-card__head"><span class="db-card__title" data-i18n="vizChat.card.chart"></span></div>
+            <div class="db-widget-stage db-widget-stage--fill"><div id="chart"></div></div>
+        </section>
+        <section class="db-card">
+            <div class="db-card__head"><span class="db-card__title" data-i18n="vizChat.card.chat"></span></div>
+            <div class="db-widget-stage db-widget-stage--fill"><div id="chat"></div></div>
+        </section>
+    </div>
+    <div class="db-live db-wide">
+        <div class="db-stack">
+            <section data-db-log></section>
+            <section class="db-card">
+                <div class="db-card__head"><span class="db-card__title" data-i18n="card.options"></span><span class="db-card__hint" data-i18n="card.optionsHint"></span></div>
+                <div id="options"></div>
+            </section>
         </div>
-
-        <div class="grid">
-            <div class="case">
-                <h3>dxChart — datetime argument axis</h3>
-                <div id="chart"></div>
-            </div>
-            <div class="case">
-                <h3>dxChat — day headers</h3>
-                <div id="chat"></div>
-            </div>
+        <div class="db-stack">
+            <section class="db-card">
+                <div class="db-card__head"><span class="db-card__title" data-i18n="card.inspector"></span></div>
+                <div class="db-card__body--flush" id="inspector"></div>
+            </section>
+            <section class="db-card">
+                <div class="db-card__head"><span class="db-card__title" data-i18n="card.actions"></span></div>
+                <div class="db-card__body db-actions" id="actions"></div>
+            </section>
         </div>
     </div>
-    <script type="module" src="./viz-chat-multi.ts"></script>
+</main>
 </body>
 </html>
